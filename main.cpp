@@ -12,44 +12,48 @@
 #define THICKNESS 10
 #define SCALE 80
 
-void renderGraph(SDL_Renderer *renderer, int zoom, int width, int height) {
+int unsignedMod(int front, int back) {
+    return (front%back + back)%back;
+}
+
+void renderGraph(SDL_Renderer *renderer, int zoom, int xOffset, int yOffset, int width, int height) {
     zoom = zoom - 1;
-    zoom = (zoom%20 + 20)%20;
+    zoom = unsignedMod(zoom, 20);
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
     SDL_SetRenderDrawColor(renderer, 50, 0, 50, 255);
-    for (int i = width / 2; i < width; i = i + (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
+    for (int i = width / 2 - xOffset; i <= width - xOffset; i = i + (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
     }
-    for (int i = width / 2; i > 0; i = i - (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
+    for (int i = width / 2 - xOffset; i >= 0 - xOffset; i = i - (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
     }
-    for (int i = height / 2; i < height; i = i + (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
+    for (int i = height / 2 - yOffset; i <= height - yOffset; i = i + (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
     }
-    for (int i = height / 2; i > 0; i = i - (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
+    for (int i = height / 2 - yOffset; i >= 0 - yOffset; i = i - (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
     }
 
     SDL_SetRenderDrawColor(renderer, 125, 0, 125, 255);
-    for (int i = width / 2; i < width; i = i + (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
+    for (int i = width / 2 - xOffset; i <= width - xOffset; i = i + (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
     }
-    for (int i = width / 2; i > 0; i = i - (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
+    for (int i = width / 2 - xOffset; i >= 0 - xOffset; i = i - (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
     }
-    for (int i = height / 2; i < height; i = i + (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
+    for (int i = height / 2 - yOffset; i <= height - yOffset; i = i + (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
     }
-    for (int i = height / 2; i > 0; i = i - (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
+    for (int i = height / 2 - yOffset; i >= 0 - yOffset; i = i - (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
     }
 
     SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
-    SDL_RenderDrawLine(renderer, 0, height / 2, width, height / 2);
-    SDL_RenderDrawLine(renderer, width / 2, 0, width / 2, height);
+    SDL_RenderDrawLine(renderer, INT_MIN, height / 2 - yOffset, INT_MAX, height / 2 - yOffset);
+    SDL_RenderDrawLine(renderer, width / 2 - xOffset, INT_MIN, width / 2 - xOffset, INT_MAX);
 }
 
 void renderFunction(SDL_Renderer *renderer, double wScale, double hScale, int width, int height) {
@@ -85,6 +89,8 @@ int main (int argc, char** argv) {
     int screenWidth = SCREEN_WIDTH;
     int screenHeight = SCREEN_HEIGHT;
     int zoom = ZOOM;
+    int xOffset = 0;
+    int yOffset = 0;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Error: SDL failed to initialize\nSDL Error: '%s'\n", SDL_GetError());
@@ -103,11 +109,14 @@ int main (int argc, char** argv) {
         return 1;
     }
 
-    renderGraph(renderer, zoom, screenWidth, screenHeight);
+    renderGraph(renderer, zoom, xOffset, yOffset, screenWidth, screenHeight);
     
     SDL_RenderPresent(renderer);
 
+    bool mouseDown = false;
     bool running = true;
+    int mouseX = 0;
+    int mouseY = 0;
     std::string title = "";
     Uint64 NOW = SDL_GetPerformanceCounter();
     Uint64 LAST = 0;
@@ -130,16 +139,40 @@ int main (int argc, char** argv) {
                         zoom--;
                     }
                     break;
+                case SDL_MOUSEBUTTONDOWN:
+                    mouseX = event.button.x + xOffset;
+                    mouseY = event.button.y + yOffset;
+                    mouseDown = true;
+                    break;
+                case SDL_MOUSEMOTION:
+                    if (mouseDown) {
+                        xOffset = mouseX - event.button.x;
+                        yOffset = mouseY - event.button.y;
+                    }
+                    break;
+                case SDL_MOUSEBUTTONUP:
+                    mouseDown = false;
+                    break;
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym == SDLK_x) {
+                        zoom = 1;
+                        xOffset = 0;
+                        yOffset = 0;
+                    }
+                    break;
                 default:
                     break;
             }
         }
 
-        renderGraph(renderer, zoom, screenWidth, screenHeight);
+        renderGraph(renderer, zoom, xOffset, yOffset, screenWidth, screenHeight);
     
         SDL_RenderPresent(renderer);
         
-        title = "DeltaTime: " + std::to_string((Uint32)deltaTime) + "ms" + "  Scale: " + std::to_string((double)(zoom + 19) / 20) + "x";
+        title = "DeltaTime: " + std::to_string((Uint32)deltaTime) + "ms" + 
+                "  Scale: " + std::to_string((double)(zoom + 19) / 20) + "x"
+                "  Offset: " + "(" + std::to_string(xOffset) + ", " + std::to_string(yOffset) + ")";
+                
         
         SDL_SetWindowTitle(window, title.c_str());
     }
