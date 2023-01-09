@@ -139,7 +139,7 @@ int main (int argc, char** argv) {
     
         SDL_RenderPresent(renderer);
         
-        title = "DeltaTime: " + std::to_string((Uint32)deltaTime) + "ms" + "  Scale: " + std::to_string((zoom + 20) / 20) + "x";
+        title = "DeltaTime: " + std::to_string((Uint32)deltaTime) + "ms" + "  Scale: " + std::to_string((double)(zoom + 19) / 20) + "x";
         
         SDL_SetWindowTitle(window, title.c_str());
     }
