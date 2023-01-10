@@ -23,35 +23,35 @@ void renderGraph(SDL_Renderer *renderer, int zoom, int xOffset, int yOffset, int
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 50, 0, 50, 255);
-    for (int i = width / 2 - xOffset; i <= width - xOffset; i = i + (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
+    SDL_SetRenderDrawColor(renderer, 50, 50, 0, 255);
+    for (int i = width / 2 - xOffset; i <= width; i = i + (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, i, 0, i, height);
     }
-    for (int i = width / 2 - xOffset; i >= 0 - xOffset; i = i - (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
+    for (int i = width / 2 - xOffset; i >= 0; i = i - (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, i, 0, i, height);
     }
-    for (int i = height / 2 - yOffset; i <= height - yOffset; i = i + (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
+    for (int i = height / 2 - yOffset; i <= height; i = i + (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, 0, i, width, i);
     }
-    for (int i = height / 2 - yOffset; i >= 0 - yOffset; i = i - (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
-    }
-
-    SDL_SetRenderDrawColor(renderer, 125, 0, 125, 255);
-    for (int i = width / 2 - xOffset; i <= width - xOffset; i = i + (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
-    }
-    for (int i = width / 2 - xOffset; i >= 0 - xOffset; i = i - (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, unsignedMod(i, width), 0, unsignedMod(i, width), height);
-    }
-    for (int i = height / 2 - yOffset; i <= height - yOffset; i = i + (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
-    }
-    for (int i = height / 2 - yOffset; i >= 0 - yOffset; i = i - (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, 0, unsignedMod(i, height), width, unsignedMod(i, height));
+    for (int i = height / 2 - yOffset; i >= 0; i = i - (20 + zoom)) {
+        SDL_RenderDrawLine(renderer, 0, i, width, i);
     }
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 100, 100, 255);
+    for (int i = width / 2 - xOffset; i <= width; i = i + (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, i, 0, i, height);
+    }
+    for (int i = width / 2 - xOffset; i >= 0; i = i - (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, i, 0, i, height);
+    }
+    for (int i = height / 2 - yOffset; i <= height; i = i + (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, 0, i, width, i);
+    }
+    for (int i = height / 2 - yOffset; i >= 0; i = i - (80 + 4 * zoom)) {
+        SDL_RenderDrawLine(renderer, 0, i, width, i);
+    }
+
+    SDL_SetRenderDrawColor(renderer, 200, 0, 200, 255);
     SDL_RenderDrawLine(renderer, INT_MIN, height / 2 - yOffset, INT_MAX, height / 2 - yOffset);
     SDL_RenderDrawLine(renderer, width / 2 - xOffset, INT_MIN, width / 2 - xOffset, INT_MAX);
 }
@@ -115,6 +115,7 @@ int main (int argc, char** argv) {
 
     bool mouseDown = false;
     bool running = true;
+    double scaleZoom = zoom;
     int mouseX = 0;
     int mouseY = 0;
     std::string title = "";
@@ -170,10 +171,9 @@ int main (int argc, char** argv) {
         SDL_RenderPresent(renderer);
         
         title = "DeltaTime: " + std::to_string((Uint32)deltaTime) + "ms" + 
-                "  Scale: " + std::to_string((double)(zoom + 19) / 20) + "x"
-                "  Offset: " + "(" + std::to_string(xOffset) + ", " + std::to_string(yOffset) + ")";
+                "  Scale: " + std::to_string((double)(pow(2, ((zoom - 1) / 20)))) + "x"
+                "  Offset: " + "(" + std::to_string(xOffset) + ", " + std::to_string(-yOffset) + ")";
                 
-        
         SDL_SetWindowTitle(window, title.c_str());
     }
 
