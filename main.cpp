@@ -1,181 +1,161 @@
 #include <SDL2/SDL.h>
-#include <stdio.h>
+#include <glad/glad.h>
+#include <iostream>
 #include <vector>
-#include <cmath>
 #include <string>
 
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
-#define ZOOM 1
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
-#define RANGE 16
-#define THICKNESS 10
-#define SCALE 80
+GLuint compileShader(GLuint type, const std::string& source) {
+        GLuint shaderObject;
 
-int unsignedMod(int front, int back) {
-    return (front%back + back)%back;
-}
-
-void renderGraph(SDL_Renderer *renderer, int zoom, int xOffset, int yOffset, int width, int height) {
-    zoom = zoom - 1;
-    zoom = unsignedMod(zoom, 20);
-
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 50, 50, 0, 255);
-    for (int i = width / 2 - xOffset; i <= width; i = i + (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
-    }
-    for (int i = width / 2 - xOffset; i >= 0; i = i - (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
-    }
-    for (int i = height / 2 - yOffset; i <= height; i = i + (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
-    }
-    for (int i = height / 2 - yOffset; i >= 0; i = i - (20 + zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
-    }
-
-    SDL_SetRenderDrawColor(renderer, 0, 100, 100, 255);
-    for (int i = width / 2 - xOffset; i <= width; i = i + (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
-    }
-    for (int i = width / 2 - xOffset; i >= 0; i = i - (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, i, 0, i, height);
-    }
-    for (int i = height / 2 - yOffset; i <= height; i = i + (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
-    }
-    for (int i = height / 2 - yOffset; i >= 0; i = i - (80 + 4 * zoom)) {
-        SDL_RenderDrawLine(renderer, 0, i, width, i);
-    }
-
-    SDL_SetRenderDrawColor(renderer, 200, 0, 200, 255);
-    SDL_RenderDrawLine(renderer, INT_MIN, height / 2 - yOffset, INT_MAX, height / 2 - yOffset);
-    SDL_RenderDrawLine(renderer, width / 2 - xOffset, INT_MIN, width / 2 - xOffset, INT_MAX);
-}
-
-void renderFunction(SDL_Renderer *renderer, double wScale, double hScale, int width, int height) {
-    double aWidth = width / wScale;
-    double aHeight = height / hScale;
-
-    std::vector<SDL_Point> points;
-    double y = 0.0;
-    double perp = 0.0;
-    double angle = 0.0;
-    for (int j = 1 - THICKNESS; j < THICKNESS; j++) {
-        for (int i = -(RANGE * SCALE / 2); i <= RANGE * SCALE / 2; i++) {
-            y = sin((double)i / SCALE) * SCALE;
-            perp = -1.0 / cos((double)i / SCALE);
-            angle = atan(perp);
-
-            SDL_Point point;
-            if (i != 0) {
-                point = {i + (int)(j * cos(angle)) + (int)aWidth / 2,
-                        -((int)y + (int)(j * sin(angle))) + (int)aHeight / 2};
-            } else {
-                point = {i + (int)aWidth / 2,
-                        -((int)y + j) + (int)aHeight / 2};
-            }
-            points.emplace_back(point);
+        if(type == GL_VERTEX_SHADER) {
+            shaderObject = glCreateShader(GL_VERTEX_SHADER);
+        } else if(type == GL_FRAGMENT_SHADER) {
+            shaderObject = glCreateShader(GL_FRAGMENT_SHADER);
         }
-    }
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderDrawPoints(renderer, points.data(), points.size());
+
+        const char* src = source.c_str();
+        glShaderSource(shaderObject, 1, &src, nullptr);
+        glCompileShader(shaderObject);
+
+        return shaderObject;
+ }
+
+ GLuint createShaderProgram(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) {
+        GLuint programObject = glCreateProgram();
+
+        GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+        GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+
+        glAttachShader(programObject, vertexShader);
+        glAttachShader(programObject, fragmentShader);
+        glLinkProgram(programObject);
+
+        glValidateProgram(programObject);
+
+        return programObject;
 }
 
 int main (int argc, char** argv) {
-    int screenWidth = SCREEN_WIDTH;
-    int screenHeight = SCREEN_HEIGHT;
-    int zoom = ZOOM;
-    int xOffset = 0;
-    int yOffset = 0;
-
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        printf("Error: SDL failed to initialize\nSDL Error: '%s'\n", SDL_GetError());
+        std::cout << "Error: Failed to initialize SDL video subsytem\nSDL Error: " 
+                << SDL_GetError() << std::endl;
         return 1;
     }
 
-    SDL_Window *window = SDL_CreateWindow("SDL test", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    SDL_Window *window = SDL_CreateWindow("MA_385_Project", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
     if (!window) {
-        printf("Error: Failed to open window\nSDL Error: '%s'\n", SDL_GetError());
+        std::cout << "Error: Failed to create window\nSDL Error: " 
+                << SDL_GetError() << std::endl;
         return 1;
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer) {
-        printf("Error: Failed to create renderer\nSDL Error: '%s'\n", SDL_GetError());
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+    if (!context) {
+        std::cout << "Error: Failed to create OpenGL context\nSDL Error: " 
+                << SDL_GetError() << std::endl;
         return 1;
     }
 
-    renderGraph(renderer, zoom, xOffset, yOffset, screenWidth, screenHeight);
+    if(!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+        std::cout << "Error: glad was not initialized" << std::endl;
+        return 1;
+    }
+    std::cout << "Vender: " << glGetString(GL_VENDOR) << std::endl;
+    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "Version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+
+
+    const std::vector<GLfloat> vertices {
+        -0.8f, -0.8f, 0.0f,
+        0.8f, -0.8f, 0.0f,
+        0.0f, 0.8f, 0.0f
+    };
+
+    GLuint gVertexArrayObject = 0;
+    glGenVertexArrays(1, &gVertexArrayObject);
+    glBindVertexArray(gVertexArrayObject);
+
+    GLuint gVertexBufferObject = 0;
+    glGenBuffers(1, &gVertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
+                vertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glBindVertexArray(0);
+    glDisableVertexAttribArray(0);
+
     
-    SDL_RenderPresent(renderer);
 
-    bool mouseDown = false;
+    const std::string gVertexShaderSource = 
+        "#version 410 core\n"
+        "in vec4 postion;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = vec4(position.x, position.y, position.z, position.w);\n"
+        "}\n";
+
+    const std::string gFragmentShaderSource = 
+        "#version 410 core\n"
+        "out vec4 color;\n"
+        "void main()\n"
+        "{\n"
+        "   color = vec4(1.0f, 0.5f, 0.0f, 1.0f);\n"
+        "}\n";
+
+    GLuint gGraphicsPipelineObject = createShaderProgram(gVertexShaderSource, gFragmentShaderSource);
+    
+
+
+    
+
+
+
     bool running = true;
-    double scaleZoom = zoom;
-    int mouseX = 0;
-    int mouseY = 0;
-    std::string title = "";
-    Uint64 NOW = SDL_GetPerformanceCounter();
-    Uint64 LAST = 0;
-    double deltaTime = 0;
     while (running) {
-        LAST = NOW;
-        NOW = SDL_GetPerformanceCounter();
-        deltaTime = (double)((NOW - LAST) * 1000 / (double)SDL_GetPerformanceFrequency());
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            switch (e.type) {
                 case SDL_QUIT:
                     running = false;
-                    break;
-                case SDL_MOUSEWHEEL:
-                    if (event.wheel.y > 0) {
-                        zoom++;
-                    } else if (event.wheel.y < 0) {
-                        zoom--;
-                    }
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    mouseX = event.button.x + xOffset;
-                    mouseY = event.button.y + yOffset;
-                    mouseDown = true;
-                    break;
-                case SDL_MOUSEMOTION:
-                    if (mouseDown) {
-                        xOffset = mouseX - event.button.x;
-                        yOffset = mouseY - event.button.y;
-                    }
-                    break;
-                case SDL_MOUSEBUTTONUP:
-                    mouseDown = false;
-                    break;
-                case SDL_KEYDOWN:
-                    if (event.key.keysym.sym == SDLK_x) {
-                        zoom = 1;
-                        xOffset = 0;
-                        yOffset = 0;
-                    }
                     break;
                 default:
                     break;
             }
         }
 
-        renderGraph(renderer, zoom, xOffset, yOffset, screenWidth, screenHeight);
-    
-        SDL_RenderPresent(renderer);
-        
-        title = "DeltaTime: " + std::to_string((Uint32)deltaTime) + "ms" + 
-                "  Scale: " + std::to_string((double)(pow(2, ((zoom - 1) / 20)))) + "x"
-                "  Offset: " + "(" + std::to_string(xOffset) + ", " + std::to_string(-yOffset) + ")";
-                
-        SDL_SetWindowTitle(window, title.c_str());
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+
+        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        glClearColor(1.f, 1.f, 0.f, 1.f);
+
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(gGraphicsPipelineObject);
+
+        glBindVertexArray(gVertexArrayObject);
+        glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        SDL_GL_SwapWindow(window);
     }
+
+    SDL_Quit();
 
     return 0;
 }
