@@ -3,9 +3,85 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
+
+SDL_Window *gWindow = nullptr;
+
+GLuint gVertexArrayObject      = 0;
+GLuint gVertexBufferObject     = 0;
+GLuint gGraphicsPipelineObject = 0;
+
+bool gRunning = true;
+
+void setup() {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cout << "Error: Failed to initialize SDL video subsytem\nSDL Error: " 
+                << SDL_GetError() << std::endl;
+        exit(1);
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    gWindow = SDL_CreateWindow("MA_385_Project", 
+                                SDL_WINDOWPOS_UNDEFINED, 
+                                SDL_WINDOWPOS_UNDEFINED, 
+                                SCREEN_WIDTH, 
+                                SCREEN_HEIGHT, 
+                                SDL_WINDOW_OPENGL);
+    if (!gWindow) {
+        std::cout << "Error: Failed to create window\nSDL Error: " 
+                << SDL_GetError() << std::endl;
+        exit(1);
+    }
+
+    SDL_GLContext context = SDL_GL_CreateContext(gWindow);
+    if (!context) {
+        std::cout << "Error: Failed to create OpenGL context\nSDL Error: " 
+                << SDL_GetError() << std::endl;
+        exit(1);
+    }
+
+    if(!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+        std::cout << "Error: Failed to initialize glad" << std::endl;
+        exit(1);
+    }
+
+    std::cout << "Vender: " << glGetString(GL_VENDOR) << std::endl;
+    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
+    std::cout << "Version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+}
+
+void vertexSpecification() {
+    const std::vector<GLfloat> vertices {
+        -0.8f, -0.8f, 0.0f,
+        0.8f, -0.8f, 0.0f,
+        0.0f, 0.8f, 0.0f
+    };
+
+    glGenVertexArrays(1, &gVertexArrayObject);
+    glBindVertexArray(gVertexArrayObject);
+
+    glGenBuffers(1, &gVertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, 
+                vertices.size() * sizeof(GLfloat),
+                vertices.data(), 
+                GL_STATIC_DRAW);
+ 
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glBindVertexArray(0);
+    glDisableVertexAttribArray(0);
+}
 
 GLuint compileShader(GLuint type, const std::string& source) {
         GLuint shaderObject;
@@ -19,6 +95,21 @@ GLuint compileShader(GLuint type, const std::string& source) {
         const char* src = source.c_str();
         glShaderSource(shaderObject, 1, &src, nullptr);
         glCompileShader(shaderObject);
+
+        int status = 0;
+        glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
+
+        if (status == GL_FALSE) {
+            if(type == GL_VERTEX_SHADER) {
+                std::cout << "Error: Failed to compile GL_VERTEX_SHADER\n" << std::endl;
+            } else if(type == GL_FRAGMENT_SHADER) {
+                std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\n" << std::endl;
+            }
+
+            glDeleteShader(shaderObject);
+
+            return 0;
+        }
 
         return shaderObject;
  }
@@ -35,127 +126,107 @@ GLuint compileShader(GLuint type, const std::string& source) {
 
         glValidateProgram(programObject);
 
+        glDetachShader(programObject, vertexShader);
+        glDetachShader(programObject, vertexShader);
+
+        glDeleteShader(vertexShader);
+        glDeleteShader(vertexShader);
+
         return programObject;
 }
 
-int main (int argc, char** argv) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cout << "Error: Failed to initialize SDL video subsytem\nSDL Error: " 
-                << SDL_GetError() << std::endl;
-        return 1;
-    }
+std::string loadShader(const std::string& fileName) {
+    std::string src = "";
+    std::string line = "";
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    std::ifstream file(fileName.c_str());
 
-    SDL_Window *window = SDL_CreateWindow("MA_385_Project", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
-    if (!window) {
-        std::cout << "Error: Failed to create window\nSDL Error: " 
-                << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    SDL_GLContext context = SDL_GL_CreateContext(window);
-    if (!context) {
-        std::cout << "Error: Failed to create OpenGL context\nSDL Error: " 
-                << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    if(!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
-        std::cout << "Error: glad was not initialized" << std::endl;
-        return 1;
-    }
-    std::cout << "Vender: " << glGetString(GL_VENDOR) << std::endl;
-    std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "Version: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-
-
-
-    const std::vector<GLfloat> vertices {
-        -0.8f, -0.8f, 0.0f,
-        0.8f, -0.8f, 0.0f,
-        0.0f, 0.8f, 0.0f
-    };
-
-    GLuint gVertexArrayObject = 0;
-    glGenVertexArrays(1, &gVertexArrayObject);
-    glBindVertexArray(gVertexArrayObject);
-
-    GLuint gVertexBufferObject = 0;
-    glGenBuffers(1, &gVertexBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
-                vertices.data(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
-
-    
-
-    const std::string gVertexShaderSource = 
-        "#version 410 core\n"
-        "in vec4 postion;\n"
-        "void main()\n"
-        "{\n"
-        "   gl_Position = vec4(position.x, position.y, position.z, position.w);\n"
-        "}\n";
-
-    const std::string gFragmentShaderSource = 
-        "#version 410 core\n"
-        "out vec4 color;\n"
-        "void main()\n"
-        "{\n"
-        "   color = vec4(1.0f, 0.5f, 0.0f, 1.0f);\n"
-        "}\n";
-
-    GLuint gGraphicsPipelineObject = createShaderProgram(gVertexShaderSource, gFragmentShaderSource);
-    
-
-
-    
-
-
-
-    bool running = true;
-    while (running) {
-        SDL_Event e;
-        while (SDL_PollEvent(&e)) {
-            switch (e.type) {
-                case SDL_QUIT:
-                    running = false;
-                    break;
-                default:
-                    break;
-            }
+    if(file.is_open()) {
+        while(std::getline(file, line)) {
+            src += line + '\n';
         }
 
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-
-        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-        glClearColor(1.f, 1.f, 0.f, 1.f);
-
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(gGraphicsPipelineObject);
-
-        glBindVertexArray(gVertexArrayObject);
-        glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        SDL_GL_SwapWindow(window);
+        file.close();
     }
 
+    return src;
+}
+
+void createGraphicsPipeline() {
+    const std::string vertexShaderSource   = loadShader("./shaders/vertex.glsl");
+    const std::string fragmentShaderSource = loadShader("./shaders/fragment.glsl");
+        
+    gGraphicsPipelineObject = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+}
+
+void input() {
+    SDL_Event e;
+
+    while (SDL_PollEvent(&e)) {
+        switch (e.type) {
+            case SDL_QUIT:
+                gRunning = false;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void predraw() {
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glClearColor(1.f, 1.f, 0.f, 1.f);
+
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(gGraphicsPipelineObject);
+}
+
+void draw() {
+    glBindVertexArray(gVertexArrayObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glUseProgram(0);
+}
+
+void loop() {
+    while (gRunning) {
+        input();
+
+        predraw();
+
+        draw();
+
+        SDL_GL_SwapWindow(gWindow);
+    }
+}
+
+void cleanup() {
+    SDL_DestroyWindow(gWindow);
+
+    glDeleteBuffers(1, &gVertexBufferObject);
+    glDeleteVertexArrays(1, &gVertexArrayObject);
+
+    glDeleteProgram(gGraphicsPipelineObject);
+
     SDL_Quit();
+}
+
+int main (int argc, char** argv) {
+    setup();
+
+    vertexSpecification();
+
+    createGraphicsPipeline();
+
+    loop();
+
+    cleanup();
 
     return 0;
 }
