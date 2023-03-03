@@ -11,7 +11,8 @@
 SDL_Window *gWindow = nullptr;
 
 GLuint gVertexArrayObject      = 0;
-GLuint gVertexBufferObject     = 0;
+GLuint gPositionBufferObject   = 0;
+GLuint gColorBufferObject      = 0;
 GLuint gGraphicsPipelineObject = 0;
 
 bool gRunning = true;
@@ -61,26 +62,47 @@ void setup() {
 
 void vertexSpecification() {
     const std::vector<GLfloat> vertices {
-        -0.8f, -0.8f, 0.0f,
-        0.8f, -0.8f, 0.0f,
-        0.0f, 0.8f, 0.0f
+        -0.8f, -0.8f, 0.0f, // Position
+        0.8f , 0.0f , 0.0f, // Color
+
+        0.8f , -0.8f, 0.0f,
+        0.0f , 0.8f , 0.0f,
+
+        0.0f , 0.8f , 0.0f,
+        0.0f , 0.0f , 0.8f
     };
 
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
 
-    glGenBuffers(1, &gVertexBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glGenBuffers(1, &gPositionBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gPositionBufferObject);
     glBufferData(GL_ARRAY_BUFFER, 
                 vertices.size() * sizeof(GLfloat),
                 vertices.data(), 
                 GL_STATIC_DRAW);
- 
+
+    // Position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribPointer(0, 
+                        3, 
+                        GL_FLOAT, 
+                        GL_FALSE, 
+                        sizeof(GLfloat) * 6, 
+                        (GLvoid*)0);
+
+    // Color
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 
+                        3, 
+                        GL_FLOAT, 
+                        GL_FALSE, 
+                        sizeof(GLfloat) * 6, 
+                        (GLvoid*)(sizeof(GLfloat) * 3));
 
     glBindVertexArray(0);
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 }
 
 GLuint compileShader(GLuint type, const std::string& source) {
@@ -187,7 +209,7 @@ void predraw() {
 
 void draw() {
     glBindVertexArray(gVertexArrayObject);
-    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gPositionBufferObject);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -209,7 +231,7 @@ void loop() {
 void cleanup() {
     SDL_DestroyWindow(gWindow);
 
-    glDeleteBuffers(1, &gVertexBufferObject);
+    glDeleteBuffers(1, &gPositionBufferObject);
     glDeleteVertexArrays(1, &gVertexArrayObject);
 
     glDeleteProgram(gGraphicsPipelineObject);
