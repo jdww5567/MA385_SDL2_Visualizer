@@ -62,14 +62,20 @@ void setup() {
 
 void vertexSpecification() {
     const std::vector<GLfloat> vertices {
-        -0.8f, -0.8f, 0.0f, // Position
+        // Triangle
+        -0.5f, -0.5f, 0.0f, // Position
         0.8f , 0.0f , 0.0f, // Color
-
-        0.8f , -0.8f, 0.0f,
+        0.5f , -0.5f, 0.0f,
         0.0f , 0.8f , 0.0f,
+        -0.5f, 0.5f , 0.0f,
+        0.0f , 0.0f , 0.8f,
 
-        0.0f , 0.8f , 0.0f,
-        0.0f , 0.0f , 0.8f
+        0.5f , 0.5f , 0.0f,
+        0.8f , 0.0f , 0.0f,
+        -0.5f, 0.5f , 0.0f,
+        0.0f , 0.0f , 0.8f,
+        0.5f , -0.5f, 0.0f,
+        0.0f , 0.8f , 0.0f
     };
 
     glGenVertexArrays(1, &gVertexArrayObject);
@@ -200,7 +206,7 @@ void predraw() {
     glDisable(GL_CULL_FACE);
 
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    glClearColor(1.f, 1.f, 0.f, 1.f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
@@ -211,7 +217,7 @@ void draw() {
     glBindVertexArray(gVertexArrayObject);
     glBindBuffer(GL_ARRAY_BUFFER, gPositionBufferObject);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glUseProgram(0);
 }
