@@ -137,11 +137,13 @@ GLuint compileShader(GLuint type, const std::string& source) {
         int status = 0;
         glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
 
-        if (status == GL_FALSE) {
+        if (status) {
             if(type == GL_VERTEX_SHADER) {
-                std::cout << "Error: Failed to compile GL_VERTEX_SHADER\n" << std::endl;
+                std::cout << "Error: Failed to compile GL_VERTEX_SHADER\nglError: " 
+                << glGetError() << std::endl;
             } else if(type == GL_FRAGMENT_SHADER) {
-                std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\n" << std::endl;
+                std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError: " 
+                << glGetError() << std::endl;
             }
 
             glDeleteShader(shaderObject);
@@ -155,7 +157,7 @@ GLuint compileShader(GLuint type, const std::string& source) {
  GLuint createShaderProgram(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) {
         GLuint programObject = glCreateProgram();
 
-        GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+        GLuint vertexShader   = compileShader(GL_VERTEX_SHADER  , vertexShaderSource  );
         GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
         glAttachShader(programObject, vertexShader);
@@ -174,7 +176,7 @@ GLuint compileShader(GLuint type, const std::string& source) {
 }
 
 std::string loadShader(const std::string& fileName) {
-    std::string src = "";
+    std::string src  = "";
     std::string line = "";
 
     std::ifstream file(fileName.c_str());
@@ -191,7 +193,7 @@ std::string loadShader(const std::string& fileName) {
 }
 
 void createGraphicsPipeline() {
-    const std::string vertexShaderSource   = loadShader("./shaders/vertex.glsl");
+    const std::string vertexShaderSource   = loadShader("./shaders/vertex.glsl"  );
     const std::string fragmentShaderSource = loadShader("./shaders/fragment.glsl");
         
     gGraphicsPipelineObject = createShaderProgram(vertexShaderSource, fragmentShaderSource);
@@ -216,7 +218,7 @@ void predraw() {
     glDisable(GL_CULL_FACE);
 
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
