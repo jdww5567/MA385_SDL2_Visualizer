@@ -11,8 +11,8 @@
 SDL_Window *gWindow = nullptr;
 
 GLuint gVertexArrayObject      = 0;
-GLuint gPositionBufferObject   = 0;
-GLuint gColorBufferObject      = 0;
+GLuint gVertexBufferObject     = 0;
+GLuint gIndexBufferObject      = 0;
 GLuint gGraphicsPipelineObject = 0;
 
 bool gRunning = true;
@@ -62,30 +62,40 @@ void setup() {
 
 void vertexSpecification() {
     const std::vector<GLfloat> vertices {
-        // Triangle
-        -0.5f, -0.5f, 0.0f, // Position
-        0.8f , 0.0f , 0.0f, // Color
+        // Quad
+        -0.5f, 0.5f , 0.0f, // Position
+        0.0f , 0.0f , 0.8f, // Color
+        -0.5f, -0.5f, 0.0f,
+        0.8f , 0.0f , 0.0f,
         0.5f , -0.5f, 0.0f,
         0.0f , 0.8f , 0.0f,
-        -0.5f, 0.5f , 0.0f,
-        0.0f , 0.0f , 0.8f,
-
         0.5f , 0.5f , 0.0f,
         0.8f , 0.0f , 0.0f,
-        -0.5f, 0.5f , 0.0f,
-        0.0f , 0.0f , 0.8f,
-        0.5f , -0.5f, 0.0f,
-        0.0f , 0.8f , 0.0f
     };
 
+    const std::vector<GLuint> indices {
+        0, 1, 2, // Triangle
+        2, 3, 0
+    };
+
+    // VAO
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
 
-    glGenBuffers(1, &gPositionBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, gPositionBufferObject);
+    // VBO
+    glGenBuffers(1, &gVertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
     glBufferData(GL_ARRAY_BUFFER, 
                 vertices.size() * sizeof(GLfloat),
                 vertices.data(), 
+                GL_STATIC_DRAW);
+
+    // IBO
+    glGenBuffers(1, &gIndexBufferObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                indices.size() * sizeof(GLint),
+                indices.data(), 
                 GL_STATIC_DRAW);
 
     // Position
@@ -215,9 +225,9 @@ void predraw() {
 
 void draw() {
     glBindVertexArray(gVertexArrayObject);
-    glBindBuffer(GL_ARRAY_BUFFER, gPositionBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glUseProgram(0);
 }
@@ -237,7 +247,7 @@ void loop() {
 void cleanup() {
     SDL_DestroyWindow(gWindow);
 
-    glDeleteBuffers(1, &gPositionBufferObject);
+    glDeleteBuffers(1, &gVertexBufferObject);
     glDeleteVertexArrays(1, &gVertexArrayObject);
 
     glDeleteProgram(gGraphicsPipelineObject);
