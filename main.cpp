@@ -17,6 +17,9 @@ GLuint gGraphicsPipelineObject = 0;
 
 bool gRunning = true;
 
+float g_uVertOffset = 0.0f;
+float g_uHoriOffset = 0.0f;
+
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cout << "Error: Failed to initialize SDL video subsytem\nSDL Error: " 
@@ -145,10 +148,10 @@ GLuint compileShader(GLuint type, const std::string& source) {
             glGetShaderInfoLog(shaderObject, logSize, &logSize, &errorLog[0]);
 
             if(type == GL_VERTEX_SHADER) {
-                std::cout << "Error: Failed to compile GL_VERTEX_SHADER\nglError: " 
+                std::cout << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
                 << errorLog.data() << std::endl;
             } else if(type == GL_FRAGMENT_SHADER) {
-                std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError: " 
+                std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
                 << errorLog.data() << std::endl;
             }
 
@@ -207,7 +210,6 @@ void createGraphicsPipeline() {
 
 void input() {
     SDL_Event e;
-
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
             case SDL_QUIT:
@@ -216,6 +218,24 @@ void input() {
             default:
                 break;
         }
+    }
+
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    if(state[SDL_SCANCODE_UP]) {
+        g_uVertOffset += 0.00025f;
+        //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
+    }
+    if(state[SDL_SCANCODE_DOWN]) {
+        g_uVertOffset -= 0.00025f;
+        //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
+    }
+    if(state[SDL_SCANCODE_RIGHT]) {
+        g_uHoriOffset += 0.00025f;
+        //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
+    }
+    if(state[SDL_SCANCODE_LEFT]) {
+        g_uHoriOffset -= 0.00025f;
+        //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
 }
 
@@ -229,6 +249,20 @@ void predraw() {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     glUseProgram(gGraphicsPipelineObject);
+
+    GLint vertOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uVertOffset");
+    if(vertOffsetLoc >= 0) {
+        glUniform1f(vertOffsetLoc, g_uVertOffset);
+    } else {
+        std::cout << "Error: uVertOffset not found in GPU memory" << std::endl;
+    }
+
+    GLint horiOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uHoriOffset");
+    if(horiOffsetLoc >= 0) {
+        glUniform1f(horiOffsetLoc, g_uHoriOffset);
+    } else {
+        std::cout << "Error: uHoriOffset not found in GPU memory" << std::endl;
+    }
 }
 
 void draw() {
