@@ -15,13 +15,15 @@ GLuint gVertexBufferObject     = 0;
 GLuint gIndexBufferObject      = 0;
 GLuint gGraphicsPipelineObject = 0;
 
-GLint gVertOffsetLoc = 0;
-GLint gHoriOffsetLoc = 0;
+GLint gVertOffsetLoc  = 0;
+GLint gHoriOffsetLoc  = 0;
+GLint gDepthOffsetLoc = 0;
 
 bool gRunning = true;
 
-float g_uVertOffset = 0.0f;
-float g_uHoriOffset = 0.0f;
+float g_uVertOffset  = 0.0f;
+float g_uHoriOffset  = 0.0f;
+float g_uDepthOffset = 0.0f;
 
 const Uint8 *gState;
 
@@ -224,7 +226,12 @@ void findUniformVars() {
     gHoriOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uHoriOffset");
     if(gHoriOffsetLoc < 0) {
         std::cout << "Error: uHoriOffset not found in GPU memory" << std::endl;
-    } 
+    }
+
+    gDepthOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uDepthOffset");
+    if(gDepthOffsetLoc < 0) {
+        std::cout << "Error: uDepthOffset not found in GPU memory" << std::endl;
+    }
 }
 
 void input() {
@@ -233,6 +240,17 @@ void input() {
         switch (e.type) {
             case SDL_QUIT:
                 gRunning = false;
+                break;
+            case SDL_KEYDOWN:
+                switch (e.key.keysym.sym) {
+                    case SDLK_x:
+                        g_uVertOffset = 0.0f;
+                        g_uHoriOffset = 0.0f;
+                        g_uDepthOffset = 0.0f;
+                        break;
+                    default:
+                        break;
+                }
                 break;
             default:
                 break;
@@ -255,6 +273,14 @@ void input() {
         g_uHoriOffset -= 0.00025f;
         //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
+    if(gState[SDL_SCANCODE_W]) {
+        g_uDepthOffset += 0.00025f;
+        std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
+    }
+    if(gState[SDL_SCANCODE_S]) {
+        g_uDepthOffset -= 0.00025f;
+        std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
+    }
 }
 
 void predraw() {
@@ -270,6 +296,7 @@ void predraw() {
 
     glUniform1f(gVertOffsetLoc, g_uVertOffset);
     glUniform1f(gHoriOffsetLoc, g_uHoriOffset);
+    glUniform1f(gDepthOffsetLoc, g_uDepthOffset);
 }
 
 void draw() {

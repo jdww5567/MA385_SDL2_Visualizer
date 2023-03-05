@@ -1,7 +1,5 @@
 #version 410 core
 
-uniform float uOffset;
-
 in vec3 vColors;
 
 out vec4 color;
