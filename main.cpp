@@ -15,10 +15,15 @@ GLuint gVertexBufferObject     = 0;
 GLuint gIndexBufferObject      = 0;
 GLuint gGraphicsPipelineObject = 0;
 
+GLint gVertOffsetLoc = 0;
+GLint gHoriOffsetLoc = 0;
+
 bool gRunning = true;
 
 float g_uVertOffset = 0.0f;
 float g_uHoriOffset = 0.0f;
+
+const Uint8 *gState;
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -61,6 +66,8 @@ void setup() {
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
     std::cout << "Version: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+    gState = SDL_GetKeyboardState(NULL);
 }
 
 void vertexSpecification() {
@@ -208,6 +215,18 @@ void createGraphicsPipeline() {
     gGraphicsPipelineObject = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 }
 
+void findUniformVars() {
+    gVertOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uVertOffset");
+    if(gVertOffsetLoc < 0) {
+        std::cout << "Error: uVertOffset not found in GPU memory" << std::endl;
+    }
+
+    gHoriOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uHoriOffset");
+    if(gHoriOffsetLoc < 0) {
+        std::cout << "Error: uHoriOffset not found in GPU memory" << std::endl;
+    } 
+}
+
 void input() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
@@ -220,20 +239,19 @@ void input() {
         }
     }
 
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
-    if(state[SDL_SCANCODE_UP]) {
+    if(gState[SDL_SCANCODE_UP]) {
         g_uVertOffset += 0.00025f;
         //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
     }
-    if(state[SDL_SCANCODE_DOWN]) {
+    if(gState[SDL_SCANCODE_DOWN]) {
         g_uVertOffset -= 0.00025f;
         //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
     }
-    if(state[SDL_SCANCODE_RIGHT]) {
+    if(gState[SDL_SCANCODE_RIGHT]) {
         g_uHoriOffset += 0.00025f;
         //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
-    if(state[SDL_SCANCODE_LEFT]) {
+    if(gState[SDL_SCANCODE_LEFT]) {
         g_uHoriOffset -= 0.00025f;
         //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
@@ -250,19 +268,8 @@ void predraw() {
 
     glUseProgram(gGraphicsPipelineObject);
 
-    GLint vertOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uVertOffset");
-    if(vertOffsetLoc >= 0) {
-        glUniform1f(vertOffsetLoc, g_uVertOffset);
-    } else {
-        std::cout << "Error: uVertOffset not found in GPU memory" << std::endl;
-    }
-
-    GLint horiOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uHoriOffset");
-    if(horiOffsetLoc >= 0) {
-        glUniform1f(horiOffsetLoc, g_uHoriOffset);
-    } else {
-        std::cout << "Error: uHoriOffset not found in GPU memory" << std::endl;
-    }
+    glUniform1f(gVertOffsetLoc, g_uVertOffset);
+    glUniform1f(gHoriOffsetLoc, g_uHoriOffset);
 }
 
 void draw() {
@@ -303,6 +310,8 @@ int main (int argc, char** argv) {
     vertexSpecification();
 
     createGraphicsPipeline();
+
+    findUniformVars();
 
     loop();
 
