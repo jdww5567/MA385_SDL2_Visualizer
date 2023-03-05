@@ -1,9 +1,8 @@
-#include <SDL2/SDL.h>
-#include <glad/glad.h>
-#include <glm-master/glm/glm.hpp>
-#include <glm-master/glm/glm.hpp>
-#include <glm-master/glm/mat4x4.hpp>
-#include <glm-master/glm/gtc/matrix_transform.hpp>
+#include <SDL2/SDL.h>                   // SDL
+#include <glad/glad.h>                  // openGL definitions
+#include <glm/glm.hpp>                  // glm
+#include <glm/gtc/matrix_transform.hpp> // transformation matrices
+#include <glm/gtx/transform.hpp>         // rotation matrix
 
 #include <iostream>
 #include <vector>
@@ -20,16 +19,16 @@ GLuint gVertexBufferObject     = 0;
 GLuint gIndexBufferObject      = 0;
 GLuint gGraphicsPipelineObject = 0;
 
-// GLint gVertOffsetLoc  = 0;
-// GLint gHoriOffsetLoc  = 0;
-// GLint gDepthOffsetLoc = 0;
-GLint gModelMatrixLoc = 0;
+GLint gModelMatrixLoc       = 0;
+GLint gPerspectiveMatrixLoc = 0;
+GLint gRotationMatrixLoc    = 0;
 
 bool gRunning = true;
 
 float gVertOffset  = 0.0f;
 float gHoriOffset  = 0.0f;
-float gDepthOffset = 0.0f;
+float gDepthOffset = -3.0f;
+float gRotate      = 0.0f;
 
 const Uint8 *gState;
 
@@ -80,20 +79,57 @@ void setup() {
 
 void vertexSpecification() {
     const std::vector<GLfloat> vertices {
-        // Quad
+        // 0 Top-Left-Close 
         -0.5f, 0.5f , 0.0f, // Position
         0.0f , 0.0f , 0.8f, // Color
+        // 1 Bottom-Left-Close
         -0.5f, -0.5f, 0.0f,
         0.8f , 0.0f , 0.0f,
+        // 2 Bottom-Right-Close
         0.5f , -0.5f, 0.0f,
         0.0f , 0.8f , 0.0f,
+        // 3 Top-Right-Close
         0.5f , 0.5f , 0.0f,
+        0.8f , 0.0f , 0.0f,
+
+        // 4 Top-Left-Far
+        -0.5f, 0.5f , -1.0f,
+        0.0f , 0.0f , 0.8f,
+        // 5 Bottom-Left-Far
+        -0.5f, -0.5f, -1.0f,
+        0.8f , 0.0f , 0.0f,
+        // 6 Bottom-Right-Far
+        0.5f , -0.5f, -1.0f,
+        0.0f , 0.8f , 0.0f,
+        // 7 Top-Right-Far
+        0.5f , 0.5f , -1.0f,
         0.8f , 0.0f , 0.0f,
     };
 
     const std::vector<GLuint> indices {
+        // Front
         0, 1, 2, // Triangle
-        2, 3, 0
+        2, 3, 0,
+
+        // Left
+        4, 5, 1,
+        1, 0, 4,
+
+        // Back
+        7, 6, 5,
+        5, 4, 7,
+
+        // Right
+        3, 2, 6,
+        6, 7, 3,
+
+        // Top
+        4, 0, 3,
+        3, 7, 4,
+
+        // Bottom
+        1, 5, 6,
+        6, 2, 1
     };
 
     // VAO
@@ -228,6 +264,16 @@ void findUniformVars() {
     if(gModelMatrixLoc < 0) {
         std::cout << "Error: uModelMatrix not found in GPU memory" << std::endl;
     }
+
+    gPerspectiveMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uPerspectiveMatrix");
+    if(gPerspectiveMatrixLoc < 0) {
+        std::cout << "Error: uPerspectiveMatrix not found in GPU memory" << std::endl;
+    }
+
+    gRotationMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uRotationMatrix");
+    if(gRotationMatrixLoc < 0) {
+        std::cout << "Error: uRotationMatrix not found in GPU memory" << std::endl;
+    }
 }
 
 void input() {
@@ -240,9 +286,10 @@ void input() {
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        gVertOffset = 0.0f;
-                        gHoriOffset = 0.0f;
-                        gDepthOffset = 0.0f;
+                        gVertOffset  = 0.0f;
+                        gHoriOffset  = 0.0f;
+                        gDepthOffset = -3.0f;
+                        gRotate      = 0.0f;
                         break;
                     default:
                         break;
@@ -255,27 +302,27 @@ void input() {
 
     if(gState[SDL_SCANCODE_UP]) {
         gVertOffset += 0.00025f;
-        //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_DOWN]) {
         gVertOffset -= 0.00025f;
-        //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_RIGHT]) {
         gHoriOffset += 0.00025f;
-        //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_LEFT]) {
         gHoriOffset -= 0.00025f;
-        //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_W]) {
         gDepthOffset += 0.00025f;
-        //std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_S]) {
         gDepthOffset -= 0.00025f;
-        //std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
+    }
+    if(gState[SDL_SCANCODE_A]) {
+        gRotate += 0.00025f;
+    }
+    if(gState[SDL_SCANCODE_D]) {
+        gRotate -= 0.00025f;
     }
 }
 
@@ -290,16 +337,32 @@ void predraw() {
 
     glUseProgram(gGraphicsPipelineObject);
 
-    glm::mat4 translate = glm::translate(   glm::mat4(1.0f), 
-                                            glm::vec3(gHoriOffset, gVertOffset, gDepthOffset));
+
+    glm::mat4 rotate = glm::rotate(
+        gRotate,
+        glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
+    );
+    glm::mat4 translate = glm::translate(   
+        glm::mat4(1.0f), 
+        glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
+    );
+    glm::mat4 perspective = glm::perspective(
+        glm::radians(45.0f),
+        (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
+        0.1f,
+        10.0f
+    );
+
     glUniformMatrix4fv(gModelMatrixLoc, 1, GL_FALSE, &translate[0][0]);
+    glUniformMatrix4fv(gRotationMatrixLoc, 1, GL_FALSE, &rotate[0][0]);
+    glUniformMatrix4fv(gPerspectiveMatrixLoc, 1, GL_FALSE, &perspective[0][0]);
 }
 
 void draw() {
     glBindVertexArray(gVertexArrayObject);
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 48, GL_UNSIGNED_INT, 0);
 
     glUseProgram(0);
 }
