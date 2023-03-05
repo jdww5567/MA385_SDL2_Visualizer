@@ -1,5 +1,10 @@
 #include <SDL2/SDL.h>
 #include <glad/glad.h>
+#include <glm-master/glm/glm.hpp>
+#include <glm-master/glm/glm.hpp>
+#include <glm-master/glm/mat4x4.hpp>
+#include <glm-master/glm/gtc/matrix_transform.hpp>
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -15,15 +20,16 @@ GLuint gVertexBufferObject     = 0;
 GLuint gIndexBufferObject      = 0;
 GLuint gGraphicsPipelineObject = 0;
 
-GLint gVertOffsetLoc  = 0;
-GLint gHoriOffsetLoc  = 0;
-GLint gDepthOffsetLoc = 0;
+// GLint gVertOffsetLoc  = 0;
+// GLint gHoriOffsetLoc  = 0;
+// GLint gDepthOffsetLoc = 0;
+GLint gModelMatrixLoc = 0;
 
 bool gRunning = true;
 
-float g_uVertOffset  = 0.0f;
-float g_uHoriOffset  = 0.0f;
-float g_uDepthOffset = 0.0f;
+float gVertOffset  = 0.0f;
+float gHoriOffset  = 0.0f;
+float gDepthOffset = 0.0f;
 
 const Uint8 *gState;
 
@@ -218,19 +224,9 @@ void createGraphicsPipeline() {
 }
 
 void findUniformVars() {
-    gVertOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uVertOffset");
-    if(gVertOffsetLoc < 0) {
-        std::cout << "Error: uVertOffset not found in GPU memory" << std::endl;
-    }
-
-    gHoriOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uHoriOffset");
-    if(gHoriOffsetLoc < 0) {
-        std::cout << "Error: uHoriOffset not found in GPU memory" << std::endl;
-    }
-
-    gDepthOffsetLoc = glGetUniformLocation(gGraphicsPipelineObject, "uDepthOffset");
-    if(gDepthOffsetLoc < 0) {
-        std::cout << "Error: uDepthOffset not found in GPU memory" << std::endl;
+    gModelMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uModelMatrix");
+    if(gModelMatrixLoc < 0) {
+        std::cout << "Error: uModelMatrix not found in GPU memory" << std::endl;
     }
 }
 
@@ -244,9 +240,9 @@ void input() {
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        g_uVertOffset = 0.0f;
-                        g_uHoriOffset = 0.0f;
-                        g_uDepthOffset = 0.0f;
+                        gVertOffset = 0.0f;
+                        gHoriOffset = 0.0f;
+                        gDepthOffset = 0.0f;
                         break;
                     default:
                         break;
@@ -258,28 +254,28 @@ void input() {
     }
 
     if(gState[SDL_SCANCODE_UP]) {
-        g_uVertOffset += 0.00025f;
+        gVertOffset += 0.00025f;
         //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_DOWN]) {
-        g_uVertOffset -= 0.00025f;
+        gVertOffset -= 0.00025f;
         //std::cout << "g_uVertOffset: " << g_uVertOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_RIGHT]) {
-        g_uHoriOffset += 0.00025f;
+        gHoriOffset += 0.00025f;
         //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_LEFT]) {
-        g_uHoriOffset -= 0.00025f;
+        gHoriOffset -= 0.00025f;
         //std::cout << "g_uHoriOffset: " << g_uHoriOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_W]) {
-        g_uDepthOffset += 0.00025f;
-        std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
+        gDepthOffset += 0.00025f;
+        //std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
     }
     if(gState[SDL_SCANCODE_S]) {
-        g_uDepthOffset -= 0.00025f;
-        std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
+        gDepthOffset -= 0.00025f;
+        //std::cout << "g_uDepthOffset: " << g_uDepthOffset << std::endl;
     }
 }
 
@@ -294,9 +290,9 @@ void predraw() {
 
     glUseProgram(gGraphicsPipelineObject);
 
-    glUniform1f(gVertOffsetLoc, g_uVertOffset);
-    glUniform1f(gHoriOffsetLoc, g_uHoriOffset);
-    glUniform1f(gDepthOffsetLoc, g_uDepthOffset);
+    glm::mat4 translate = glm::translate(   glm::mat4(1.0f), 
+                                            glm::vec3(gHoriOffset, gVertOffset, gDepthOffset));
+    glUniformMatrix4fv(gModelMatrixLoc, 1, GL_FALSE, &translate[0][0]);
 }
 
 void draw() {
