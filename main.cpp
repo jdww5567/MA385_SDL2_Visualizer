@@ -23,12 +23,17 @@ GLint gModelMatrixLoc       = 0;
 GLint gPerspectiveMatrixLoc = 0;
 GLint gRotationMatrixLoc    = 0;
 
-bool gRunning = true;
+bool gRunning  = true;
+bool gLeftDown = false;
 
-float gVertOffset  = 0.0f;
-float gHoriOffset  = 0.0f;
-float gDepthOffset = -3.0f;
-float gRotate      = 0.0f;
+float gVertOffset     = 0.0f;
+float gHoriOffset     = 0.0f;
+float gDepthOffset    = -3.0f;
+float gRotate         = 0.0f;
+float gMouseMovementX = 0.0f;
+float gMouseMovementY = 0.0f;
+float gMouseX         = 0.0f;
+float gMouseY         = 0.0f;
 
 const Uint8 *gState;
 
@@ -284,6 +289,32 @@ void input() {
             case SDL_QUIT:
                 gRunning = false;
                 break;
+            case SDL_MOUSEBUTTONDOWN:
+                switch (e.button.which) {
+                    case SDL_BUTTON_LEFT:
+                        gLeftDown = true;
+                        gMouseY = -e.button.y;
+                        gMouseX = e.button.x;
+                        break;
+                    default:
+                        break;
+                    }
+                break;
+            case SDL_MOUSEMOTION:
+                    if (gLeftDown) {
+                        gMouseMovementY = gMouseY + e.button.y;
+                        gMouseMovementX = gMouseX - e.button.x;
+                    }
+                    break;
+            case SDL_MOUSEBUTTONUP:
+                switch (e.button.which) {
+                    case SDL_BUTTON_LEFT:
+                        gLeftDown = false;
+                        break;
+                    default:
+                        break;
+                }
+                break;
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
@@ -340,17 +371,18 @@ void predraw() {
         glm::mat4(1.0f), 
         glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
     );
-    glm::mat4 rotate = glm::rotate(
-        translate,
-        gRotate,
-        glm::vec3(0, 1, 0)
-    );
     glm::mat4 perspective = glm::perspective(
         glm::radians(45.0f),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
         0.1f,
         10.0f
+    ) * translate;
+    glm::mat4 rotate = glm::rotate(
+        perspective,
+        gRotate,
+        glm::cross(glm::vec3(0, 0, 1), glm::vec3(gMouseMovementX, gMouseMovementY, 0))
     );
+    
 
     glUniformMatrix4fv(gModelMatrixLoc, 1, GL_FALSE, &translate[0][0]);
     glUniformMatrix4fv(gRotationMatrixLoc, 1, GL_FALSE, &rotate[0][0]);

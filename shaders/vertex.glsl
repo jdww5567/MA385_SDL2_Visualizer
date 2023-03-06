@@ -10,7 +10,7 @@ uniform mat4 uPerspectiveMatrix;
 out vec3 vColors;
 
 void main() {
-   vec4 perspectiveRotatedTranslatedPosition = uPerspectiveMatrix * uRotationMatrix * vec4(position, 1.0f);
+   vec4 perspectiveRotatedTranslatedPosition = uRotationMatrix * vec4(position, 1.0f);
 
    gl_Position = perspectiveRotatedTranslatedPosition;
 
