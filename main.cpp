@@ -75,6 +75,7 @@ void setup() {
     std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
     gState = SDL_GetKeyboardState(NULL);
+    glEnable(GL_CULL_FACE);
 }
 
 void vertexSpecification() {
@@ -327,9 +328,6 @@ void input() {
 }
 
 void predraw() {
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -338,13 +336,14 @@ void predraw() {
     glUseProgram(gGraphicsPipelineObject);
 
 
-    glm::mat4 rotate = glm::rotate(
-        gRotate,
-        glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
-    );
     glm::mat4 translate = glm::translate(   
         glm::mat4(1.0f), 
         glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
+    );
+    glm::mat4 rotate = glm::rotate(
+        translate,
+        gRotate,
+        glm::vec3(0, 1, 0)
     );
     glm::mat4 perspective = glm::perspective(
         glm::radians(45.0f),
