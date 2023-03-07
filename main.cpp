@@ -26,7 +26,7 @@ bool gLeftDown = false;
 
 float gVertOffset     = 0.0f;
 float gHoriOffset     = 0.0f;
-float gDepthOffset    = -3.0f;
+float gDepthOffset    = 10.0f;
 float gRotateX         = 0.0f;
 float gRotateY         = 0.0f;
 float gRotateZ         = 0.0f;
@@ -36,6 +36,12 @@ float gPrevMouseMovementX = 0.0f;
 float gPrevMouseMovementY = 0.0f;
 float gMouseX         = 0.0f;
 float gMouseY         = 0.0f;
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+glm::vec3 gCameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f,  -1.0f);
+glm::vec3 gCameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 
 const Uint8 *gState;
@@ -293,6 +299,12 @@ void input() {
                     if (gLeftDown) {
                         gMouseMovementY = gPrevMouseMovementY + gMouseY - e.button.y;
                         gMouseMovementX = gPrevMouseMovementX + e.button.x - gMouseX;
+                        if(gMouseMovementY > 89.0f) {
+                            gMouseMovementY = 89.0f;
+                        }
+                        if(gMouseMovementY < -89.0f) {
+                            gMouseMovementY = -89.0f;
+                        }
                         std::cout << "gMouseY: " << gMouseMovementY << std::endl;
                         std::cout << "gMouseX: " << gMouseMovementX << std::endl;
                     }
@@ -307,7 +319,7 @@ void input() {
                     case SDLK_x:
                         gVertOffset  = 0.0f;
                         gHoriOffset  = 0.0f;
-                        gDepthOffset = -3.0f;
+                        gDepthOffset = 10.0f;
                         gRotateX      = 0.0f;
                         gRotateY      = 0.0f;
                         gRotateZ      = 0.0f;
@@ -325,41 +337,19 @@ void input() {
         }
     }
 
-    if(gState[SDL_SCANCODE_UP]) {
-        gVertOffset += 0.00025f;
+
+    const float cameraSpeed = 0.0025f;
+    if (gState[SDL_SCANCODE_W]) {
+        gCameraPos += cameraSpeed * gCameraFront;
     }
-    if(gState[SDL_SCANCODE_DOWN]) {
-        gVertOffset -= 0.00025f;
+    if (gState[SDL_SCANCODE_S]) {
+        gCameraPos -= cameraSpeed * gCameraFront;
     }
-    if(gState[SDL_SCANCODE_RIGHT]) {
-        gHoriOffset += 0.00025f;
+    if (gState[SDL_SCANCODE_A]) {
+        gCameraPos -= glm::normalize(glm::cross(gCameraFront, gCameraUp)) * cameraSpeed;
     }
-    if(gState[SDL_SCANCODE_LEFT]) {
-        gHoriOffset -= 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_W]) {
-        gDepthOffset += 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_S]) {
-        gDepthOffset -= 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_A]) {
-        gRotateZ += 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_D]) {
-        gRotateZ -= 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_T]) {
-        gRotateX -= 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_G]) {
-        gRotateX += 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_H]) {
-        gRotateY -= 0.00025f;
-    }
-    if(gState[SDL_SCANCODE_F]) {
-        gRotateY += 0.00025f;
+    if (gState[SDL_SCANCODE_D]) {
+        gCameraPos += glm::normalize(glm::cross(gCameraFront, gCameraUp)) * cameraSpeed;
     }
 }
 
@@ -371,9 +361,20 @@ void predraw() {
 
     glUseProgram(gGraphicsPipelineObject);
 
+    
 
-     glm::mat4 view = glm::rotate(
-        glm::mat4(1.0f),
+    
+    
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
+    direction.y = sin(glm::radians(gMouseMovementY));
+    direction.z = sin(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
+    gCameraFront = glm::normalize(direction);
+
+    auto view = glm::lookAt(gCameraPos, gCameraPos + gCameraFront, gCameraUp);
+
+    view = glm::rotate(
+        view,
         gRotateX,
         glm::vec3(1, 0, 0)
     );
@@ -387,15 +388,15 @@ void predraw() {
         gRotateZ,
         glm::vec3(0, 0, 1)
     );
-    view = glm::translate(   
-        view, 
-        glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
-    );
+    // view = glm::translate(   
+    //     view, 
+    //     glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
+    // );
     view = glm::perspective(
         glm::radians(45.0f),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
         0.1f,
-        10.0f
+        100.0f
     ) * view;
 
     glUniformMatrix4fv(gViewMatrixLoc, 1, GL_FALSE, &view[0][0]);
