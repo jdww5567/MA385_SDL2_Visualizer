@@ -3,16 +3,14 @@
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 colors;
 
-uniform mat4 uModelMatrix;
-uniform mat4 uRotationMatrix;
-uniform mat4 uPerspectiveMatrix;
+uniform mat4 uViewMatrix;
 
 out vec3 vColors;
 
 void main() {
-   vec4 perspectiveRotatedTranslatedPosition = uRotationMatrix * vec4(position, 1.0f);
+   vec4 viewPosition = uViewMatrix * vec4(position, 1.0f);
 
-   gl_Position = perspectiveRotatedTranslatedPosition;
+   gl_Position = viewPosition;
 
    vColors = colors;
 }

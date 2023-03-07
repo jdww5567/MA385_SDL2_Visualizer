@@ -19,9 +19,7 @@ GLuint gVertexBufferObject     = 0;
 GLuint gIndexBufferObject      = 0;
 GLuint gGraphicsPipelineObject = 0;
 
-GLint gModelMatrixLoc       = 0;
-GLint gPerspectiveMatrixLoc = 0;
-GLint gRotationMatrixLoc    = 0;
+GLint gViewMatrixLoc = 0;
 
 bool gRunning  = true;
 bool gLeftDown = false;
@@ -29,11 +27,16 @@ bool gLeftDown = false;
 float gVertOffset     = 0.0f;
 float gHoriOffset     = 0.0f;
 float gDepthOffset    = -3.0f;
-float gRotate         = 0.0f;
+float gRotateX         = 0.0f;
+float gRotateY         = 0.0f;
+float gRotateZ         = 0.0f;
 float gMouseMovementX = 0.0f;
 float gMouseMovementY = 0.0f;
+float gPrevMouseMovementX = 0.0f;
+float gPrevMouseMovementY = 0.0f;
 float gMouseX         = 0.0f;
 float gMouseY         = 0.0f;
+
 
 const Uint8 *gState;
 
@@ -47,7 +50,8 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     gWindow = SDL_CreateWindow("MA_385_Project", 
@@ -81,35 +85,36 @@ void setup() {
 
     gState = SDL_GetKeyboardState(NULL);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_MULTISAMPLE);
 }
 
 void vertexSpecification() {
     const std::vector<GLfloat> vertices {
         // 0 Top-Left-Close 
-        -0.5f, 0.5f , 0.0f, // Position
+        -0.5f, 0.5f , 0.5f, // Position
         0.0f , 0.0f , 0.8f, // Color
         // 1 Bottom-Left-Close
-        -0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.5f,
         0.8f , 0.0f , 0.0f,
         // 2 Bottom-Right-Close
-        0.5f , -0.5f, 0.0f,
+        0.5f , -0.5f, 0.5f,
         0.0f , 0.8f , 0.0f,
         // 3 Top-Right-Close
-        0.5f , 0.5f , 0.0f,
-        0.8f , 0.0f , 0.0f,
+        0.5f , 0.5f , 0.5f,
+        0.8f , 0.8f , 0.0f,
 
         // 4 Top-Left-Far
-        -0.5f, 0.5f , -1.0f,
-        0.0f , 0.0f , 0.8f,
+        -0.5f, 0.5f , -0.5f,
+        0.8f , 0.0f , 0.8f,
         // 5 Bottom-Left-Far
-        -0.5f, -0.5f, -1.0f,
-        0.8f , 0.0f , 0.0f,
+        -0.5f, -0.5f, -0.5f,
+        0.0f , 0.0f , 0.0f,
         // 6 Bottom-Right-Far
-        0.5f , -0.5f, -1.0f,
-        0.0f , 0.8f , 0.0f,
+        0.5f , -0.5f, -0.5f,
+        0.0f , 0.8f , 0.8f,
         // 7 Top-Right-Far
-        0.5f , 0.5f , -1.0f,
-        0.8f , 0.0f , 0.0f,
+        0.5f , 0.5f , -0.5f,
+        0.8f , 0.8f , 0.8f,
     };
 
     const std::vector<GLuint> indices {
@@ -266,19 +271,9 @@ void createGraphicsPipeline() {
 }
 
 void findUniformVars() {
-    gModelMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uModelMatrix");
-    if(gModelMatrixLoc < 0) {
-        std::cout << "Error: uModelMatrix not found in GPU memory" << std::endl;
-    }
-
-    gPerspectiveMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uPerspectiveMatrix");
-    if(gPerspectiveMatrixLoc < 0) {
-        std::cout << "Error: uPerspectiveMatrix not found in GPU memory" << std::endl;
-    }
-
-    gRotationMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uRotationMatrix");
-    if(gRotationMatrixLoc < 0) {
-        std::cout << "Error: uRotationMatrix not found in GPU memory" << std::endl;
+    gViewMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uViewMatrix");
+    if(gViewMatrixLoc < 0) {
+        std::cout << "Error: uViewMatrix not found in GPU memory" << std::endl;
     }
 }
 
@@ -290,30 +285,22 @@ void input() {
                 gRunning = false;
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                switch (e.button.which) {
-                    case SDL_BUTTON_LEFT:
-                        gLeftDown = true;
-                        gMouseY = -e.button.y;
-                        gMouseX = e.button.x;
-                        break;
-                    default:
-                        break;
-                    }
+                gLeftDown = true;
+                gMouseY = e.button.y;
+                gMouseX = e.button.x;
                 break;
             case SDL_MOUSEMOTION:
                     if (gLeftDown) {
-                        gMouseMovementY = gMouseY + e.button.y;
-                        gMouseMovementX = gMouseX - e.button.x;
+                        gMouseMovementY = gPrevMouseMovementY + gMouseY - e.button.y;
+                        gMouseMovementX = gPrevMouseMovementX + e.button.x - gMouseX;
+                        std::cout << "gMouseY: " << gMouseMovementY << std::endl;
+                        std::cout << "gMouseX: " << gMouseMovementX << std::endl;
                     }
                     break;
             case SDL_MOUSEBUTTONUP:
-                switch (e.button.which) {
-                    case SDL_BUTTON_LEFT:
-                        gLeftDown = false;
-                        break;
-                    default:
-                        break;
-                }
+                gLeftDown = false;
+                gPrevMouseMovementY = gMouseMovementY;
+                gPrevMouseMovementX = gMouseMovementX;
                 break;
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
@@ -321,7 +308,13 @@ void input() {
                         gVertOffset  = 0.0f;
                         gHoriOffset  = 0.0f;
                         gDepthOffset = -3.0f;
-                        gRotate      = 0.0f;
+                        gRotateX      = 0.0f;
+                        gRotateY      = 0.0f;
+                        gRotateZ      = 0.0f;
+                        gMouseMovementY = 0.0f;
+                        gMouseMovementX = 0.0f;
+                        gPrevMouseMovementY = 0.0f;
+                        gPrevMouseMovementX = 0.0f;
                         break;
                     default:
                         break;
@@ -351,10 +344,22 @@ void input() {
         gDepthOffset -= 0.00025f;
     }
     if(gState[SDL_SCANCODE_A]) {
-        gRotate += 0.00025f;
+        gRotateZ += 0.00025f;
     }
     if(gState[SDL_SCANCODE_D]) {
-        gRotate -= 0.00025f;
+        gRotateZ -= 0.00025f;
+    }
+    if(gState[SDL_SCANCODE_T]) {
+        gRotateX -= 0.00025f;
+    }
+    if(gState[SDL_SCANCODE_G]) {
+        gRotateX += 0.00025f;
+    }
+    if(gState[SDL_SCANCODE_H]) {
+        gRotateY -= 0.00025f;
+    }
+    if(gState[SDL_SCANCODE_F]) {
+        gRotateY += 0.00025f;
     }
 }
 
@@ -367,26 +372,33 @@ void predraw() {
     glUseProgram(gGraphicsPipelineObject);
 
 
-    glm::mat4 translate = glm::translate(   
-        glm::mat4(1.0f), 
+     glm::mat4 view = glm::rotate(
+        glm::mat4(1.0f),
+        gRotateX,
+        glm::vec3(1, 0, 0)
+    );
+    view = glm::rotate(
+        view,
+        gRotateY,
+        glm::vec3(0, 1, 0)
+    );
+    view = glm::rotate(
+        view,
+        gRotateZ,
+        glm::vec3(0, 0, 1)
+    );
+    view = glm::translate(   
+        view, 
         glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
     );
-    glm::mat4 perspective = glm::perspective(
+    view = glm::perspective(
         glm::radians(45.0f),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
         0.1f,
         10.0f
-    ) * translate;
-    glm::mat4 rotate = glm::rotate(
-        perspective,
-        gRotate,
-        glm::cross(glm::vec3(0, 0, 1), glm::vec3(gMouseMovementX, gMouseMovementY, 0))
-    );
-    
+    ) * view;
 
-    glUniformMatrix4fv(gModelMatrixLoc, 1, GL_FALSE, &translate[0][0]);
-    glUniformMatrix4fv(gRotationMatrixLoc, 1, GL_FALSE, &rotate[0][0]);
-    glUniformMatrix4fv(gPerspectiveMatrixLoc, 1, GL_FALSE, &perspective[0][0]);
+    glUniformMatrix4fv(gViewMatrixLoc, 1, GL_FALSE, &view[0][0]);
 }
 
 void draw() {
