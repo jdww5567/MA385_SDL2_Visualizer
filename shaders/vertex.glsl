@@ -9,7 +9,7 @@ out vec3 vColors;
 
 void main() {
    vec4 viewPosition = uViewMatrix * vec4(position, 1.0f);
-
+   
    gl_Position = viewPosition;
 
    vColors = colors;

@@ -1,8 +1,8 @@
-#include <SDL2/SDL.h>                   // SDL
-#include <glad/glad.h>                  // openGL definitions
-#include <glm/glm.hpp>                  // glm
-#include <glm/gtc/matrix_transform.hpp> // transformation matrices
-#include <glm/gtx/transform.hpp>         // rotation matrix
+#include <SDL2/SDL.h>
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
 
 #include <iostream>
 #include <vector>
@@ -30,19 +30,17 @@ float gDepthOffset    = 10.0f;
 float gRotateX         = 0.0f;
 float gRotateY         = 0.0f;
 float gRotateZ         = 0.0f;
-float gMouseMovementX = 0.0f;
+float gMouseMovementX = -90.0f;
 float gMouseMovementY = 0.0f;
-float gPrevMouseMovementX = 0.0f;
+float gPrevMouseMovementX = -90.0f;
 float gPrevMouseMovementY = 0.0f;
 float gMouseX         = 0.0f;
 float gMouseY         = 0.0f;
-float yaw = -90.0f;
-float pitch = 0.0f;
+float gAxesWidth      = 0.005;
 
 glm::vec3 gCameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
 glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f,  -1.0f);
 glm::vec3 gCameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-
 
 const Uint8 *gState;
 
@@ -57,7 +55,7 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     gWindow = SDL_CreateWindow("MA_385_Project", 
@@ -90,63 +88,64 @@ void setup() {
     std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
     gState = SDL_GetKeyboardState(NULL);
-    glEnable(GL_CULL_FACE);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_LINE_SMOOTH);
 }
 
 void vertexSpecification() {
     const std::vector<GLfloat> vertices {
-        // 0 Top-Left-Close 
-        -0.5f, 0.5f , 0.5f, // Position
-        0.0f , 0.0f , 0.8f, // Color
-        // 1 Bottom-Left-Close
-        -0.5f, -0.5f, 0.5f,
+        // 0 -x axis -z
+        -5.0f, -gAxesWidth , 0.0f, // Position
+        0.8f , 0.0f , 0.0f,    // Color
+        // 1 -x axis +z
+        -5.0f, gAxesWidth , 0.0f,
         0.8f , 0.0f , 0.0f,
-        // 2 Bottom-Right-Close
-        0.5f , -0.5f, 0.5f,
-        0.0f , 0.8f , 0.0f,
-        // 3 Top-Right-Close
-        0.5f , 0.5f , 0.5f,
-        0.8f , 0.8f , 0.0f,
+        // 2 +x axis -z
+        5.0f, -gAxesWidth, 0.0f,
+        0.8f, 0.0f, 0.0f,
+        // 3 +x axis +z
+        5.0f, gAxesWidth, 0.0f,
+        0.8f, 0.0f, 0.0f,
 
-        // 4 Top-Left-Far
-        -0.5f, 0.5f , -0.5f,
-        0.8f , 0.0f , 0.8f,
-        // 5 Bottom-Left-Far
-        -0.5f, -0.5f, -0.5f,
-        0.0f , 0.0f , 0.0f,
-        // 6 Bottom-Right-Far
-        0.5f , -0.5f, -0.5f,
-        0.0f , 0.8f , 0.8f,
-        // 7 Top-Right-Far
-        0.5f , 0.5f , -0.5f,
-        0.8f , 0.8f , 0.8f,
+        // 4 -y axis -z
+        0.0f, -gAxesWidth , -5.0f, 
+        0.0f, 0.8f , 0.0f,     
+        // 5 -y axis +z
+        0.0f, gAxesWidth , -5.0f,
+        0.0f , 0.8f , 0.0f,
+        // 6 +y axis -z
+        0.0f, -gAxesWidth , 5.0f,
+        0.0f , 0.8f , 0.0f,
+        // 7 +y axis +z
+        0.0f, gAxesWidth , 5.0f,
+        0.0f , 0.8f , 0.0f,
+
+        // 8 -z axis -x
+        -gAxesWidth, -5.0f , 0.0f,
+        0.0f,  0.0f, 0.8f,     
+        // 9 -z axis +x
+        gAxesWidth, -5.0f , 0.0f, 
+        0.0f,  0.0f, 0.8f,    
+        // 10 +z axis -x
+        -gAxesWidth, 5.0f , 0.0f, 
+        0.0f,  0.0f, 0.8f,    
+        // 11 +z axis +x
+        gAxesWidth, 5.0f , 0.0f, 
+        0.0f,  0.0f, 0.8f,    
     };
 
     const std::vector<GLuint> indices {
-        // Front
-        0, 1, 2, // Triangle
-        2, 3, 0,
+       // x axis
+       0, 1, 2,
+       2, 3, 0,
 
-        // Left
-        4, 5, 1,
-        1, 0, 4,
+       // y axis
+       4, 5, 6,
+       6, 7, 4,
 
-        // Back
-        7, 6, 5,
-        5, 4, 7,
-
-        // Right
-        3, 2, 6,
-        6, 7, 3,
-
-        // Top
-        4, 0, 3,
-        3, 7, 4,
-
-        // Bottom
-        1, 5, 6,
-        6, 2, 1
+       // z axis
+       8, 9, 10,
+       10, 11, 8
     };
 
     // VAO
@@ -193,63 +192,63 @@ void vertexSpecification() {
 }
 
 GLuint compileShader(GLuint type, const std::string& source) {
-        GLuint shaderObject;
+    GLuint shaderObject;
+
+    if(type == GL_VERTEX_SHADER) {
+        shaderObject = glCreateShader(GL_VERTEX_SHADER);
+    } else if(type == GL_FRAGMENT_SHADER) {
+        shaderObject = glCreateShader(GL_FRAGMENT_SHADER);
+    }
+
+    const char* src = source.c_str();
+    glShaderSource(shaderObject, 1, &src, nullptr);
+    glCompileShader(shaderObject);
+
+    GLint status = 0;
+    glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
+
+    if (!status) {
+        GLint logSize = 0;
+        glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &logSize);
+
+        std::vector<GLchar> errorLog(logSize);
+        glGetShaderInfoLog(shaderObject, logSize, &logSize, &errorLog[0]);
 
         if(type == GL_VERTEX_SHADER) {
-            shaderObject = glCreateShader(GL_VERTEX_SHADER);
+            std::cout << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
+            << errorLog.data() << std::endl;
         } else if(type == GL_FRAGMENT_SHADER) {
-            shaderObject = glCreateShader(GL_FRAGMENT_SHADER);
+            std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
+            << errorLog.data() << std::endl;
         }
 
-        const char* src = source.c_str();
-        glShaderSource(shaderObject, 1, &src, nullptr);
-        glCompileShader(shaderObject);
+        glDeleteShader(shaderObject);
 
-        GLint status = 0;
-        glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
+        return 0;
+    }
 
-        if (!status) {
-            GLint logSize = 0;
-            glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &logSize);
-
-            std::vector<GLchar> errorLog(logSize);
-            glGetShaderInfoLog(shaderObject, logSize, &logSize, &errorLog[0]);
-
-            if(type == GL_VERTEX_SHADER) {
-                std::cout << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
-                << errorLog.data() << std::endl;
-            } else if(type == GL_FRAGMENT_SHADER) {
-                std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
-                << errorLog.data() << std::endl;
-            }
-
-            glDeleteShader(shaderObject);
-
-            return 0;
-        }
-
-        return shaderObject;
+    return shaderObject;
  }
 
  GLuint createShaderProgram(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) {
-        GLuint programObject = glCreateProgram();
+    GLuint programObject = glCreateProgram();
 
-        GLuint vertexShader   = compileShader(GL_VERTEX_SHADER  , vertexShaderSource  );
-        GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+    GLuint vertexShader   = compileShader(GL_VERTEX_SHADER  , vertexShaderSource  );
+    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
-        glAttachShader(programObject, vertexShader);
-        glAttachShader(programObject, fragmentShader);
-        glLinkProgram(programObject);
+    glAttachShader(programObject, vertexShader);
+    glAttachShader(programObject, fragmentShader);
+    glLinkProgram(programObject);
 
-        glValidateProgram(programObject);
+    glValidateProgram(programObject);
 
-        glDetachShader(programObject, vertexShader);
-        glDetachShader(programObject, vertexShader);
+    glDetachShader(programObject, vertexShader);
+    glDetachShader(programObject, vertexShader);
 
-        glDeleteShader(vertexShader);
-        glDeleteShader(vertexShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(vertexShader);
 
-        return programObject;
+    return programObject;
 }
 
 std::string loadShader(const std::string& fileName) {
@@ -292,13 +291,13 @@ void input() {
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 gLeftDown = true;
-                gMouseY = e.button.y;
-                gMouseX = e.button.x;
+                gMouseY = e.button.y + gPrevMouseMovementY;
+                gMouseX = e.button.x - gPrevMouseMovementX;
                 break;
             case SDL_MOUSEMOTION:
                     if (gLeftDown) {
-                        gMouseMovementY = gPrevMouseMovementY + gMouseY - e.button.y;
-                        gMouseMovementX = gPrevMouseMovementX + e.button.x - gMouseX;
+                        gMouseMovementY = gMouseY - e.button.y;
+                        gMouseMovementX = e.button.x - gMouseX;
                         if(gMouseMovementY > 89.0f) {
                             gMouseMovementY = 89.0f;
                         }
@@ -355,15 +354,11 @@ void input() {
 
 void predraw() {
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     glUseProgram(gGraphicsPipelineObject);
-
-    
-
-    
     
     glm::vec3 direction;
     direction.x = cos(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
@@ -388,10 +383,6 @@ void predraw() {
         gRotateZ,
         glm::vec3(0, 0, 1)
     );
-    // view = glm::translate(   
-    //     view, 
-    //     glm::vec3(gHoriOffset, gVertOffset, gDepthOffset)
-    // );
     view = glm::perspective(
         glm::radians(45.0f),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
@@ -406,7 +397,7 @@ void draw() {
     glBindVertexArray(gVertexArrayObject);
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
 
-    glDrawElements(GL_TRIANGLES, 48, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
 
     glUseProgram(0);
 }
