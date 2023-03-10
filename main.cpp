@@ -200,9 +200,9 @@ void vertexSpecification() {
 GLuint compileShader(GLuint type, const std::string& source) {
     GLuint shaderObject;
 
-    if(type == GL_VERTEX_SHADER) {
+    if (type == GL_VERTEX_SHADER) {
         shaderObject = glCreateShader(GL_VERTEX_SHADER);
-    } else if(type == GL_FRAGMENT_SHADER) {
+    } else if (type == GL_FRAGMENT_SHADER) {
         shaderObject = glCreateShader(GL_FRAGMENT_SHADER);
     }
 
@@ -220,10 +220,10 @@ GLuint compileShader(GLuint type, const std::string& source) {
         std::vector<GLchar> errorLog(logSize);
         glGetShaderInfoLog(shaderObject, logSize, &logSize, &errorLog[0]);
 
-        if(type == GL_VERTEX_SHADER) {
+        if (type == GL_VERTEX_SHADER) {
             std::cout << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
             << errorLog.data() << std::endl;
-        } else if(type == GL_FRAGMENT_SHADER) {
+        } else if (type == GL_FRAGMENT_SHADER) {
             std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
             << errorLog.data() << std::endl;
         }
@@ -263,8 +263,8 @@ std::string loadShader(const std::string& fileName) {
 
     std::ifstream file(fileName.c_str());
 
-    if(file.is_open()) {
-        while(std::getline(file, line)) {
+    if (file.is_open()) {
+        while (std::getline(file, line)) {
             src += line + '\n';
         }
 
@@ -283,7 +283,7 @@ void createGraphicsPipeline() {
 
 void findUniformVars() {
     gViewMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uViewMatrix");
-    if(gViewMatrixLoc < 0) {
+    if (gViewMatrixLoc < 0) {
         std::cout << "Error: uViewMatrix not found in GPU memory" << std::endl;
     }
 }
@@ -304,10 +304,10 @@ void input() {
                     if (gLeftDown) {
                         gMouseMovementY = gMouseY - e.button.y;
                         gMouseMovementX = e.button.x - gMouseX;
-                        if(gMouseMovementY > 89.0f) {
+                        if (gMouseMovementY > 89.0f) {
                             gMouseMovementY = 89.0f;
                         }
-                        if(gMouseMovementY < -89.0f) {
+                        if (gMouseMovementY < -89.0f) {
                             gMouseMovementY = -89.0f;
                         }
                         std::cout << "gMouseY: " << gMouseMovementY << std::endl;
