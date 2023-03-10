@@ -24,22 +24,19 @@ GLint gViewMatrixLoc = 0;
 bool gRunning  = true;
 bool gLeftDown = false;
 
-float gVertOffset     = 0.0f;
-float gHoriOffset     = 0.0f;
-float gDepthOffset    = 10.0f;
-float gRotateX         = 0.0f;
-float gRotateY         = 0.0f;
-float gRotateZ         = 0.0f;
-float gMouseMovementX = -90.0f;
-float gMouseMovementY = 0.0f;
+float gVertOffset         =  0.0f;
+float gHoriOffset         =  0.0f;
+float gDepthOffset        =  10.0f;
+float gMouseMovementX     = -90.0f;
+float gMouseMovementY     =  0.0f;
 float gPrevMouseMovementX = -90.0f;
-float gPrevMouseMovementY = 0.0f;
-float gMouseX         = 0.0f;
-float gMouseY         = 0.0f;
-float gAxesWidth      = 0.005;
+float gPrevMouseMovementY =  0.0f;
+float gMouseX             =  0.0f;
+float gMouseY             =  0.0f;
+float gAxesWidth          =  0.005;
 
 glm::vec3 gCameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f,  -1.0f);
+glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 gCameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 const Uint8 *gState;
@@ -58,12 +55,14 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    gWindow = SDL_CreateWindow("MA_385_Project", 
-                                SDL_WINDOWPOS_UNDEFINED, 
-                                SDL_WINDOWPOS_UNDEFINED, 
-                                SCREEN_WIDTH, 
-                                SCREEN_HEIGHT, 
-                                SDL_WINDOW_OPENGL);
+    gWindow = SDL_CreateWindow(
+        "MA_385_Project", 
+        SDL_WINDOWPOS_UNDEFINED, 
+        SDL_WINDOWPOS_UNDEFINED, 
+        SCREEN_WIDTH, 
+        SCREEN_HEIGHT, 
+        SDL_WINDOW_OPENGL
+    );
     if (!gWindow) {
         std::cout << "Error: Failed to create window\nSDL Error: " 
                 << SDL_GetError() << std::endl;
@@ -89,63 +88,62 @@ void setup() {
 
     gState = SDL_GetKeyboardState(NULL);
     glEnable(GL_MULTISAMPLE);
-    glEnable(GL_LINE_SMOOTH);
 }
 
 void vertexSpecification() {
     const std::vector<GLfloat> vertices {
         // 0 -x axis -z
-        -5.0f, -gAxesWidth , 0.0f, // Position
-        0.8f , 0.0f , 0.0f,    // Color
+        -5.0f, -gAxesWidth,  0.0f, // Position
+         0.8f,  0.0f,        0.0f,    // Color
         // 1 -x axis +z
-        -5.0f, gAxesWidth , 0.0f,
-        0.8f , 0.0f , 0.0f,
+        -5.0f,  gAxesWidth,  0.0f,
+         0.8f,  0.0f,        0.0f,
         // 2 +x axis -z
-        5.0f, -gAxesWidth, 0.0f,
-        0.8f, 0.0f, 0.0f,
+         5.0f, -gAxesWidth,  0.0f,
+         0.8f,  0.0f,        0.0f,
         // 3 +x axis +z
-        5.0f, gAxesWidth, 0.0f,
-        0.8f, 0.0f, 0.0f,
+         5.0f,  gAxesWidth,  0.0f,
+         0.8f,  0.0f,        0.0f,
 
         // 4 -y axis -z
-        0.0f, -gAxesWidth , -5.0f, 
-        0.0f, 0.8f , 0.0f,     
+         0.0f, -gAxesWidth, -5.0f, 
+         0.0f,  0.8f,        0.0f,     
         // 5 -y axis +z
-        0.0f, gAxesWidth , -5.0f,
-        0.0f , 0.8f , 0.0f,
+         0.0f,  gAxesWidth, -5.0f,
+         0.0f,  0.8f,        0.0f,
         // 6 +y axis -z
-        0.0f, -gAxesWidth , 5.0f,
-        0.0f , 0.8f , 0.0f,
+         0.0f, -gAxesWidth,  5.0f,
+         0.0f,  0.8f,        0.0f,
         // 7 +y axis +z
-        0.0f, gAxesWidth , 5.0f,
-        0.0f , 0.8f , 0.0f,
+         0.0f,  gAxesWidth,  5.0f,
+         0.0f,  0.8f,        0.0f,
 
         // 8 -z axis -x
-        -gAxesWidth, -5.0f , 0.0f,
-        0.0f,  0.0f, 0.8f,     
+        -gAxesWidth, -5.0f,  0.0f,
+         0.0f,        0.0f,  0.8f,     
         // 9 -z axis +x
-        gAxesWidth, -5.0f , 0.0f, 
-        0.0f,  0.0f, 0.8f,    
+         gAxesWidth, -5.0f,  0.0f, 
+         0.0f,        0.0f,  0.8f,    
         // 10 +z axis -x
-        -gAxesWidth, 5.0f , 0.0f, 
-        0.0f,  0.0f, 0.8f,    
+        -gAxesWidth,  5.0f,  0.0f, 
+         0.0f,        0.0f,  0.8f,    
         // 11 +z axis +x
-        gAxesWidth, 5.0f , 0.0f, 
-        0.0f,  0.0f, 0.8f,    
+         gAxesWidth,  5.0f,  0.0f, 
+         0.0f,        0.0f,  0.8f,    
     };
 
     const std::vector<GLuint> indices {
        // x axis
-       0, 1, 2,
-       2, 3, 0,
+        0,  1,  2,
+        2,  3,  0,
 
        // y axis
-       4, 5, 6,
-       6, 7, 4,
+        4,  5,  6,
+        6,  7,  4,
 
        // z axis
-       8, 9, 10,
-       10, 11, 8
+        8,  9, 10,
+       10, 11,  8
     };
 
     // VAO
@@ -155,36 +153,44 @@ void vertexSpecification() {
     // VBO
     glGenBuffers(1, &gVertexBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, 
-                vertices.size() * sizeof(GLfloat),
-                vertices.data(), 
-                GL_STATIC_DRAW);
+    glBufferData(
+        GL_ARRAY_BUFFER, 
+        vertices.size() * sizeof(GLfloat),
+        vertices.data(), 
+        GL_STATIC_DRAW
+    );
 
     // IBO
     glGenBuffers(1, &gIndexBufferObject);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                indices.size() * sizeof(GLint),
-                indices.data(), 
-                GL_STATIC_DRAW);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        indices.size() * sizeof(GLint),
+        indices.data(), 
+        GL_STATIC_DRAW
+    );
 
     // Position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 
-                        3, 
-                        GL_FLOAT, 
-                        GL_FALSE, 
-                        sizeof(GLfloat) * 6, 
-                        (GLvoid*)0);
+    glVertexAttribPointer(
+        0, 
+        3, 
+        GL_FLOAT, 
+        GL_FALSE, 
+        sizeof(GLfloat) * 6, 
+        (GLvoid*)0
+    );
 
     // Color
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 
-                        3, 
-                        GL_FLOAT, 
-                        GL_FALSE, 
-                        sizeof(GLfloat) * 6, 
-                        (GLvoid*)(sizeof(GLfloat) * 3));
+    glVertexAttribPointer(
+        1, 
+        3, 
+        GL_FLOAT, 
+        GL_FALSE, 
+        sizeof(GLfloat) * 6, 
+        (GLvoid*)(sizeof(GLfloat) * 3)
+    );
 
     glBindVertexArray(0);
     glDisableVertexAttribArray(0);
@@ -319,9 +325,6 @@ void input() {
                         gVertOffset  = 0.0f;
                         gHoriOffset  = 0.0f;
                         gDepthOffset = 10.0f;
-                        gRotateX      = 0.0f;
-                        gRotateY      = 0.0f;
-                        gRotateZ      = 0.0f;
                         gMouseMovementY = 0.0f;
                         gMouseMovementX = 0.0f;
                         gPrevMouseMovementY = 0.0f;
@@ -368,21 +371,6 @@ void predraw() {
 
     auto view = glm::lookAt(gCameraPos, gCameraPos + gCameraFront, gCameraUp);
 
-    view = glm::rotate(
-        view,
-        gRotateX,
-        glm::vec3(1, 0, 0)
-    );
-    view = glm::rotate(
-        view,
-        gRotateY,
-        glm::vec3(0, 1, 0)
-    );
-    view = glm::rotate(
-        view,
-        gRotateZ,
-        glm::vec3(0, 0, 1)
-    );
     view = glm::perspective(
         glm::radians(45.0f),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
