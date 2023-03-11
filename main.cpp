@@ -24,9 +24,6 @@ GLint gViewMatrixLoc = 0;
 bool gRunning  = true;
 bool gLeftDown = false;
 
-float gVertOffset         =  0.0f;
-float gHoriOffset         =  0.0f;
-float gDepthOffset        =  10.0f;
 float gMouseMovementX     = -90.0f;
 float gMouseMovementY     =  0.0f;
 float gPrevMouseMovementX = -90.0f;
@@ -35,7 +32,7 @@ float gMouseX             =  0.0f;
 float gMouseY             =  0.0f;
 float gAxesWidth          =  0.005;
 
-glm::vec3 gCameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 gCameraPos   = glm::vec3(3.0f, 4.0f,  7.0f);
 glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 gCameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
@@ -91,10 +88,17 @@ void setup() {
 }
 
 void vertexSpecification() {
-    const std::vector<GLfloat> vertices {
+    GLfloat data[11][11];
+    for (int i = 0; i < 11; i++) {
+        for (int j = 0; j < 11; j++) {
+            data[i][j] = (GLfloat)((j - 5) + (i - 5)); 
+        }
+    }
+
+    std::vector<GLfloat> vertices {
         // 0 -x axis -z
         -5.0f, -gAxesWidth,  0.0f, // Position
-         0.8f,  0.0f,        0.0f,    // Color
+         0.8f,  0.0f,        0.0f, // Color
         // 1 -x axis +z
         -5.0f,  gAxesWidth,  0.0f,
          0.8f,  0.0f,        0.0f,
@@ -132,7 +136,19 @@ void vertexSpecification() {
          0.0f,        0.0f,  0.8f,    
     };
 
-    const std::vector<GLuint> indices {
+    for (int i = 0; i < 11; i++) {
+        for (int j = 0; j < 11; j++) {
+            vertices.vector::push_back((GLfloat)(i - 5));    // x
+            vertices.vector::push_back((GLfloat)data[i][j]); // z
+            vertices.vector::push_back((GLfloat)(j - 5));    // y
+
+            vertices.vector::push_back((GLfloat)0);                               // r
+            vertices.vector::push_back((GLfloat)((1 - data[i][j]) / data[i][j])); // g
+            vertices.vector::push_back((GLfloat)((0 + data[i][j]) / data[i][j])); // b
+        }
+    }
+
+    std::vector<GLuint> indices {
        // x axis
         0,  1,  2,
         2,  3,  0,
@@ -143,8 +159,22 @@ void vertexSpecification() {
 
        // z axis
         8,  9, 10,
-       10, 11,  8
+       10, 11,  8,
     };
+
+    // for (int i = 0; i < 11; i++) {
+    //     for (int j = 0; j < 11; j++) {
+    //         indices.vector::push_back(i + j + 12);            // top left
+    //         indices.vector::push_back(i + (j + 1) + 12);      // bottom left
+    //         indices.vector::push_back(i + j + 12 + 11);       // top right
+    //         indices.vector::push_back(i + (j + 1) + 12 + 11); // bottom right
+    //         indices.vector::push_back(i + (j + 1) + 12);      // bottom left
+    //     }
+    // }
+
+    for (int i = 12; i <= 132; i++) {
+        indices.vector::push_back(i);
+    }
 
     // VAO
     glGenVertexArrays(1, &gVertexArrayObject);
@@ -322,9 +352,6 @@ void input() {
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        gVertOffset  = 0.0f;
-                        gHoriOffset  = 0.0f;
-                        gDepthOffset = 10.0f;
                         gMouseMovementY = 0.0f;
                         gMouseMovementX = 0.0f;
                         gPrevMouseMovementY = 0.0f;
@@ -340,7 +367,7 @@ void input() {
     }
 
 
-    const float cameraSpeed = 0.0025f;
+    const float cameraSpeed = 0.00125f;
     if (gState[SDL_SCANCODE_W]) {
         gCameraPos += cameraSpeed * gCameraFront;
     }
@@ -364,17 +391,17 @@ void predraw() {
     glUseProgram(gGraphicsPipelineObject);
     
     glm::vec3 direction;
-    direction.x = cos(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
-    direction.y = sin(glm::radians(gMouseMovementY));
-    direction.z = sin(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
+    direction.x = cos(glm::radians(gMouseMovementX - 20)) * cos(glm::radians(gMouseMovementY - 25));
+    direction.y = sin(glm::radians(gMouseMovementY - 25));
+    direction.z = sin(glm::radians(gMouseMovementX - 20)) * cos(glm::radians(gMouseMovementY - 25));
     gCameraFront = glm::normalize(direction);
 
     auto view = glm::lookAt(gCameraPos, gCameraPos + gCameraFront, gCameraUp);
 
     view = glm::perspective(
-        glm::radians(45.0f),
+        glm::radians(90.0f),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
-        0.1f,
+        0.01f,
         100.0f
     ) * view;
 
@@ -385,7 +412,7 @@ void draw() {
     glBindVertexArray(gVertexArrayObject);
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
 
-    glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 300, GL_UNSIGNED_INT, 0);
 
     glUseProgram(0);
 }
