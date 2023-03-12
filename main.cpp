@@ -26,17 +26,80 @@ bool gLeftDown = false;
 
 float gMouseMovementX     = -90.0f;
 float gMouseMovementY     =  0.0f;
-float gPrevMouseMovementX = -90.0f;
-float gPrevMouseMovementY =  0.0f;
+float gPrevMouseMovementX = -110.0f;
+float gPrevMouseMovementY = -25.0f;
 float gMouseX             =  0.0f;
 float gMouseY             =  0.0f;
 float gAxesWidth          =  0.005;
-
-glm::vec3 gCameraPos   = glm::vec3(3.0f, 4.0f,  7.0f);
+float gXAngle = 0;
+float gXY = 0;
+float gXZ = 0;
+float gZAngle = 0;
+float gZX = 0;
+float gZY = 0;
+float gYAngle = 0;
+float gYZ = 0;
+float gYX = 0;
+glm::vec3 gCameraPos   = glm::vec3(6.0f, 0.0f,  0.0f);
 glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 gCameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 const Uint8 *gState;
+
+std::vector<GLfloat> vertices {
+        // 0 -x axis -y
+        -5.0f, -gAxesWidth,  0.0f, // Position
+         0.1f,  0.1f,        0.1f, // Color
+        // 1 -x axis +y
+        -5.0f,  gAxesWidth,  0.0f,
+         0.1f,  0.1f,        0.1f,
+        // 2 +x axis -y
+         5.0f, -gAxesWidth,  0.0f,
+         0.1f,  0.1f,        0.1f,
+        // 3 +x axis +y
+         5.0f,  gAxesWidth,  0.0f,
+         0.1f,  0.1f,        0.1f,
+
+        // 4 -z axis -y
+         0.0f, -gAxesWidth, -5.0f, 
+         0.1f,  0.1f,        0.1f,     
+        // 5 -z axis +y
+         0.0f,  gAxesWidth, -5.0f,
+         0.1f,  0.1f,        0.1f,
+        // 6 +z axis -y
+         0.0f, -gAxesWidth,  5.0f,
+         0.1f,  0.1f,        0.1f,
+        // 7 +z axis +y
+         0.0f,  gAxesWidth,  5.0f,
+         0.1f,  0.1f,        0.1f,
+
+        // 8 -y axis -x
+        -gAxesWidth, -5.0f,  0.0f,
+         0.1f,        0.1f,  0.1f,     
+        // 9 -y axis +x
+         gAxesWidth, -5.0f,  0.0f, 
+         0.1f,        0.1f,  0.1f,    
+        // 10 +y axis -x
+        -gAxesWidth,  5.0f,  0.0f, 
+         0.1f,        0.1f,  0.1f,    
+        // 11 +y axis +x
+         gAxesWidth,  5.0f,  0.0f, 
+         0.1f,        0.1f,  0.1f,    
+};
+
+std::vector<GLuint> indices {
+       // x axis
+        0,  1,  2,
+        2,  3,  0,
+
+       // z axis
+        4,  5,  6,
+        6,  7,  4,
+
+       // y axis
+        8,  9, 10,
+       10, 11,  8,
+};
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -85,6 +148,9 @@ void setup() {
 
     gState = SDL_GetKeyboardState(NULL);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_DEPTH_TEST); 
+    glClearColor(0.859f, 0.765f, 0.604f, 1.0f);
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void vertexSpecification() {
@@ -94,47 +160,6 @@ void vertexSpecification() {
             data[i][j] = (GLfloat)((j - 5) + (i - 5)); 
         }
     }
-
-    std::vector<GLfloat> vertices {
-        // 0 -x axis -z
-        -5.0f, -gAxesWidth,  0.0f, // Position
-         0.8f,  0.0f,        0.0f, // Color
-        // 1 -x axis +z
-        -5.0f,  gAxesWidth,  0.0f,
-         0.8f,  0.0f,        0.0f,
-        // 2 +x axis -z
-         5.0f, -gAxesWidth,  0.0f,
-         0.8f,  0.0f,        0.0f,
-        // 3 +x axis +z
-         5.0f,  gAxesWidth,  0.0f,
-         0.8f,  0.0f,        0.0f,
-
-        // 4 -y axis -z
-         0.0f, -gAxesWidth, -5.0f, 
-         0.0f,  0.8f,        0.0f,     
-        // 5 -y axis +z
-         0.0f,  gAxesWidth, -5.0f,
-         0.0f,  0.8f,        0.0f,
-        // 6 +y axis -z
-         0.0f, -gAxesWidth,  5.0f,
-         0.0f,  0.8f,        0.0f,
-        // 7 +y axis +z
-         0.0f,  gAxesWidth,  5.0f,
-         0.0f,  0.8f,        0.0f,
-
-        // 8 -z axis -x
-        -gAxesWidth, -5.0f,  0.0f,
-         0.0f,        0.0f,  0.8f,     
-        // 9 -z axis +x
-         gAxesWidth, -5.0f,  0.0f, 
-         0.0f,        0.0f,  0.8f,    
-        // 10 +z axis -x
-        -gAxesWidth,  5.0f,  0.0f, 
-         0.0f,        0.0f,  0.8f,    
-        // 11 +z axis +x
-         gAxesWidth,  5.0f,  0.0f, 
-         0.0f,        0.0f,  0.8f,    
-    };
 
     for (int i = 0; i < 11; i++) {
         for (int j = 0; j < 11; j++) {
@@ -147,20 +172,6 @@ void vertexSpecification() {
             vertices.vector::push_back((GLfloat)((0 + data[i][j]) / data[i][j])); // b
         }
     }
-
-    std::vector<GLuint> indices {
-       // x axis
-        0,  1,  2,
-        2,  3,  0,
-
-       // y axis
-        4,  5,  6,
-        6,  7,  4,
-
-       // z axis
-        8,  9, 10,
-       10, 11,  8,
-    };
 
     // for (int i = 0; i < 11; i++) {
     //     for (int j = 0; j < 11; j++) {
@@ -340,8 +351,6 @@ void input() {
                         if (gMouseMovementY < -89.0f) {
                             gMouseMovementY = -89.0f;
                         }
-                        std::cout << "gMouseY: " << gMouseMovementY << std::endl;
-                        std::cout << "gMouseX: " << gMouseMovementX << std::endl;
                     }
                     break;
             case SDL_MOUSEBUTTONUP:
@@ -367,7 +376,7 @@ void input() {
     }
 
 
-    const float cameraSpeed = 0.00125f;
+    const float cameraSpeed = 0.000625f;
     if (gState[SDL_SCANCODE_W]) {
         gCameraPos += cameraSpeed * gCameraFront;
     }
@@ -383,17 +392,50 @@ void input() {
 }
 
 void predraw() {
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     glUseProgram(gGraphicsPipelineObject);
+
+    gXAngle = M_PI/2 - atan(gCameraPos.y / gCameraPos.z);
+    gXY = -gAxesWidth * sin(gXAngle);
+    gXZ = gAxesWidth * cos(gXAngle);
+    vertices[1] = gXY;
+    vertices[2] = gXZ;
+    vertices[7] = -gXY;
+    vertices[8] = -gXZ;
+    vertices[13] = gXY;
+    vertices[14] = gXZ;
+    vertices[19] = -gXY;
+    vertices[20] = -gXZ;
+
+    gZAngle = M_PI/2 - atan(gCameraPos.x / gCameraPos.y);
+    gZX = -gAxesWidth * sin(gZAngle);
+    gZY = gAxesWidth * cos(gZAngle);
+    vertices[24] = gZX;
+    vertices[25] = gZY;
+    vertices[30] = -gZX;
+    vertices[31] = -gZY;
+    vertices[36] = gZX;
+    vertices[37] = gZY;
+    vertices[42] = -gZX;
+    vertices[43] = -gZY;
+
+    gYAngle = M_PI/2 - atan(gCameraPos.z / gCameraPos.x);
+    gYZ = -gAxesWidth * sin(gYAngle);
+    gYX = gAxesWidth * cos(gYAngle);
+    vertices[48] = gYX;
+    vertices[50] = gYZ;
+    vertices[54] = -gYX;
+    vertices[56] = -gYZ;
+    vertices[60] = gYX;
+    vertices[62] = gYZ;
+    vertices[66] = -gYX;
+    vertices[68] = -gYZ;
     
     glm::vec3 direction;
-    direction.x = cos(glm::radians(gMouseMovementX - 20)) * cos(glm::radians(gMouseMovementY - 25));
-    direction.y = sin(glm::radians(gMouseMovementY - 25));
-    direction.z = sin(glm::radians(gMouseMovementX - 20)) * cos(glm::radians(gMouseMovementY - 25));
+    direction.x = cos(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
+    direction.y = sin(glm::radians(gMouseMovementY));
+    direction.z = sin(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
     gCameraFront = glm::normalize(direction);
 
     auto view = glm::lookAt(gCameraPos, gCameraPos + gCameraFront, gCameraUp);
@@ -411,6 +453,12 @@ void predraw() {
 void draw() {
     glBindVertexArray(gVertexArrayObject);
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glBufferData(
+        GL_ARRAY_BUFFER, 
+        vertices.size() * sizeof(GLfloat),
+        vertices.data(), 
+        GL_STATIC_DRAW
+    );
 
     glDrawElements(GL_TRIANGLES, 300, GL_UNSIGNED_INT, 0);
 
