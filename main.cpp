@@ -49,7 +49,7 @@ const Uint8 *gState;
 std::vector<GLfloat> vertices {
         // 0 -x axis -y
         -5.0f, -gAxesWidth,  0.0f, // Position
-         0.1f,  0.1f,        0.1f, // Color
+         0.5f,  0.1f,        0.1f, // Color
         // 1 -x axis +y
         -5.0f,  gAxesWidth,  0.0f,
          0.1f,  0.1f,        0.1f,
@@ -58,11 +58,11 @@ std::vector<GLfloat> vertices {
          0.1f,  0.1f,        0.1f,
         // 3 +x axis +y
          5.0f,  gAxesWidth,  0.0f,
-         0.1f,  0.1f,        0.1f,
+         0.5f,  0.1f,        0.1f,
 
         // 4 -z axis -y
          0.0f, -gAxesWidth, -5.0f, 
-         0.1f,  0.1f,        0.1f,     
+         0.1f,  0.5f,        0.1f,     
         // 5 -z axis +y
          0.0f,  gAxesWidth, -5.0f,
          0.1f,  0.1f,        0.1f,
@@ -71,11 +71,11 @@ std::vector<GLfloat> vertices {
          0.1f,  0.1f,        0.1f,
         // 7 +z axis +y
          0.0f,  gAxesWidth,  5.0f,
-         0.1f,  0.1f,        0.1f,
+         0.1f,  0.5f,        0.1f,
 
         // 8 -y axis -x
         -gAxesWidth, -5.0f,  0.0f,
-         0.1f,        0.1f,  0.1f,     
+         0.1f,        0.1f,  0.5f,     
         // 9 -y axis +x
          gAxesWidth, -5.0f,  0.0f, 
          0.1f,        0.1f,  0.1f,    
@@ -84,7 +84,7 @@ std::vector<GLfloat> vertices {
          0.1f,        0.1f,  0.1f,    
         // 11 +y axis +x
          gAxesWidth,  5.0f,  0.0f, 
-         0.1f,        0.1f,  0.1f,    
+         0.1f,        0.1f,  0.5f,    
 };
 
 std::vector<GLuint> indices {
@@ -113,7 +113,7 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
 
     gWindow = SDL_CreateWindow(
         "MA_385_Project", 
@@ -148,30 +148,29 @@ void setup() {
 
     gState = SDL_GetKeyboardState(NULL);
     glEnable(GL_MULTISAMPLE);
-    glEnable(GL_DEPTH_TEST); 
     glClearColor(0.859f, 0.765f, 0.604f, 1.0f);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void vertexSpecification() {
-    GLfloat data[11][11];
-    for (int i = 0; i < 11; i++) {
-        for (int j = 0; j < 11; j++) {
-            data[i][j] = (GLfloat)((j - 5) + (i - 5)); 
-        }
-    }
+    // GLfloat data[11][11];
+    // for (int i = 0; i < 11; i++) {
+    //     for (int j = 0; j < 11; j++) {
+    //         data[i][j] = (GLfloat)((j - 5) + (i - 5)); 
+    //     }
+    // }
 
-    for (int i = 0; i < 11; i++) {
-        for (int j = 0; j < 11; j++) {
-            vertices.vector::push_back((GLfloat)(i - 5));    // x
-            vertices.vector::push_back((GLfloat)data[i][j]); // z
-            vertices.vector::push_back((GLfloat)(j - 5));    // y
+    // for (int i = 0; i < 11; i++) {
+    //     for (int j = 0; j < 11; j++) {
+    //         vertices.vector::push_back((GLfloat)(i - 5));    // x
+    //         vertices.vector::push_back((GLfloat)data[i][j]); // z
+    //         vertices.vector::push_back((GLfloat)(j - 5));    // y
 
-            vertices.vector::push_back((GLfloat)0);                               // r
-            vertices.vector::push_back((GLfloat)((1 - data[i][j]) / data[i][j])); // g
-            vertices.vector::push_back((GLfloat)((0 + data[i][j]) / data[i][j])); // b
-        }
-    }
+    //         vertices.vector::push_back((GLfloat)0);                               // r
+    //         vertices.vector::push_back((GLfloat)((1 - data[i][j]) / data[i][j])); // g
+    //         vertices.vector::push_back((GLfloat)((0 + data[i][j]) / data[i][j])); // b
+    //     }
+    // }
 
     // for (int i = 0; i < 11; i++) {
     //     for (int j = 0; j < 11; j++) {
@@ -183,9 +182,9 @@ void vertexSpecification() {
     //     }
     // }
 
-    for (int i = 12; i <= 132; i++) {
-        indices.vector::push_back(i);
-    }
+    // for (int i = 12; i <= 132; i++) {
+    //     indices.vector::push_back(i);
+    // }
 
     // VAO
     glGenVertexArrays(1, &gVertexArrayObject);
