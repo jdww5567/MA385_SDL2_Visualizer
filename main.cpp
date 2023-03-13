@@ -32,7 +32,7 @@ float gPrevMouseMovementX = -110.0f;
 float gPrevMouseMovementY = -25.0f;
 float gMouseX = 0.0f;
 float gMouseY = 0.0f;
-float gAxesWidth = 0.015;
+float gAxesWidth = 0.01;
 float gDashLength = 6 * gAxesWidth;
 float gDashWidth = 2 * gAxesWidth;
 float gGridWidth = gAxesWidth / 2;
@@ -514,9 +514,7 @@ void predraw() {
         vertices[i + 13] = gXZ + offset;
         vertices[i + 18] = -gXY;
         vertices[i + 19] = -gXZ + offset;
-    } 
-
-
+    }
 
     gZAngle = M_PI/2 - atan(gCameraPos.x / gCameraPos.y);
     gZX = -gAxesWidth * sin(gZAngle);
@@ -529,7 +527,91 @@ void predraw() {
     vertices[37] = gZY;
     vertices[42] = -gZX;
     vertices[43] = -gZY;
-
+    for (int i = 72; i < 192; i += 24) {
+        int offset = (i - 72) / 24 - 5;
+        gZAngle = M_PI/2 - atan((gCameraPos.x - offset) / gCameraPos.y);
+        gZX = -gDashWidth * sin(gZAngle);
+        gZY = gDashWidth * cos(gZAngle);
+        vertices[i] = gZX + offset;
+        vertices[i + 2] = gZY;
+        vertices[i + 6] = -gZX + offset;
+        vertices[i + 8] = -gZY;
+        vertices[i + 12] = gZX + offset;
+        vertices[i + 14] = gZY;
+        vertices[i + 18] = -gZX + offset;
+        vertices[i + 20] = -gZY;
+    }
+    for (int i = 192; i < 312; i += 24) {
+        int offset = (i - 192) / 24 + 1;
+        gZAngle = M_PI/2 - atan((gCameraPos.x - offset) / gCameraPos.y);
+        gZX = -gDashWidth * sin(gZAngle);
+        gZY = gDashWidth * cos(gZAngle);
+        vertices[i] = gZX + offset;
+        vertices[i + 2] = gZY;
+        vertices[i + 6] = -gZX + offset;
+        vertices[i + 8] = -gZY;
+        vertices[i + 12] = gZX + offset;
+        vertices[i + 14] = gZY;
+        vertices[i + 18] = -gZX + offset;
+        vertices[i + 20] = -gZY;
+    }
+    for (int i = 552; i < 672; i += 24) {
+        int offset = (i - 552) / 24 + 1;
+        gZAngle = M_PI/2 - atan(gCameraPos.x / (gCameraPos.y - offset));
+        gZX = -gDashWidth * sin(gZAngle);
+        gZY = gDashWidth * cos(gZAngle);
+        vertices[i] = gZX;
+        vertices[i + 2] = gZY + offset;
+        vertices[i + 6] = -gZX;
+        vertices[i + 8] = -gZY + offset;
+        vertices[i + 12] = gZX;
+        vertices[i + 14] = gZY + offset;
+        vertices[i + 18] = -gZX;
+        vertices[i + 20] = -gZY + offset;
+    }
+    for (int i = 672; i < 792; i += 24) {
+        int offset = (i - 672) / 24 + 1;
+        gZAngle = M_PI/2 - atan(gCameraPos.x / (gCameraPos.y - offset));
+        gZX = -gDashWidth * sin(gZAngle);
+        gZY = gDashWidth * cos(gZAngle);
+        vertices[i] = gZX;
+        vertices[i + 2] = gZY + offset;
+        vertices[i + 6] = -gZX;
+        vertices[i + 8] = -gZY + offset;
+        vertices[i + 12] = gZX;
+        vertices[i + 14] = gZY + offset;
+        vertices[i + 18] = -gZX;
+        vertices[i + 20] = -gZY + offset;
+    }
+    for (int i = 792; i < 912; i += 24) {
+        int offset = (i - 792) / 24 - 5;
+        gZAngle = M_PI/2 - atan(gCameraPos.x / (gCameraPos.y - offset));
+        gZX = -gGridWidth * sin(gZAngle);
+        gZY = gGridWidth * cos(gZAngle);
+        vertices[i] = gZX + offset;
+        vertices[i + 2] = gZY;
+        vertices[i + 6] = -gZX + offset;
+        vertices[i + 8] = -gZY;
+        vertices[i + 12] = gZX + offset;
+        vertices[i + 14] = gZY;
+        vertices[i + 18] = -gZX + offset;
+        vertices[i + 20] = -gZY;
+    }
+    for (int i = 912; i < 1032; i += 24) {
+        int offset = (i - 912) / 24 + 1;
+        gZAngle = M_PI/2 - atan((gCameraPos.x - offset) / gCameraPos.y);
+        gZX = -gGridWidth * sin(gZAngle);
+        gZY = gGridWidth * cos(gZAngle);
+        vertices[i] = gZX + offset;
+        vertices[i + 2] = gZY;
+        vertices[i + 6] = -gZX + offset;
+        vertices[i + 8] = -gZY;
+        vertices[i + 12] = gZX + offset;
+        vertices[i + 14] = gZY;
+        vertices[i + 18] = -gZX + offset;
+        vertices[i + 20] = -gZY;
+    }
+    
     gYAngle = M_PI/2 - atan(gCameraPos.z / gCameraPos.x);
     gYZ = -gAxesWidth * sin(gYAngle);
     gYX = gAxesWidth * cos(gYAngle);
