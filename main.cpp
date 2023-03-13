@@ -12,25 +12,30 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+#define AXES_LENGTH 5
+
 SDL_Window *gWindow = nullptr;
 
-GLuint gVertexArrayObject      = 0;
-GLuint gVertexBufferObject     = 0;
-GLuint gIndexBufferObject      = 0;
+GLuint gVertexArrayObject = 0;
+GLuint gVertexBufferObject = 0;
+GLuint gIndexBufferObject = 0;
 GLuint gGraphicsPipelineObject = 0;
 
 GLint gViewMatrixLoc = 0;
 
-bool gRunning  = true;
+bool gRunning = true;
 bool gLeftDown = false;
 
-float gMouseMovementX     = -90.0f;
-float gMouseMovementY     =  0.0f;
+float gMouseMovementX = -90.0f;
+float gMouseMovementY = 0.0f;
 float gPrevMouseMovementX = -110.0f;
 float gPrevMouseMovementY = -25.0f;
-float gMouseX             =  0.0f;
-float gMouseY             =  0.0f;
-float gAxesWidth          =  0.005;
+float gMouseX = 0.0f;
+float gMouseY = 0.0f;
+float gAxesWidth = 0.015;
+float gDashLength = 6 * gAxesWidth;
+float gDashWidth = 2 * gAxesWidth;
+float gGridWidth = gAxesWidth / 2;
 float gXAngle = 0;
 float gXY = 0;
 float gXZ = 0;
@@ -40,66 +45,16 @@ float gZY = 0;
 float gYAngle = 0;
 float gYZ = 0;
 float gYX = 0;
-glm::vec3 gCameraPos   = glm::vec3(6.0f, 0.0f,  0.0f);
+
+glm::vec3 gCameraPos = glm::vec3(6.0f, 0.0f,  0.0f);
 glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 gCameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+glm::vec3 gCameraUp = glm::vec3(0.0f, 1.0f,  0.0f);
 
 const Uint8 *gState;
 
-std::vector<GLfloat> vertices {
-        // 0 -x axis -y
-        -5.0f, -gAxesWidth,  0.0f, // Position
-         0.5f,  0.1f,        0.1f, // Color
-        // 1 -x axis +y
-        -5.0f,  gAxesWidth,  0.0f,
-         0.1f,  0.1f,        0.1f,
-        // 2 +x axis -y
-         5.0f, -gAxesWidth,  0.0f,
-         0.1f,  0.1f,        0.1f,
-        // 3 +x axis +y
-         5.0f,  gAxesWidth,  0.0f,
-         0.5f,  0.1f,        0.1f,
+std::vector<GLfloat> vertices {};
 
-        // 4 -z axis -y
-         0.0f, -gAxesWidth, -5.0f, 
-         0.1f,  0.5f,        0.1f,     
-        // 5 -z axis +y
-         0.0f,  gAxesWidth, -5.0f,
-         0.1f,  0.1f,        0.1f,
-        // 6 +z axis -y
-         0.0f, -gAxesWidth,  5.0f,
-         0.1f,  0.1f,        0.1f,
-        // 7 +z axis +y
-         0.0f,  gAxesWidth,  5.0f,
-         0.1f,  0.5f,        0.1f,
-
-        // 8 -y axis -x
-        -gAxesWidth, -5.0f,  0.0f,
-         0.1f,        0.1f,  0.5f,     
-        // 9 -y axis +x
-         gAxesWidth, -5.0f,  0.0f, 
-         0.1f,        0.1f,  0.1f,    
-        // 10 +y axis -x
-        -gAxesWidth,  5.0f,  0.0f, 
-         0.1f,        0.1f,  0.1f,    
-        // 11 +y axis +x
-         gAxesWidth,  5.0f,  0.0f, 
-         0.1f,        0.1f,  0.5f,    
-};
-
-std::vector<GLuint> indices {
-       // x axis
-        0,  1,  2,
-        2,  3,  0,
-
-       // z axis
-        4,  5,  6,
-        6,  7,  4,
-
-       // y axis
-        8,  9, 10,
-       10, 11,  8,
-};
+std::vector<GLuint> indices {};
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -148,43 +103,125 @@ void setup() {
 
     gState = SDL_GetKeyboardState(NULL);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_DEPTH_TEST);
     glClearColor(0.859f, 0.765f, 0.604f, 1.0f);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
+void vertex(float x, float y, float z) {
+    vertices.push_back(x);
+    vertices.push_back(y);
+    vertices.push_back(z);
+    vertices.push_back(0.1f); // r
+    vertices.push_back(0.1f); // g
+    vertices.push_back(0.1f); // b
+}
+
 void vertexSpecification() {
-    // GLfloat data[11][11];
-    // for (int i = 0; i < 11; i++) {
-    //     for (int j = 0; j < 11; j++) {
-    //         data[i][j] = (GLfloat)((j - 5) + (i - 5)); 
-    //     }
-    // }
+    // -x axes
+    vertex(-AXES_LENGTH, -gAxesWidth, 0.0f);
+    vertex(-AXES_LENGTH, gAxesWidth, 0.0f);
+    // +x axes
+    vertex(AXES_LENGTH, -gAxesWidth, 0.0f);
+    vertex(AXES_LENGTH, gAxesWidth, 0.0f);
 
-    // for (int i = 0; i < 11; i++) {
-    //     for (int j = 0; j < 11; j++) {
-    //         vertices.vector::push_back((GLfloat)(i - 5));    // x
-    //         vertices.vector::push_back((GLfloat)data[i][j]); // z
-    //         vertices.vector::push_back((GLfloat)(j - 5));    // y
+    // -z axes
+    vertex(0.0f, -gAxesWidth, -AXES_LENGTH);
+    vertex(0.0f, gAxesWidth, -AXES_LENGTH);
+    // +z axes
+    vertex(0.0f, -gAxesWidth, AXES_LENGTH);
+    vertex(0.0f, gAxesWidth, AXES_LENGTH);
 
-    //         vertices.vector::push_back((GLfloat)0);                               // r
-    //         vertices.vector::push_back((GLfloat)((1 - data[i][j]) / data[i][j])); // g
-    //         vertices.vector::push_back((GLfloat)((0 + data[i][j]) / data[i][j])); // b
-    //     }
-    // }
+    // -y axes
+    vertex(-gAxesWidth, -AXES_LENGTH, 0.0f);
+    vertex(gAxesWidth, -AXES_LENGTH, 0.0f);
+    // +y axes
+    vertex(-gAxesWidth, AXES_LENGTH, 0.0f);
+    vertex(gAxesWidth, AXES_LENGTH, 0.0f);
 
-    // for (int i = 0; i < 11; i++) {
-    //     for (int j = 0; j < 11; j++) {
-    //         indices.vector::push_back(i + j + 12);            // top left
-    //         indices.vector::push_back(i + (j + 1) + 12);      // bottom left
-    //         indices.vector::push_back(i + j + 12 + 11);       // top right
-    //         indices.vector::push_back(i + (j + 1) + 12 + 11); // bottom right
-    //         indices.vector::push_back(i + (j + 1) + 12);      // bottom left
-    //     }
-    // }
+    // -x dashes
+    for (int i = -AXES_LENGTH; i < 0; i++) {
+        vertex(i, -gDashWidth, -gDashLength);
+        vertex(i, gDashWidth, -gDashLength);
+        vertex(i, -gDashWidth, gDashLength);
+        vertex(i, gDashWidth, gDashLength);
+    }
+    // +x dashes
+    for (int i = 1; i <= AXES_LENGTH; i++) {
+        vertex(i, -gDashWidth, -gDashLength);
+        vertex(i, gDashWidth, -gDashLength);
+        vertex(i, -gDashWidth, gDashLength);
+        vertex(i, gDashWidth, gDashLength);
+    }
 
-    // for (int i = 12; i <= 132; i++) {
-    //     indices.vector::push_back(i);
-    // }
+    // -z dashes
+    for (int i = -AXES_LENGTH; i < 0; i++) {
+        vertex(-gDashLength, -gDashWidth, i);
+        vertex(-gDashLength, gDashWidth, i);
+        vertex(gDashLength, -gDashWidth, i);
+        vertex(gDashLength, gDashWidth, i);
+    }
+    // +z dashes
+    for (int i = 1; i <= AXES_LENGTH; i++) {
+        vertex(-gDashLength, -gDashWidth, i);
+        vertex(-gDashLength, gDashWidth, i);
+        vertex(gDashLength, -gDashWidth, i);
+        vertex(gDashLength, gDashWidth, i);
+    }
+
+    // -y dashes
+    for (int i = -AXES_LENGTH; i < 0; i++) {
+        vertex(-gDashLength, i, -gDashLength);
+        vertex(gDashLength, i, -gDashLength);
+        vertex(-gDashLength, i, gDashLength);
+        vertex(gDashLength, i, gDashLength);
+    }
+    // +y dashes
+    for (int i = 1; i <= AXES_LENGTH; i++) {
+        vertex(-gDashLength, i, -gDashLength);
+        vertex(gDashLength, i, -gDashLength);
+        vertex(-gDashLength, i, gDashLength);
+        vertex(gDashLength, i, gDashLength);
+    }
+
+    // -x grid
+    for (int i = -AXES_LENGTH; i < 0; i++) {
+        vertex(i, -gGridWidth, -AXES_LENGTH);
+        vertex(i, gGridWidth, -AXES_LENGTH);
+        vertex(i, -gGridWidth, AXES_LENGTH);
+        vertex(i, gGridWidth, AXES_LENGTH);
+    }
+    // +x grid
+    for (int i = 1; i <= AXES_LENGTH; i++) {
+        vertex(i, -gGridWidth, -AXES_LENGTH);
+        vertex(i, gGridWidth, -AXES_LENGTH);
+        vertex(i, -gGridWidth, AXES_LENGTH);
+        vertex(i, gGridWidth, AXES_LENGTH);
+    }
+
+    // -z grid
+    for (int i = -AXES_LENGTH; i < 0; i++) {
+        vertex(-AXES_LENGTH, -gGridWidth, i);
+        vertex(-AXES_LENGTH, gGridWidth, i);
+        vertex(AXES_LENGTH, -gGridWidth, i);
+        vertex(AXES_LENGTH, gGridWidth, i);
+    }
+    // +z grid
+    for (int i = 1; i <= AXES_LENGTH; i++) {
+        vertex(-AXES_LENGTH, -gGridWidth, i);
+        vertex(-AXES_LENGTH, gGridWidth, i);
+        vertex(AXES_LENGTH, -gGridWidth, i);
+        vertex(AXES_LENGTH, gGridWidth, i);
+    }
+    
+    for (int i = 0; i < (vertices.size() / 6); i += 4) {
+        indices.push_back(i);
+        indices.push_back(i + 1);
+        indices.push_back(i + 2);
+        indices.push_back(i + 2);
+        indices.push_back(i + 3);
+        indices.push_back(i + 1);
+    }
 
     // VAO
     glGenVertexArrays(1, &gVertexArrayObject);
@@ -459,7 +496,7 @@ void draw() {
         GL_STATIC_DRAW
     );
 
-    glDrawElements(GL_TRIANGLES, 300, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
     glUseProgram(0);
 }
