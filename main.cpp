@@ -58,8 +58,11 @@ std::vector<GLuint> indices {};
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cout << "Error: Failed to initialize SDL video subsytem\nSDL Error: " 
-                << SDL_GetError() << std::endl;
+        std::cout 
+            << "Error: Failed to initialize SDL video subsytem\nSDL Error: " 
+            << SDL_GetError() 
+            << std::endl
+        ;
         exit(1);
     }
 
@@ -79,15 +82,21 @@ void setup() {
         SDL_WINDOW_OPENGL
     );
     if (!gWindow) {
-        std::cout << "Error: Failed to create window\nSDL Error: " 
-                << SDL_GetError() << std::endl;
+        std::cout 
+            << "Error: Failed to create window\nSDL Error: " 
+            << SDL_GetError() 
+            << std::endl
+        ;
         exit(1);
     }
 
     SDL_GLContext context = SDL_GL_CreateContext(gWindow);
     if (!context) {
-        std::cout << "Error: Failed to create OpenGL context\nSDL Error: " 
-                << SDL_GetError() << std::endl;
+        std::cout 
+            << "Error: Failed to create OpenGL context\nSDL Error: " 
+            << SDL_GetError() 
+            << std::endl
+        ;
         exit(1);
     }
 
@@ -298,11 +307,17 @@ GLuint compileShader(GLuint type, const std::string& source) {
         glGetShaderInfoLog(shaderObject, logSize, &logSize, &errorLog[0]);
 
         if (type == GL_VERTEX_SHADER) {
-            std::cout << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
-            << errorLog.data() << std::endl;
+            std::cout 
+                << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
+                << errorLog.data() 
+                << std::endl
+            ;
         } else if (type == GL_FRAGMENT_SHADER) {
-            std::cout << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
-            << errorLog.data() << std::endl;
+            std::cout 
+                << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
+                << errorLog.data() 
+                << std::endl
+            ;
         }
 
         glDeleteShader(shaderObject);
@@ -352,7 +367,7 @@ std::string loadShader(const std::string& fileName) {
 }
 
 void createGraphicsPipeline() {
-    const std::string vertexShaderSource   = loadShader("./shaders/vertex.glsl"  );
+    const std::string vertexShaderSource = loadShader("./shaders/vertex.glsl");
     const std::string fragmentShaderSource = loadShader("./shaders/fragment.glsl");
         
     gGraphicsPipelineObject = createShaderProgram(vertexShaderSource, fragmentShaderSource);
