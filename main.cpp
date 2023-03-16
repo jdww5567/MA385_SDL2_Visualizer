@@ -222,6 +222,22 @@ void vertexSpecification() {
         vertex(AXES_LENGTH, -gGridWidth, i);
         vertex(AXES_LENGTH, gGridWidth, i);
     }
+
+    // points
+    for (int i = -50; i <= 50; i++) {
+        for (int j = -50; j <= 50; j++) {
+            double iD = (double)i / 10.0;
+            double jD = (double)j / 10.0;
+            double value = iD * iD + jD * jD;
+            if (value <= 5.0) {
+                vertex(
+                    iD, 
+                    value,
+                    jD
+                );
+            }
+        }
+    }
     
     // Indices
     for (int i = 0; i < (vertices.size() / 6); i += 4) {
