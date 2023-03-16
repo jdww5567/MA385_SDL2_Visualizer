@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <cmath>
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -117,136 +118,152 @@ void setup() {
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
-void vertex(float x, float y, float z) {
+void vertex(float x, float y, float z, float r, float g, float b) {
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);
-    vertices.push_back(0.1f); // r
-    vertices.push_back(0.1f); // g
-    vertices.push_back(0.1f); // b
+    vertices.push_back(r);
+    vertices.push_back(g);
+    vertices.push_back(b);
 }
 
 void vertexSpecification() {
     // -x axes
-    vertex(-AXES_LENGTH, -gAxesWidth, 0.0f);
-    vertex(-AXES_LENGTH, gAxesWidth, 0.0f);
+    vertex(-AXES_LENGTH, -gAxesWidth, 0.0f, 0.1f, 0.1f, 0.1f);
+    vertex(-AXES_LENGTH, gAxesWidth, 0.0f, 0.1f, 0.1f, 0.1f);
     // +x axes
-    vertex(AXES_LENGTH, -gAxesWidth, 0.0f);
-    vertex(AXES_LENGTH, gAxesWidth, 0.0f);
+    vertex(AXES_LENGTH, -gAxesWidth, 0.0f, 0.1f, 0.1f, 0.1f);
+    vertex(AXES_LENGTH, gAxesWidth, 0.0f, 0.1f, 0.1f, 0.1f);
 
     // -z axes
-    vertex(0.0f, -gAxesWidth, -AXES_LENGTH);
-    vertex(0.0f, gAxesWidth, -AXES_LENGTH);
+    vertex(0.0f, -gAxesWidth, -AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+    vertex(0.0f, gAxesWidth, -AXES_LENGTH, 0.1f, 0.1f, 0.1f);
     // +z axes
-    vertex(0.0f, -gAxesWidth, AXES_LENGTH);
-    vertex(0.0f, gAxesWidth, AXES_LENGTH);
+    vertex(0.0f, -gAxesWidth, AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+    vertex(0.0f, gAxesWidth, AXES_LENGTH, 0.1f, 0.1f, 0.1f);
 
     // -y axes
-    vertex(-gAxesWidth, -AXES_LENGTH, 0.0f);
-    vertex(gAxesWidth, -AXES_LENGTH, 0.0f);
+    vertex(-gAxesWidth, -AXES_LENGTH, 0.0f, 0.1f, 0.1f, 0.1f);
+    vertex(gAxesWidth, -AXES_LENGTH, 0.0f, 0.1f, 0.1f, 0.1f);
     // +y axes
-    vertex(-gAxesWidth, AXES_LENGTH, 0.0f);
-    vertex(gAxesWidth, AXES_LENGTH, 0.0f);
+    vertex(-gAxesWidth, AXES_LENGTH, 0.0f, 0.1f, 0.1f, 0.1f);
+    vertex(gAxesWidth, AXES_LENGTH, 0.0f, 0.1f, 0.1f, 0.1f);
 
     // -x dashes
     for (int i = -AXES_LENGTH; i < 0; i++) {
-        vertex(i, -gDashWidth, -gDashLength);
-        vertex(i, gDashWidth, -gDashLength);
-        vertex(i, -gDashWidth, gDashLength);
-        vertex(i, gDashWidth, gDashLength);
+        vertex(i, -gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
     }
     // +x dashes
     for (int i = 1; i <= AXES_LENGTH; i++) {
-        vertex(i, -gDashWidth, -gDashLength);
-        vertex(i, gDashWidth, -gDashLength);
-        vertex(i, -gDashWidth, gDashLength);
-        vertex(i, gDashWidth, gDashLength);
+        vertex(i, -gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
     }
 
     // -z dashes
     for (int i = -AXES_LENGTH; i < 0; i++) {
-        vertex(-gDashLength, -gDashWidth, i);
-        vertex(-gDashLength, gDashWidth, i);
-        vertex(gDashLength, -gDashWidth, i);
-        vertex(gDashLength, gDashWidth, i);
+        vertex(-gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
     }
     // +z dashes
     for (int i = 1; i <= AXES_LENGTH; i++) {
-        vertex(-gDashLength, -gDashWidth, i);
-        vertex(-gDashLength, gDashWidth, i);
-        vertex(gDashLength, -gDashWidth, i);
-        vertex(gDashLength, gDashWidth, i);
+        vertex(-gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
     }
 
     // -y dashes
     for (int i = -AXES_LENGTH; i < 0; i++) {
-        vertex(-gDashWidth, i, -gDashLength);
-        vertex(gDashWidth, i, -gDashLength);
-        vertex(-gDashWidth, i, gDashLength);
-        vertex(gDashWidth, i, gDashLength);
+        vertex(-gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
     }
     // +y dashes
     for (int i = 1; i <= AXES_LENGTH; i++) {
-        vertex(-gDashWidth, i, -gDashLength);
-        vertex(gDashWidth, i, -gDashLength);
-        vertex(-gDashWidth, i, gDashLength);
-        vertex(gDashWidth, i, gDashLength);
+        vertex(-gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
     }
 
     // -x grid
     for (int i = -AXES_LENGTH; i < 0; i++) {
-        vertex(i, -gGridWidth, -AXES_LENGTH);
-        vertex(i, gGridWidth, -AXES_LENGTH);
-        vertex(i, -gGridWidth, AXES_LENGTH);
-        vertex(i, gGridWidth, AXES_LENGTH);
+        vertex(i, -gGridWidth, -AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, gGridWidth, -AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gGridWidth, AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, gGridWidth, AXES_LENGTH, 0.1f, 0.1f, 0.1f);
     }
     // +x grid
     for (int i = 1; i <= AXES_LENGTH; i++) {
-        vertex(i, -gGridWidth, -AXES_LENGTH);
-        vertex(i, gGridWidth, -AXES_LENGTH);
-        vertex(i, -gGridWidth, AXES_LENGTH);
-        vertex(i, gGridWidth, AXES_LENGTH);
+        vertex(i, -gGridWidth, -AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, gGridWidth, -AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gGridWidth, AXES_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, gGridWidth, AXES_LENGTH, 0.1f, 0.1f, 0.1f);
     }
 
     // -z grid
     for (int i = -AXES_LENGTH; i < 0; i++) {
-        vertex(-AXES_LENGTH, -gGridWidth, i);
-        vertex(-AXES_LENGTH, gGridWidth, i);
-        vertex(AXES_LENGTH, -gGridWidth, i);
-        vertex(AXES_LENGTH, gGridWidth, i);
+        vertex(-AXES_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-AXES_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(AXES_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(AXES_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
     }
     // +z grid
     for (int i = 1; i <= AXES_LENGTH; i++) {
-        vertex(-AXES_LENGTH, -gGridWidth, i);
-        vertex(-AXES_LENGTH, gGridWidth, i);
-        vertex(AXES_LENGTH, -gGridWidth, i);
-        vertex(AXES_LENGTH, gGridWidth, i);
+        vertex(-AXES_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-AXES_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(AXES_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(AXES_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
     }
 
-    // points
-    for (int i = -50; i <= 50; i++) {
-        for (int j = -50; j <= 50; j++) {
+    // Points
+    for (int i = -20; i <= 20; i++) {
+        for (int j = -20; j <= 20; j++) {
             double iD = (double)i / 10.0;
             double jD = (double)j / 10.0;
-            double value = iD * iD + jD * jD;
-            if (value <= 5.0) {
-                vertex(
-                    iD, 
-                    value,
-                    jD
-                );
-            }
+            double value = iD * iD - jD * jD;
+            vertex(
+                iD, 
+                value,
+                jD,
+                abs(sin(value / 2.0)),
+                abs(sin(value / 2.0 + M_PI / 3)),
+                abs(sin(value / 2.0 + (2 * M_PI) / 3))
+            );
         }
     }
     
-    // Indices
-    for (int i = 0; i < (vertices.size() / 6); i += 4) {
+    // Axes and Grid Indices
+    for (int i = 0; i < (1272 / 6); i += 4) {
         indices.push_back(i);
         indices.push_back(i + 1);
         indices.push_back(i + 2);
         indices.push_back(i + 2);
         indices.push_back(i + 3);
         indices.push_back(i + 1);
+    }
+
+    // Graph Indices
+    for (int i = (1272 / 6); i < (vertices.size() / 6); i++) {
+        if (vertices[i * 6 + 2] == 2.0f) {
+            continue;
+        } else if (vertices[i * 6] == 2.0f) {
+            continue;
+        }
+        indices.push_back(i);
+        indices.push_back(i + 1);
+        indices.push_back(i + 42);
+        indices.push_back(i + 42);
+        indices.push_back(i + 41);
+        indices.push_back(i);
     }
 
     // VAO
@@ -444,7 +461,7 @@ void input() {
     }
 
 
-    const float cameraSpeed = 0.000625f;
+    const float cameraSpeed = 0.00625f;
     if (gState[SDL_SCANCODE_W]) {
         gCameraPos += cameraSpeed * gCameraFront;
     }
@@ -695,7 +712,7 @@ void loop() {
         deltaTime += (double)((currTime - prevTime) * 1000 / (double)SDL_GetPerformanceFrequency());
         loopCount += 1;
         if (loopCount == 500) {
-            fpms = 500.0 / (deltaTime);
+            fpms = 500000.0 / (deltaTime);
             std::string title = std::to_string(fpms) + " FPMS";
             SDL_SetWindowTitle(gWindow, title.c_str());
             loopCount = 0;
