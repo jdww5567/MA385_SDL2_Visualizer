@@ -12,6 +12,9 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 #define AXIS_LENGTH 5
+#define RECTS_PER_UNIT 20
+#define X_BOUNDS 2
+#define Z_BOUNDS 2
 
 #define INITIAL_X_POS 6.0f
 #define INITIAL_Y_POS 3.0f
@@ -250,11 +253,11 @@ void vertexSpecification() {
     }
 
     // generate data points to graph
-    for (int i = -20; i <= 20; i++) {
-        for (int j = -20; j <= 20; j++) {
-            double iD = (double)i / 10.0;     // x
-            double jD = (double)j / 10.0;     // z
-            double value = iD * iD + jD * jD; // y
+    for (int i = -X_BOUNDS * RECTS_PER_UNIT; i <= X_BOUNDS * RECTS_PER_UNIT; i++) {
+        for (int j = -Z_BOUNDS * RECTS_PER_UNIT; j <= Z_BOUNDS * RECTS_PER_UNIT; j++) {
+            double iD = (double)i / (double)RECTS_PER_UNIT; // x
+            double jD = (double)j / (double)RECTS_PER_UNIT; // z
+            double value = (iD * iD - jD * jD - iD) / jD;    // y
             // set color off of y value
             vertex(
                 iD, 
@@ -279,16 +282,16 @@ void vertexSpecification() {
 
     // iterate over the data and index trangles, avoid edge cases
     for (int i = (1272 / 6); i < (vertices.size() / 6); i++) {
-        if (vertices[i * 6 + 2] == 2.0f) {
+        if (vertices[i * 6 + 2] == (float)Z_BOUNDS) {
             continue;
-        } else if (vertices[i * 6] == 2.0f) {
+        } else if (vertices[i * 6] == (float)X_BOUNDS) {
             continue;
         }
         indices.push_back(i);
         indices.push_back(i + 1);
-        indices.push_back(i + 42);
-        indices.push_back(i + 42);
-        indices.push_back(i + 41);
+        indices.push_back(i + 2 + 2 * Z_BOUNDS * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + 2 * Z_BOUNDS * RECTS_PER_UNIT);
+        indices.push_back(i + 1 + 2 * Z_BOUNDS * RECTS_PER_UNIT);
         indices.push_back(i);
     }
 
