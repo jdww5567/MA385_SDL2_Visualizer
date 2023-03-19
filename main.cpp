@@ -34,7 +34,7 @@ float gPrevMouseMovementY = -25.0f;
 float gMouseX = 0.0f;
 float gMouseY = 0.0f;
 float gAxesWidth = 0.005;
-float gDashLength = 6 * gAxesWidth;
+float gDashLength = 12 * gAxesWidth;
 float gDashWidth = 2 * gAxesWidth;
 float gGridWidth = gAxesWidth / 3;
 float gXAngle = 0;
@@ -231,7 +231,7 @@ void vertexSpecification() {
         for (int j = -20; j <= 20; j++) {
             double iD = (double)i / 10.0;
             double jD = (double)j / 10.0;
-            double value = iD * iD - jD * jD;
+            double value = (iD * iD - jD * jD + iD) / jD;
             vertex(
                 iD, 
                 value,
@@ -322,11 +322,7 @@ void vertexSpecification() {
 GLuint compileShader(GLuint type, const std::string& source) {
     GLuint shaderObject;
 
-    if (type == GL_VERTEX_SHADER) {
-        shaderObject = glCreateShader(GL_VERTEX_SHADER);
-    } else if (type == GL_FRAGMENT_SHADER) {
-        shaderObject = glCreateShader(GL_FRAGMENT_SHADER);
-    }
+    shaderObject = glCreateShader(type);
 
     const char* src = source.c_str();
     glShaderSource(shaderObject, 1, &src, nullptr);
@@ -367,7 +363,7 @@ GLuint compileShader(GLuint type, const std::string& source) {
  GLuint createShaderProgram(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) {
     GLuint programObject = glCreateProgram();
 
-    GLuint vertexShader   = compileShader(GL_VERTEX_SHADER  , vertexShaderSource  );
+    GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
     GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
     glAttachShader(programObject, vertexShader);
@@ -377,10 +373,10 @@ GLuint compileShader(GLuint type, const std::string& source) {
     glValidateProgram(programObject);
 
     glDetachShader(programObject, vertexShader);
-    glDetachShader(programObject, vertexShader);
+    glDetachShader(programObject, fragmentShader);
 
     glDeleteShader(vertexShader);
-    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 
     return programObject;
 }
@@ -669,10 +665,11 @@ void predraw() {
     vertices[66] = -gYX;
     vertices[68] = -gYZ;
     
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
-    direction.y = sin(glm::radians(gMouseMovementY));
-    direction.z = sin(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY));
+    glm::vec3 direction {
+        cos(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY)),
+        sin(glm::radians(gMouseMovementY)),
+        sin(glm::radians(gMouseMovementX)) * cos(glm::radians(gMouseMovementY))
+    };
     gCameraFront = glm::normalize(direction);
 
     auto view = glm::lookAt(gCameraPos, gCameraPos + gCameraFront, gCameraUp);
@@ -697,6 +694,10 @@ void draw() {
         GL_STATIC_DRAW
     );
 
+    glDisable(GL_BLEND);
+    glDrawElements(GL_TRIANGLES, (1272 / 4), GL_UNSIGNED_INT, 0);
+
+    glEnable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
     glUseProgram(0);
@@ -706,7 +707,7 @@ void loop() {
     Uint64 currTime = SDL_GetPerformanceCounter();
     Uint64 prevTime = 0;
     double deltaTime = 0;
-    int fpms = 0;
+    int fps = 0;
     int loopCount = 0;
     while (gRunning) {
         prevTime = currTime;
@@ -714,8 +715,8 @@ void loop() {
         deltaTime += (double)((currTime - prevTime) * 1000 / (double)SDL_GetPerformanceFrequency());
         loopCount += 1;
         if (loopCount == 500) {
-            fpms = 500000.0 / (deltaTime);
-            std::string title = std::to_string(fpms) + " FPMS";
+            fps = 500000.0 / (deltaTime);
+            std::string title = std::to_string(fps) + " FPS";
             SDL_SetWindowTitle(gWindow, title.c_str());
             loopCount = 0;
             deltaTime = 0.0;
