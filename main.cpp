@@ -19,7 +19,7 @@
 #define INITIAL_YAW -135.0f
 #define INITIAL_PITCH -10.0f
 
-// pointer for SDL2 window object
+// pointer for sdl window object
 SDL_Window *gWindow = nullptr;
 
 // ids of opengl objects
@@ -51,7 +51,7 @@ float gGridWidth  = gAxisWidth / 3.0f;
 
 // current camera position
 glm::vec3 gCameraPos = glm::vec3(INITIAL_X_POS, INITIAL_Y_POS, INITIAL_Z_POS);
-// current camera facing direction
+// current camera direction
 glm::vec3 gCameraFront = glm::vec3(0.0f, 0.0f, 0.0f);
 // direction above camera
 glm::vec3 gCameraUp = glm::vec3(0.0f, 1.0f,  0.0f);
@@ -104,7 +104,7 @@ void setup() {
         exit(1);
     }
 
-    // create opengl context in in sdl and make sure it worked
+    // create opengl context in sdl and make sure it worked
     SDL_GLContext context = SDL_GL_CreateContext(gWindow);
     if (!context) {
         std::cout 
@@ -127,7 +127,7 @@ void setup() {
     std::cout << "Version: " << glGetString(GL_VERSION) << std::endl;
     std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-    // multisample
+    // multi sample points
     glEnable(GL_MULTISAMPLE);
     // test for depth
     glEnable(GL_DEPTH_TEST);
@@ -141,7 +141,7 @@ void setup() {
     glEnable(GL_BLEND);
 }
 
-// create a vertex in vertices
+// create a vertex
 void vertex(float x, float y, float z, float r, float g, float b) {
     vertices.push_back(x);
     vertices.push_back(y);
@@ -252,9 +252,10 @@ void vertexSpecification() {
     // generate data points to graph
     for (int i = -20; i <= 20; i++) {
         for (int j = -20; j <= 20; j++) {
-            double iD = (double)i / 10.0;
-            double jD = (double)j / 10.0;
-            double value = iD * iD + jD * jD;
+            double iD = (double)i / 10.0;     // x
+            double jD = (double)j / 10.0;     // z
+            double value = iD * iD + jD * jD; // y
+            // set color off of y value
             vertex(
                 iD, 
                 value,
@@ -291,7 +292,7 @@ void vertexSpecification() {
         indices.push_back(i);
     }
 
-    // VAO - binds stuff somehow
+    // VAO - id of vertices, binds to all buffers
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
 
@@ -302,7 +303,7 @@ void vertexSpecification() {
         GL_ARRAY_BUFFER,                   // type of buffer
         vertices.size() * sizeof(GLfloat), // total bytesize of vertices
         vertices.data(),                   // underlying array of vertices vector
-        GL_STATIC_DRAW                     // what you are going to do with vertices
+        GL_STATIC_DRAW                     // what is going to be done with vertices
     );
 
     // IBO - buffer of index data
@@ -343,12 +344,12 @@ void vertexSpecification() {
     glDisableVertexAttribArray(1);
 }
 
-// compile .glsl shader files from a string copy of them and return shader object
+// compile shader from string source
 GLuint compileShader(GLuint type, const std::string& source) {
-    GLuint shaderObject;
+    // create shader object of specified type
+    GLuint shaderObject = glCreateShader(type); 
 
-    shaderObject = glCreateShader(type); 
-
+    // convert to c string, create opengl shadersource, compile it
     const char* src = source.c_str();
     glShaderSource(shaderObject, 1, &src, nullptr);
     glCompileShader(shaderObject);
@@ -378,7 +379,7 @@ GLuint compileShader(GLuint type, const std::string& source) {
             ;
         }
 
-        // save memory if shader didn't compile
+        // save memory if the shader didn't compile
         glDeleteShader(shaderObject);
 
         return 0;
@@ -392,7 +393,7 @@ GLuint createShaderProgram(const std::string& vertexShaderSource, const std::str
     GLuint programObject = glCreateProgram();
 
     // compile shaders
-    GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+    GLuint vertexShader   = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
     GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
     // attach and link them to pipeline, validate pipeline
@@ -412,13 +413,15 @@ GLuint createShaderProgram(const std::string& vertexShaderSource, const std::str
     return programObject;
 }
 
-// load shader from .glsl source into std::string
+// load a shader from a glsl source file into a string
 std::string loadShader(const std::string& fileName) {
     std::string src  = "";
     std::string line = "";
 
+    // in stream for file
     std::ifstream file(fileName.c_str());
 
+    // while a line can be read add the line to the string
     if (file.is_open()) {
         while (std::getline(file, line)) {
             src += line + '\n';
@@ -432,17 +435,21 @@ std::string loadShader(const std::string& fileName) {
 
 // create a graphics pipeline from shader source files
 void createGraphicsPipeline() {
-    const std::string vertexShaderSource = loadShader("./shaders/vertex.glsl");
+    // load glsl files into strings
+    const std::string vertexShaderSource   = loadShader("./shaders/vertex.glsl");
     const std::string fragmentShaderSource = loadShader("./shaders/fragment.glsl");
-        
+    
+    // create a pipeline with shader source strings
     gGraphicsPipelineObject = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 }
 
 // find uniform variables in gpu memory
 void findUniformVars() {
+    // get location of view matrix, if it can't be found, stop program
     gViewMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uViewMatrix");
     if (gViewMatrixLoc < 0) {
         std::cout << "Error: uViewMatrix not found in GPU memory" << std::endl;
+        exit(2);
     }
 }
 
@@ -456,13 +463,13 @@ void input() {
             case SDL_QUIT:
                 gRunning = false;
                 break;
-            // set boolean and get mouse relative position if mouse is clicked
+            // set mouse boolean and get mouse relative position if mouse is clicked
             case SDL_MOUSEBUTTONDOWN:
                 gLeftDown = true;
                 gMouseY = e.button.y + gPrevMouseMovementY;
                 gMouseX = e.button.x - gPrevMouseMovementX;
                 break;
-            // update mouse movement if mouse is clicked
+            // update mouse movement if mouse is currently pressed
             case SDL_MOUSEMOTION:
                     if (gLeftDown) {
                         gMouseMovementY = gMouseY - e.button.y;
@@ -475,13 +482,13 @@ void input() {
                         }
                     }
                 break;
-            // set boolean and store mouse movement
+            // set mouse boolean and store mouse movement
             case SDL_MOUSEBUTTONUP:
                 gLeftDown = false;
                 gPrevMouseMovementY = gMouseMovementY;
                 gPrevMouseMovementX = gMouseMovementX;
                 break;
-            // if x is pressed, reset camera facing angle and position
+            // if x is pressed, reset camera angle and position
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
@@ -509,7 +516,7 @@ void input() {
     if (gState[SDL_SCANCODE_W]) {
         gCameraPos += cameraSpeed * gCameraFront;
     }
-    // if s is pressed, if w is currently pressed, move camera backwards
+    // if s is currently pressed, move camera backwards
     if (gState[SDL_SCANCODE_S]) {
         gCameraPos -= cameraSpeed * gCameraFront;
     }
@@ -727,7 +734,7 @@ void predraw() {
     };
     gCameraFront = glm::normalize(direction);
 
-    // set view matrix from camera position and facing information
+    // set view matrix from camera information
     auto view = glm::lookAt(gCameraPos, gCameraPos + gCameraFront, gCameraUp);
 
     // multiply view matrix by perspective matrix to generate actual 3d environment
@@ -741,7 +748,7 @@ void predraw() {
     // input view matrix into gpu memory
     glUniformMatrix4fv(gViewMatrixLoc, 1, GL_FALSE, &view[0][0]);
 
-    // rebind VAO and update VBO data
+    // rebind VAO and update VBO
     glBindVertexArray(gVertexArrayObject);
     glBufferData(
         GL_ARRAY_BUFFER, 
@@ -764,7 +771,7 @@ void draw() {
 
 // setup following drawing
 void postdraw() {
-    // save memory
+    // save memory?
     glBindVertexArray(0);
     glUseProgram(0);
 }
@@ -772,16 +779,16 @@ void postdraw() {
 // main loop for all repeated processes in updating and rendering
 void loop() {
     // variables for fps calculation
+    double deltaTime = 0;
     Uint64 currTime = SDL_GetPerformanceCounter();
     Uint64 prevTime = 0;
-    double deltaTime = 0;
-    int fps = 0;
+    int fps       = 0;
     int loopCount = 0;
-    // while program is running, update the title of the with the fps and run all processes
+    // while program is running, update the title of the window with the fps and run all processes
     while (gRunning) {
         prevTime = currTime;
         currTime = SDL_GetPerformanceCounter();
-        deltaTime += (double)((currTime - prevTime) * 1000 / (double)SDL_GetPerformanceFrequency());
+        deltaTime += (double)((double)(currTime - prevTime) * 1000.0 / (double)SDL_GetPerformanceFrequency());
         loopCount += 1;
         if (loopCount == 500) {
             fps = 500000.0 / (deltaTime);
