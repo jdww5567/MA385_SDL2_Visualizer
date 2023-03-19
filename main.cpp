@@ -51,6 +51,8 @@ float gAxisWidth  = 0.005f;
 float gDashLength = 12.0f * gAxisWidth;
 float gDashWidth  = 2.0f * gAxisWidth;
 float gGridWidth  = gAxisWidth / 3.0f;
+// speed of the camera
+float gCameraSpeed = 0.0f;
 
 // current camera position
 glm::vec3 gCameraPos = glm::vec3(INITIAL_X_POS, INITIAL_Y_POS, INITIAL_Z_POS);
@@ -512,24 +514,24 @@ void input() {
         }
     }
 
-    const float cameraSpeed = 0.00625f;
+    
 
     // keyboards state input handling
     // if w is currently pressed, move camera forward
     if (gState[SDL_SCANCODE_W]) {
-        gCameraPos += cameraSpeed * gCameraFront;
+        gCameraPos += gCameraSpeed * gCameraFront;
     }
     // if s is currently pressed, move camera backwards
     if (gState[SDL_SCANCODE_S]) {
-        gCameraPos -= cameraSpeed * gCameraFront;
+        gCameraPos -= gCameraSpeed * gCameraFront;
     }
     // if a is currently pressed, move camera left
     if (gState[SDL_SCANCODE_A]) {
-        gCameraPos -= glm::normalize(glm::cross(gCameraFront, gCameraUp)) * cameraSpeed;
+        gCameraPos -= glm::normalize(glm::cross(gCameraFront, gCameraUp)) * gCameraSpeed;
     }
     // if d is currently pressed, move camera right
     if (gState[SDL_SCANCODE_D]) {
-        gCameraPos += glm::normalize(glm::cross(gCameraFront, gCameraUp)) * cameraSpeed;
+        gCameraPos += glm::normalize(glm::cross(gCameraFront, gCameraUp)) * gCameraSpeed;
     }
 }
 
@@ -791,10 +793,11 @@ void loop() {
     while (gRunning) {
         prevTime = currTime;
         currTime = SDL_GetPerformanceCounter();
-        deltaTime += (double)((double)(currTime - prevTime) * 1000.0 / (double)SDL_GetPerformanceFrequency());
+        deltaTime += (double)((double)(currTime - prevTime) / (double)SDL_GetPerformanceFrequency());
         loopCount += 1;
         if (loopCount == 500) {
-            fps = 500000.0 / (deltaTime);
+            fps = 500.0 / deltaTime;
+            gCameraSpeed = 3.5 * (deltaTime / 500.0);
             std::string title = std::to_string(fps) + " FPS";
             SDL_SetWindowTitle(gWindow, title.c_str());
             loopCount = 0;
