@@ -257,10 +257,10 @@ void vertexSpecification() {
         for (int j = -Z_BOUNDS * RECTS_PER_UNIT; j <= Z_BOUNDS * RECTS_PER_UNIT; j++) {
             double iD = (double)i / (double)RECTS_PER_UNIT; // x
             double jD = (double)j / (double)RECTS_PER_UNIT; // z
-            double value = (iD * iD - jD * jD - iD) / jD;    // y
+            double value = iD * jD;    // y
             // set color off of y value
             vertex(
-                iD, 
+                iD,
                 value,
                 jD,
                 abs(sin(value / 2.0)) / 1.2,
@@ -814,7 +814,7 @@ void loop() {
     }
 }
 
-// delete everything before program closes
+// delete everything before the program closes
 void cleanup() {
     SDL_DestroyWindow(gWindow);
 
