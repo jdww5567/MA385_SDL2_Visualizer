@@ -1,7 +1,7 @@
-#include <SDL2/SDL.h>            // hardware access framework
-#include <glad/glad.h>           // loads opengl functions for 3d graphics
-#include <glm/glm.hpp>           // linear algebra library
-#include <glm/gtx/transform.hpp> // perspective matrix
+#include <SDL2/SDL.h>
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 
 #include <iostream>
 #include <vector>
@@ -40,7 +40,11 @@ float gRadius      = 9.0f;
 float gTheta       = 45.0f;
 float gPhi         = 45.0f;
 
-glm::vec3 gCameraPos = glm::vec3(gRadius * sin(glm::radians(gPhi)) * cos(glm::radians(gTheta)), gRadius * cos(glm::radians(gPhi)), gRadius * sin(glm::radians(gPhi)) * sin(glm::radians(gTheta)));
+glm::vec3 gCameraPos = glm::vec3(
+    gRadius * sin(glm::radians(gPhi)) * cos(glm::radians(gTheta)),
+    gRadius * cos(glm::radians(gPhi)),
+    gRadius * sin(glm::radians(gPhi)) * sin(glm::radians(gTheta))
+);
 glm::vec3 gCameraFront = glm::normalize(glm::vec3(-gCameraPos.x, -gCameraPos.y, -gCameraPos.z));
 glm::vec3 gCameraUp = glm::normalize(glm::vec3(0, 1.0f, 0));
 
@@ -109,7 +113,6 @@ void setup() {
     glClearColor(0.859f, 0.765f, 0.604f, 1.0f);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
 }
 
 void vertex(float x, float y, float z, float r, float g, float b) {
@@ -218,11 +221,12 @@ void vertexSpecification() {
         vertex(AXIS_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
     }
 
+    // function
     for (int i = -X_BOUNDS * RECTS_PER_UNIT; i <= X_BOUNDS * RECTS_PER_UNIT; i++) {
         for (int j = -Z_BOUNDS * RECTS_PER_UNIT; j <= Z_BOUNDS * RECTS_PER_UNIT; j++) {
             double iD = (double)i / (double)RECTS_PER_UNIT; 
             double jD = (double)j / (double)RECTS_PER_UNIT;
-            double value = iD / jD;
+            double value = jD * jD - iD * iD;
             vertex(
                 iD,
                 value,
@@ -234,6 +238,7 @@ void vertexSpecification() {
         }
     }
     
+    // grid and axes rectangles
     for (int i = 0; i < (1272 / 6); i += 4) {
         indices.push_back(i);
         indices.push_back(i + 1);
@@ -243,6 +248,7 @@ void vertexSpecification() {
         indices.push_back(i + 1);
     }
 
+    // function triangles
     for (int i = (1272 / 6); i < (vertices.size() / 6); i++) {
         if (vertices[i * 6 + 2] == (float)Z_BOUNDS) {
             continue;
