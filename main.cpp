@@ -226,7 +226,7 @@ void vertexSpecification() {
         for (int j = -Z_BOUNDS * RECTS_PER_UNIT; j <= Z_BOUNDS * RECTS_PER_UNIT; j++) {
             double iD = (double)i / (double)RECTS_PER_UNIT; 
             double jD = (double)j / (double)RECTS_PER_UNIT;
-            double value = jD * jD - iD * iD;
+            double value = sinf(iD * jD);
             vertex(
                 iD,
                 value,
@@ -707,7 +707,7 @@ void loop() {
     double deltaTime = 0;
     Uint64 currTime = SDL_GetPerformanceCounter();
     Uint64 prevTime = 0;
-    int fps       = 0;
+    int fps = 0;
     int loopCount = 0;
     while (gRunning) {
         prevTime = currTime;
