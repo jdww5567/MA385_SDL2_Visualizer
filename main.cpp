@@ -29,7 +29,7 @@ GLuint gGraphicsPipelineObject = 0;
 GLint gViewMatrixLoc = 0;
 
 bool gRunning  = true;
-bool gMouseDown = false;
+bool gLeftDown = false;
 
 float gAxisWidth  = 0.005f;
 float gDashLength = 12.0f * gAxisWidth;
@@ -425,15 +425,21 @@ void input() {
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                gMouseX = e.button.x / 2.0 - gTheta;
-                gMouseY = e.button.y / 2.0 + gPhi;
-                gMouseDown = true;
+                switch (e.button.button) {
+                    case SDL_BUTTON_LEFT:
+                        gMouseX = e.button.x / 2.0 - gTheta;
+                        gMouseY = e.button.y / 2.0 + gPhi;
+                        gLeftDown = true;
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case SDL_MOUSEBUTTONUP:
-                gMouseDown = false;
+                gLeftDown = false;
                 break;
             case SDL_MOUSEMOTION:
-                if (gMouseDown) {
+                if (gLeftDown) {
                     gTheta = e.button.x / 2.0 - gMouseX;
                     gPhi = gMouseY - e.button.y / 2.0;
                     if (gPhi < 1.0f) {
@@ -449,7 +455,7 @@ void input() {
                         gRadius = INITIAL_RADIUS;
                         gTheta = INITIAL_THETA;
                         gPhi = INITIAL_PHI;
-                        
+
                         SDL_GetMouseState(&gMouseX, &gMouseY);
                         gMouseX = gMouseX / 2.0 - gTheta;
                         gMouseY = gMouseY / 2.0 + gPhi;
