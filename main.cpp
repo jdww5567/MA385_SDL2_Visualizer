@@ -15,6 +15,9 @@
 #define RECTS_PER_UNIT 20
 #define X_BOUNDS 2
 #define Z_BOUNDS 2
+#define INITIAL_RADIUS 9.0f
+#define INITIAL_THETA 45.0f
+#define INITIAL_PHI 45.0f
 
 SDL_Window *gWindow = nullptr;
 
@@ -33,12 +36,12 @@ float gDashLength = 12.0f * gAxisWidth;
 float gDashWidth  = 2.0f * gAxisWidth;
 float gGridWidth  = gAxisWidth / 3.0f;
 
-float gMouseX      = 0.0f;
-float gMouseY      = 0.0f;
+int gMouseX      = 0;
+int gMouseY      = 0;
 float gCameraSpeed = 0.0f;
-float gRadius      = 9.0f;
-float gTheta       = 45.0f;
-float gPhi         = 45.0f;
+float gRadius      = INITIAL_RADIUS;
+float gTheta       = INITIAL_THETA;
+float gPhi         = INITIAL_PHI;
 
 glm::vec3 gCameraPos = glm::vec3(
     gRadius * sin(glm::radians(gPhi)) * cos(glm::radians(gTheta)),
@@ -443,9 +446,13 @@ void input() {
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        gRadius = 9.0f;
-                        gTheta = 45.0f;
-                        gPhi = 45.0f;
+                        gRadius = INITIAL_RADIUS;
+                        gTheta = INITIAL_THETA;
+                        gPhi = INITIAL_PHI;
+                        
+                        SDL_GetMouseState(&gMouseX, &gMouseY);
+                        gMouseX = gMouseX / 2.0 - gTheta;
+                        gMouseY = gMouseY / 2.0 + gPhi;
                         break;
                     default:
                         break;
