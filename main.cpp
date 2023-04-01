@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <cmath>
+#include <random>
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -38,7 +39,6 @@ float gGridWidth  = gAxisWidth / 3.0f;
 
 int gMouseX      = 0;
 int gMouseY      = 0;
-float gCameraSpeed = 0.0f;
 float gRadius      = INITIAL_RADIUS;
 float gTheta       = INITIAL_THETA;
 float gPhi         = INITIAL_PHI;
@@ -229,7 +229,7 @@ void vertexSpecification() {
         for (int j = -Z_BOUNDS * RECTS_PER_UNIT; j <= Z_BOUNDS * RECTS_PER_UNIT; j++) {
             double iD = (double)i / (double)RECTS_PER_UNIT; 
             double jD = (double)j / (double)RECTS_PER_UNIT;
-            double value = sinf(iD * jD);
+            double value = powf(iD, 2) - powf(jD, 2) ;
             vertex(
                 iD,
                 value,
@@ -729,7 +729,6 @@ void loop() {
         loopCount += 1;
         if (loopCount == 50) {
             fps = 50.0 / deltaTime;
-            gCameraSpeed = 10.0 * (deltaTime / 50.0);
             std::string title = std::to_string(fps) + " FPS";
             SDL_SetWindowTitle(gWindow, title.c_str());
             loopCount = 0;
