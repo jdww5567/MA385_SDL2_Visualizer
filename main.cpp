@@ -12,13 +12,20 @@
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
+
 #define AXIS_LENGTH 5
 #define RECTS_PER_UNIT 20
 #define X_BOUNDS 2
 #define Z_BOUNDS 2
+
 #define INITIAL_RADIUS 9.0f
 #define INITIAL_THETA 45.0f
 #define INITIAL_PHI 45.0f
+
+#define BG_COLOR 0.1f, 0.1f, 0.1f
+#define AXIS_COLOR 1.0f, 1.0f, 1.0f
+
+#define FUNCTION x * x - y * y / x
 
 SDL_Window *gWindow = nullptr;
 
@@ -32,7 +39,7 @@ GLint gViewMatrixLoc = 0;
 bool gRunning  = true;
 bool gLeftDown = false;
 
-float gAxisWidth  = 0.005f;
+float gAxisWidth  = 0.01f;
 float gDashLength = 12.0f * gAxisWidth;
 float gDashWidth  = 2.0f * gAxisWidth;
 float gGridWidth  = gAxisWidth / 3.0f;
@@ -113,7 +120,7 @@ void setup() {
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.859f, 0.765f, 0.604f, 1.0f);
+    glClearColor(BG_COLOR, 1.0f);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -129,114 +136,114 @@ void vertex(float x, float y, float z, float r, float g, float b) {
 
 void vertexSpecification() {
     // -x axis
-    vertex(-AXIS_LENGTH, -gAxisWidth, 0.0f, 0.2f, 0.1f, 0.1f);
-    vertex(-AXIS_LENGTH, gAxisWidth, 0.0f, 0.2f, 0.1f, 0.1f);
+    vertex(-AXIS_LENGTH, -gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(-AXIS_LENGTH, gAxisWidth, 0.0f, AXIS_COLOR);
     // +x axis
-    vertex(AXIS_LENGTH, -gAxisWidth, 0.0f, 0.8f, 0.1f, 0.1f);
-    vertex(AXIS_LENGTH, gAxisWidth, 0.0f, 0.8f, 0.1f, 0.1f);
+    vertex(AXIS_LENGTH, -gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(AXIS_LENGTH, gAxisWidth, 0.0f, AXIS_COLOR);
 
     // -z axis
-    vertex(0.0f, -gAxisWidth, -AXIS_LENGTH, 0.1f, 0.2f, 0.1f);
-    vertex(0.0f, gAxisWidth, -AXIS_LENGTH, 0.1f, 0.2f, 0.1f);
+    vertex(0.0f, -gAxisWidth, -AXIS_LENGTH, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, -AXIS_LENGTH, AXIS_COLOR);
     // +z axis
-    vertex(0.0f, -gAxisWidth, AXIS_LENGTH, 0.1f, 0.8f, 0.1f);
-    vertex(0.0f, gAxisWidth, AXIS_LENGTH, 0.1f, 0.8f, 0.1f);
+    vertex(0.0f, -gAxisWidth, AXIS_LENGTH, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, AXIS_LENGTH, AXIS_COLOR);
 
     // -y axis
-    vertex(-gAxisWidth, -AXIS_LENGTH, 0.0f, 0.1f, 0.1f, 0.2f);
-    vertex(gAxisWidth, -AXIS_LENGTH, 0.0f, 0.1f, 0.1f, 0.2f);
+    vertex(-gAxisWidth, -AXIS_LENGTH, 0.0f, AXIS_COLOR);
+    vertex(gAxisWidth, -AXIS_LENGTH, 0.0f, AXIS_COLOR);
     // +y axis
-    vertex(-gAxisWidth, AXIS_LENGTH, 0.0f, 0.1f, 0.1f, 0.8f);
-    vertex(gAxisWidth, AXIS_LENGTH, 0.0f, 0.1f, 0.1f, 0.8f);
+    vertex(-gAxisWidth, AXIS_LENGTH, 0.0f, AXIS_COLOR);
+    vertex(gAxisWidth, AXIS_LENGTH, 0.0f, AXIS_COLOR);
 
     // -x dashes
     for (int i = -AXIS_LENGTH; i < 0; i++) {
-        vertex(i, -gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(i, gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(i, -gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(i, gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, -gDashWidth, gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, gDashLength, AXIS_COLOR);
     }
     // +x dashes
     for (int i = 1; i <= AXIS_LENGTH; i++) {
-        vertex(i, -gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(i, gDashWidth, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(i, -gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(i, gDashWidth, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, -gDashWidth, gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, gDashLength, AXIS_COLOR);
     }
 
     // -z dashes
     for (int i = -AXIS_LENGTH; i < 0; i++) {
-        vertex(-gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(-gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, gDashWidth, i, AXIS_COLOR);
     }
     // +z dashes
     for (int i = 1; i <= AXIS_LENGTH; i++) {
-        vertex(-gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(-gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(gDashLength, -gDashWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(gDashLength, gDashWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, gDashWidth, i, AXIS_COLOR);
     }
 
     // -y dashes
     for (int i = -AXIS_LENGTH; i < 0; i++) {
-        vertex(-gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(-gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(-gDashWidth, i, gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, gDashLength, AXIS_COLOR);
     }
     // +y dashes
     for (int i = 1; i <= AXIS_LENGTH; i++) {
-        vertex(-gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(gDashWidth, i, -gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(-gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
-        vertex(gDashWidth, i, gDashLength, 0.1f, 0.1f, 0.1f);
+        vertex(-gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(-gDashWidth, i, gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, gDashLength, AXIS_COLOR);
     }
 
     // -x grid
     for (int i = -AXIS_LENGTH; i < 0; i++) {
-        vertex(i, -gGridWidth, -AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
-        vertex(i, gGridWidth, -AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
-        vertex(i, -gGridWidth, AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
-        vertex(i, gGridWidth, AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
+        vertex(i, gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
+        vertex(i, -gGridWidth, AXIS_LENGTH, AXIS_COLOR);
+        vertex(i, gGridWidth, AXIS_LENGTH, AXIS_COLOR);
     }
     // +x grid
     for (int i = 1; i <= AXIS_LENGTH; i++) {
-        vertex(i, -gGridWidth, -AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
-        vertex(i, gGridWidth, -AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
-        vertex(i, -gGridWidth, AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
-        vertex(i, gGridWidth, AXIS_LENGTH, 0.1f, 0.1f, 0.1f);
+        vertex(i, -gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
+        vertex(i, gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
+        vertex(i, -gGridWidth, AXIS_LENGTH, AXIS_COLOR);
+        vertex(i, gGridWidth, AXIS_LENGTH, AXIS_COLOR);
     }
 
     // -z grid
     for (int i = -AXIS_LENGTH; i < 0; i++) {
-        vertex(-AXIS_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(-AXIS_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(AXIS_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(AXIS_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
+        vertex(-AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
+        vertex(AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
+        vertex(AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
     }
     // +z grid
     for (int i = 1; i <= AXIS_LENGTH; i++) {
-        vertex(-AXIS_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(-AXIS_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(AXIS_LENGTH, -gGridWidth, i, 0.1f, 0.1f, 0.1f);
-        vertex(AXIS_LENGTH, gGridWidth, i, 0.1f, 0.1f, 0.1f);
+        vertex(-AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
+        vertex(-AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
+        vertex(AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
+        vertex(AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
     }
 
     // function
     for (int i = -X_BOUNDS * RECTS_PER_UNIT; i <= X_BOUNDS * RECTS_PER_UNIT; i++) {
         for (int j = -Z_BOUNDS * RECTS_PER_UNIT; j <= Z_BOUNDS * RECTS_PER_UNIT; j++) {
-            double iD = (double)i / (double)RECTS_PER_UNIT; 
-            double jD = (double)j / (double)RECTS_PER_UNIT;
-            double value = powf(iD, 2) - powf(jD, 2) ;
+            double x = (double)i / (double)RECTS_PER_UNIT; 
+            double y = (double)j / (double)RECTS_PER_UNIT;
+            double z = FUNCTION;
             vertex(
-                iD,
-                value,
-                jD,
-                abs(sin(value / 2.0)) / 1.2,
-                abs(sin(value / 2.0 + M_PI / 3)) / 1.2,
-                abs(sin(value / 2.0 + (2 * M_PI) / 3)) / 1.2
+                x,
+                z,
+                y,
+                abs(sin(z / 2.0)) / 1.2,
+                abs(sin(z / 2.0 + M_PI / 3)) / 1.2,
+                abs(sin(z / 2.0 + (2 * M_PI) / 3)) / 1.2
             );
         }
     }
