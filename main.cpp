@@ -16,7 +16,7 @@
 #define AXIS_LENGTH 5
 #define RECTS_PER_UNIT 20
 #define X_BOUNDS 2
-#define Z_BOUNDS 2
+#define Y_BOUNDS 2
 
 #define INITIAL_RADIUS 9.0f
 #define INITIAL_THETA 45.0f
@@ -25,7 +25,9 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
-#define FUNCTION x * x - y * y / x
+#define FUNCTION powf(abs(x), slider) - powf(abs(y), slider)
+
+#define AXIS_VERTICE_COUNT (72 + AXIS_LENGTH * 240)
 
 SDL_Window *gWindow = nullptr;
 
@@ -44,11 +46,14 @@ float gDashLength = 12.0f * gAxisWidth;
 float gDashWidth  = 2.0f * gAxisWidth;
 float gGridWidth  = gAxisWidth / 3.0f;
 
-int gMouseX      = 0;
-int gMouseY      = 0;
-float gRadius      = INITIAL_RADIUS;
-float gTheta       = INITIAL_THETA;
-float gPhi         = INITIAL_PHI;
+int gMouseX   = 0;
+int gMouseY   = 0;
+float gRadius = INITIAL_RADIUS;
+float gTheta  = INITIAL_THETA;
+float gPhi    = INITIAL_PHI;
+float slider  = 2;
+
+const Uint8* kState = SDL_GetKeyboardState(NULL);
 
 glm::vec3 gCameraPos = glm::vec3(
     gRadius * sin(glm::radians(gPhi)) * cos(glm::radians(gTheta)),
@@ -233,7 +238,7 @@ void vertexSpecification() {
 
     // function
     for (int i = -X_BOUNDS * RECTS_PER_UNIT; i <= X_BOUNDS * RECTS_PER_UNIT; i++) {
-        for (int j = -Z_BOUNDS * RECTS_PER_UNIT; j <= Z_BOUNDS * RECTS_PER_UNIT; j++) {
+        for (int j = -Y_BOUNDS * RECTS_PER_UNIT; j <= Y_BOUNDS * RECTS_PER_UNIT; j++) {
             double x = (double)i / (double)RECTS_PER_UNIT; 
             double y = (double)j / (double)RECTS_PER_UNIT;
             double z = FUNCTION;
@@ -249,7 +254,7 @@ void vertexSpecification() {
     }
     
     // grid and axes rectangles
-    for (int i = 0; i < (1272 / 6); i += 4) {
+    for (int i = 0; i < (AXIS_VERTICE_COUNT / 6); i += 4) {
         indices.push_back(i);
         indices.push_back(i + 1);
         indices.push_back(i + 2);
@@ -259,8 +264,8 @@ void vertexSpecification() {
     }
 
     // function triangles
-    for (int i = (1272 / 6); i < (vertices.size() / 6); i++) {
-        if (vertices[i * 6 + 2] == (float)Z_BOUNDS) {
+    for (int i = (AXIS_VERTICE_COUNT / 6); i < (vertices.size() / 6); i++) {
+        if (vertices[i * 6 + 2] == (float)Y_BOUNDS) {
             continue;
         } else if (vertices[i * 6] == (float)X_BOUNDS) {
             continue;
@@ -271,9 +276,9 @@ void vertexSpecification() {
         }
         indices.push_back(i);
         indices.push_back(i + 1);
-        indices.push_back(i + 2 + 2 * Z_BOUNDS * RECTS_PER_UNIT);
-        indices.push_back(i + 2 + 2 * Z_BOUNDS * RECTS_PER_UNIT);
-        indices.push_back(i + 1 + 2 * Z_BOUNDS * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + 2 * Y_BOUNDS * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + 2 * Y_BOUNDS * RECTS_PER_UNIT);
+        indices.push_back(i + 1 + 2 * Y_BOUNDS * RECTS_PER_UNIT);
         indices.push_back(i);
     }
 
@@ -475,6 +480,13 @@ void input() {
                 break;
         }
     }
+
+    if (kState[SDL_SCANCODE_T]) {
+        slider += 0.01;
+    }
+    if (kState[SDL_SCANCODE_G]) {
+        slider -= 0.01;
+    }
 }
 
 void predraw() {
@@ -482,6 +494,7 @@ void predraw() {
 
     glUseProgram(gGraphicsPipelineObject);
 
+    // x axis
     float xAngle = M_PI / 2.0 - atan(gCameraPos.y / gCameraPos.z);
     float xY = -gAxisWidth * sin(xAngle);
     float xZ = gAxisWidth * cos(xAngle);
@@ -493,66 +506,6 @@ void predraw() {
     vertices[14] = xZ;
     vertices[19] = -xY;
     vertices[20] = -xZ;
-    // -z dashes
-    for (int i = 313; i < 433; i += 24) {
-        int offset = (i - 313) / 24 - 5;
-        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
-        xY = -gDashWidth * sin(xAngle);
-        xZ = gDashWidth * cos(xAngle);
-        vertices[i] = xY;
-        vertices[i + 1] = xZ + offset;
-        vertices[i + 6] = -xY;
-        vertices[i + 7] = -xZ + offset;
-        vertices[i + 12] = xY;
-        vertices[i + 13] = xZ + offset;
-        vertices[i + 18] = -xY;
-        vertices[i + 19] = -xZ + offset;
-    }
-    // +z dashes
-    for (int i = 433; i < 553; i += 24) {
-        int offset = (i - 433) / 24 + 1;
-        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
-        xY = -gDashWidth * sin(xAngle);
-        xZ = gDashWidth * cos(xAngle);
-        vertices[i] = xY;
-        vertices[i + 1] = xZ + offset;
-        vertices[i + 6] = -xY;
-        vertices[i + 7] = -xZ + offset;
-        vertices[i + 12] = xY;
-        vertices[i + 13] = xZ + offset;
-        vertices[i + 18] = -xY;
-        vertices[i + 19] = -xZ + offset;
-    }
-    // -z grid
-    for (int i = 1033; i < 1153; i += 24) {
-        int offset = (i - 1033) / 24 - 5;
-        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
-        xY = -gGridWidth * sin(xAngle);
-        xZ = gGridWidth * cos(xAngle);
-        vertices[i] = xY;
-        vertices[i + 1] = xZ + offset;
-        vertices[i + 6] = -xY;
-        vertices[i + 7] = -xZ + offset;
-        vertices[i + 12] = xY;
-        vertices[i + 13] = xZ + offset;
-        vertices[i + 18] = -xY;
-        vertices[i + 19] = -xZ + offset;
-    }
-    // +z grid
-    for (int i = 1153; i < 1273; i += 24) {
-        int offset = (i - 1153) / 24 + 1;
-        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
-        xY = -gGridWidth * sin(xAngle);
-        xZ = gGridWidth * cos(xAngle);
-        vertices[i] = xY;
-        vertices[i + 1] = xZ + offset;
-        vertices[i + 6] = -xY;
-        vertices[i + 7] = -xZ + offset;
-        vertices[i + 12] = xY;
-        vertices[i + 13] = xZ + offset;
-        vertices[i + 18] = -xY;
-        vertices[i + 19] = -xZ + offset;
-    }
     // z axis
     float zAngle = M_PI / 2.0 - atan(gCameraPos.x / gCameraPos.y);
     float zX = -gAxisWidth * sin(zAngle);
@@ -565,9 +518,21 @@ void predraw() {
     vertices[37] = zY;
     vertices[42] = -zX;
     vertices[43] = -zY;
+    // y axis
+    float yAngle = M_PI / 2.0 - atan(gCameraPos.z / gCameraPos.x);
+    float yZ = -gAxisWidth * sin(yAngle);
+    float yX = gAxisWidth * cos(yAngle);
+    vertices[48] = yX;
+    vertices[50] = yZ;
+    vertices[54] = -yX;
+    vertices[56] = -yZ;
+    vertices[60] = yX;
+    vertices[62] = yZ;
+    vertices[66] = -yX;
+    vertices[68] = -yZ;
     // -x dashes
-    for (int i = 72; i < 192; i += 24) {
-        int offset = (i - 72) / 24 - 5;
+    for (int i = 72; i < 72 + AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - 72) / 24 - AXIS_LENGTH;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -581,8 +546,8 @@ void predraw() {
         vertices[i + 19] = -zY;
     }
     // +x dashes
-    for (int i = 192; i < 312; i += 24) {
-        int offset = (i - 192) / 24 + 1;
+    for (int i = 72 + AXIS_LENGTH * 24; i < 72 + 2 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + AXIS_LENGTH * 24)) / 24 + 1;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -595,9 +560,39 @@ void predraw() {
         vertices[i + 18] = -zX + offset;
         vertices[i + 19] = -zY;
     }
+    // -z dashes
+    for (int i = 72 + 2 * AXIS_LENGTH * 24; i < 72 + 3 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 2 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
+        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
+        xY = -gDashWidth * sin(xAngle);
+        xZ = gDashWidth * cos(xAngle);
+        vertices[i + 1] = xY;
+        vertices[i + 2] = xZ + offset;
+        vertices[i + 7] = -xY;
+        vertices[i + 8] = -xZ + offset;
+        vertices[i + 13] = xY;
+        vertices[i + 14] = xZ + offset;
+        vertices[i + 19] = -xY;
+        vertices[i + 20] = -xZ + offset;
+    }
+    // +z dashes
+    for (int i = 72 + 3 * AXIS_LENGTH * 24; i < 72 + 4 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 3 * AXIS_LENGTH * 24)) / 24 + 1;
+        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
+        xY = -gDashWidth * sin(xAngle);
+        xZ = gDashWidth * cos(xAngle);
+        vertices[i + 1] = xY;
+        vertices[i + 2] = xZ + offset;
+        vertices[i + 7] = -xY;
+        vertices[i + 8] = -xZ + offset;
+        vertices[i + 13] = xY;
+        vertices[i + 14] = xZ + offset;
+        vertices[i + 19] = -xY;
+        vertices[i + 20] = -xZ + offset;
+    }
     // -y dashes
-    for (int i = 552; i < 672; i += 24) {
-        int offset = (i - 552) / 24 - 5;
+    for (int i = 72 + 4 * AXIS_LENGTH * 24; i < 72 + 5 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 4 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
         zAngle = M_PI / 2.0 - atan(gCameraPos.x / (gCameraPos.y - offset));
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -611,8 +606,8 @@ void predraw() {
         vertices[i + 19] = -zY + offset;
     }
     // +y dashes
-    for (int i = 672; i < 792; i += 24) {
-        int offset = (i - 672) / 24 + 1;
+    for (int i = 72 + 5 * AXIS_LENGTH * 24; i < 72 + 6 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 5 * AXIS_LENGTH * 24)) / 24 + 1;
         zAngle = M_PI / 2.0 - atan(gCameraPos.x / (gCameraPos.y - offset));
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -626,8 +621,8 @@ void predraw() {
         vertices[i + 19] = -zY + offset;
     }
     // -x grid
-    for (int i = 792; i < 912; i += 24) {
-        int offset = (i - 792) / 24 - 5;
+    for (int i = 72 + 6 * AXIS_LENGTH * 24; i < 72 + 7 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 6 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gGridWidth * sin(zAngle);
         zY = gGridWidth * cos(zAngle);
@@ -641,8 +636,8 @@ void predraw() {
         vertices[i + 19] = -zY;
     }
     // +x grid
-    for (int i = 912; i < 1032; i += 24) {
-        int offset = (i - 912) / 24 + 1;
+    for (int i = 72 + 7 * AXIS_LENGTH * 24; i < 72 + 8 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 7 * AXIS_LENGTH * 24)) / 24 + 1;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gGridWidth * sin(zAngle);
         zY = gGridWidth * cos(zAngle);
@@ -655,18 +650,52 @@ void predraw() {
         vertices[i + 18] = -zX + offset;
         vertices[i + 19] = -zY;
     }
-    // y axis
-    float yAngle = M_PI / 2.0 - atan(gCameraPos.z / gCameraPos.x);
-    float yZ = -gAxisWidth * sin(yAngle);
-    float yX = gAxisWidth * cos(yAngle);
-    vertices[48] = yX;
-    vertices[50] = yZ;
-    vertices[54] = -yX;
-    vertices[56] = -yZ;
-    vertices[60] = yX;
-    vertices[62] = yZ;
-    vertices[66] = -yX;
-    vertices[68] = -yZ;
+    // -z grid
+    for (int i = 72 + 8 * AXIS_LENGTH * 24; i < 72 + 9 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 8 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
+        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
+        xY = -gGridWidth * sin(xAngle);
+        xZ = gGridWidth * cos(xAngle);
+        vertices[i + 1] = xY;
+        vertices[i + 2] = xZ + offset;
+        vertices[i + 7] = -xY;
+        vertices[i + 8] = -xZ + offset;
+        vertices[i + 13] = xY;
+        vertices[i + 14] = xZ + offset;
+        vertices[i + 19] = -xY;
+        vertices[i + 20] = -xZ + offset;
+    }
+    // +z grid
+    for (int i = 72 + 9 * AXIS_LENGTH * 24; i < 72 + 10 * AXIS_LENGTH * 24; i += 24) {
+        int offset = (i - (72 + 9 * AXIS_LENGTH * 24)) / 24 + 1;
+        xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
+        xY = -gGridWidth * sin(xAngle);
+        xZ = gGridWidth * cos(xAngle);
+        vertices[i + 1] = xY;
+        vertices[i + 2] = xZ + offset;
+        vertices[i + 7] = -xY;
+        vertices[i + 8] = -xZ + offset;
+        vertices[i + 13] = xY;
+        vertices[i + 14] = xZ + offset;
+        vertices[i + 19] = -xY;
+        vertices[i + 20] = -xZ + offset;
+    }
+
+    int count = 0;
+    // function
+    for (int i = -X_BOUNDS * RECTS_PER_UNIT; i <= X_BOUNDS * RECTS_PER_UNIT; i++) {
+        for (int j = -Y_BOUNDS * RECTS_PER_UNIT; j <= Y_BOUNDS * RECTS_PER_UNIT; j++) {
+            double x = (double)i / (double)RECTS_PER_UNIT; 
+            double y = (double)j / (double)RECTS_PER_UNIT;
+            double z = FUNCTION;
+
+            vertices[AXIS_VERTICE_COUNT + 1 + count] = z;
+            vertices[AXIS_VERTICE_COUNT + 3 + count] = abs(sin(z / 2.0)) / 1.2;
+            vertices[AXIS_VERTICE_COUNT + 4 + count] = abs(sin(z / 2.0 + M_PI / 3)) / 1.2;
+            vertices[AXIS_VERTICE_COUNT + 5 + count] = abs(sin(z / 2.0 + (2 * M_PI) / 3)) / 1.2;
+            count += 6;
+        }
+    }
 
     gCameraPos = glm::vec3(
         gRadius * sin(glm::radians(gPhi)) * cos(glm::radians(gTheta)), 
@@ -712,10 +741,10 @@ void predraw() {
 
 void draw() {
     glDisable(GL_BLEND);
-    glDrawElements(GL_TRIANGLES, (1272 / 4), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, (AXIS_VERTICE_COUNT / 4), GL_UNSIGNED_INT, 0);
 
     glEnable(GL_BLEND);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (const void*)(sizeof(GLfloat) * (1272 / 4)));
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (const void*)(sizeof(GLfloat) * (AXIS_VERTICE_COUNT / 4)));
 }
 
 void postdraw() {
