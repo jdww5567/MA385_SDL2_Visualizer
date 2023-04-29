@@ -25,7 +25,7 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
-#define FUNCTION powf(abs(x), slider) - powf(abs(y), slider)
+#define FUNCTION powf(abs(slider), x) - powf(abs(slider), y)
 
 #define AXIS_VERTICE_COUNT (72 + AXIS_LENGTH * 240)
 
@@ -52,6 +52,7 @@ float gRadius = INITIAL_RADIUS;
 float gTheta  = INITIAL_THETA;
 float gPhi    = INITIAL_PHI;
 float slider  = 2;
+float counter = 0;
 
 const Uint8* kState = SDL_GetKeyboardState(NULL);
 
@@ -679,22 +680,6 @@ void predraw() {
         vertices[i + 14] = xZ + offset;
         vertices[i + 19] = -xY;
         vertices[i + 20] = -xZ + offset;
-    }
-
-    int count = 0;
-    // function
-    for (int i = -X_BOUNDS * RECTS_PER_UNIT; i <= X_BOUNDS * RECTS_PER_UNIT; i++) {
-        for (int j = -Y_BOUNDS * RECTS_PER_UNIT; j <= Y_BOUNDS * RECTS_PER_UNIT; j++) {
-            double x = (double)i / (double)RECTS_PER_UNIT; 
-            double y = (double)j / (double)RECTS_PER_UNIT;
-            double z = FUNCTION;
-
-            vertices[AXIS_VERTICE_COUNT + 1 + count] = z;
-            vertices[AXIS_VERTICE_COUNT + 3 + count] = abs(sin(z / 2.0)) / 1.2;
-            vertices[AXIS_VERTICE_COUNT + 4 + count] = abs(sin(z / 2.0 + M_PI / 3)) / 1.2;
-            vertices[AXIS_VERTICE_COUNT + 5 + count] = abs(sin(z / 2.0 + (2 * M_PI) / 3)) / 1.2;
-            count += 6;
-        }
     }
 
     gCameraPos = glm::vec3(
