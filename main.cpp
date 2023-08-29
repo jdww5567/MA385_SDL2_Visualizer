@@ -25,7 +25,7 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
-#define FUNCTION powf(abs(slider), x) - powf(abs(slider), y)
+#define FUNCTION powf(abs(2), x) - powf(abs(2), y)
 
 #define AXIS_VERTICE_COUNT (72 + AXIS_LENGTH * 240)
 
@@ -51,8 +51,6 @@ int gMouseY   = 0;
 float gRadius = INITIAL_RADIUS;
 float gTheta  = INITIAL_THETA;
 float gPhi    = INITIAL_PHI;
-float slider  = 2;
-float counter = 0;
 
 const Uint8* kState = SDL_GetKeyboardState(NULL);
 
@@ -480,13 +478,6 @@ void input() {
             default:
                 break;
         }
-    }
-
-    if (kState[SDL_SCANCODE_T]) {
-        slider += 0.01;
-    }
-    if (kState[SDL_SCANCODE_G]) {
-        slider -= 0.01;
     }
 }
 
