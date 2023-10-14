@@ -8,15 +8,11 @@
 #include <string>
 #include <fstream>
 #include <cmath>
-#include <random>
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 960
+#define SCREEN_HEIGHT 720
 
-#define AXIS_LENGTH 5
 #define RECTS_PER_UNIT 20
-#define X_BOUNDS 2
-#define Y_BOUNDS 2
 
 #define INITIAL_RADIUS 9.0f
 #define INITIAL_THETA 45.0f
@@ -25,9 +21,13 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
+int gXBounds = 2;
+int gYBounds = 2;
+
 #define FUNCTION powf(abs(2), x) - powf(abs(2), y)
 
-#define AXIS_VERTICE_COUNT (72 + AXIS_LENGTH * 240)
+int gAxisLength = 5;
+int gVerticeCount = 72 + gAxisLength * 240;
 
 SDL_Window *gWindow = nullptr;
 
@@ -44,7 +44,7 @@ bool gLeftDown = false;
 float gAxisWidth  = 0.01f;
 float gDashLength = 12.0f * gAxisWidth;
 float gDashWidth  = 2.0f * gAxisWidth;
-float gGridWidth  = gAxisWidth / 3.0f;
+float gGridWidth  = gAxisWidth / 2.0f;
 
 int gMouseX   = 0;
 int gMouseY   = 0;
@@ -64,7 +64,7 @@ glm::vec3 gCameraUp = glm::normalize(glm::vec3(0, 1.0f, 0));
 
 const Uint8 *gState = SDL_GetKeyboardState(NULL);
 
-std::vector<GLfloat> vertices {}; 
+std::vector<GLfloat> vertices {};
 
 std::vector<GLuint> indices {};
 
@@ -139,36 +139,38 @@ void vertex(float x, float y, float z, float r, float g, float b) {
 }
 
 void vertexSpecification() {
+    vertices.clear();
+    indices.clear();
     // -x axis
-    vertex(-AXIS_LENGTH, -gAxisWidth, 0.0f, AXIS_COLOR);
-    vertex(-AXIS_LENGTH, gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(-gAxisLength, -gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(-gAxisLength, gAxisWidth, 0.0f, AXIS_COLOR);
     // +x axis
-    vertex(AXIS_LENGTH, -gAxisWidth, 0.0f, AXIS_COLOR);
-    vertex(AXIS_LENGTH, gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(gAxisLength, -gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(gAxisLength, gAxisWidth, 0.0f, AXIS_COLOR);
 
     // -z axis
-    vertex(0.0f, -gAxisWidth, -AXIS_LENGTH, AXIS_COLOR);
-    vertex(0.0f, gAxisWidth, -AXIS_LENGTH, AXIS_COLOR);
+    vertex(0.0f, -gAxisWidth, -gAxisLength, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, -gAxisLength, AXIS_COLOR);
     // +z axis
-    vertex(0.0f, -gAxisWidth, AXIS_LENGTH, AXIS_COLOR);
-    vertex(0.0f, gAxisWidth, AXIS_LENGTH, AXIS_COLOR);
+    vertex(0.0f, -gAxisWidth, gAxisLength, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, gAxisLength, AXIS_COLOR);
 
     // -y axis
-    vertex(-gAxisWidth, -AXIS_LENGTH, 0.0f, AXIS_COLOR);
-    vertex(gAxisWidth, -AXIS_LENGTH, 0.0f, AXIS_COLOR);
+    vertex(-gAxisWidth, -gAxisLength, 0.0f, AXIS_COLOR);
+    vertex(gAxisWidth, -gAxisLength, 0.0f, AXIS_COLOR);
     // +y axis
-    vertex(-gAxisWidth, AXIS_LENGTH, 0.0f, AXIS_COLOR);
-    vertex(gAxisWidth, AXIS_LENGTH, 0.0f, AXIS_COLOR);
+    vertex(-gAxisWidth, gAxisLength, 0.0f, AXIS_COLOR);
+    vertex(gAxisWidth, gAxisLength, 0.0f, AXIS_COLOR);
 
     // -x dashes
-    for (int i = -AXIS_LENGTH; i < 0; i++) {
+    for (int i = -gAxisLength; i < 0; i++) {
         vertex(i, -gDashWidth, -gDashLength, AXIS_COLOR);
         vertex(i, gDashWidth, -gDashLength, AXIS_COLOR);
         vertex(i, -gDashWidth, gDashLength, AXIS_COLOR);
         vertex(i, gDashWidth, gDashLength, AXIS_COLOR);
     }
     // +x dashes
-    for (int i = 1; i <= AXIS_LENGTH; i++) {
+    for (int i = 1; i <= gAxisLength; i++) {
         vertex(i, -gDashWidth, -gDashLength, AXIS_COLOR);
         vertex(i, gDashWidth, -gDashLength, AXIS_COLOR);
         vertex(i, -gDashWidth, gDashLength, AXIS_COLOR);
@@ -176,14 +178,14 @@ void vertexSpecification() {
     }
 
     // -z dashes
-    for (int i = -AXIS_LENGTH; i < 0; i++) {
+    for (int i = -gAxisLength; i < 0; i++) {
         vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
         vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
         vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
         vertex(gDashLength, gDashWidth, i, AXIS_COLOR);
     }
     // +z dashes
-    for (int i = 1; i <= AXIS_LENGTH; i++) {
+    for (int i = 1; i <= gAxisLength; i++) {
         vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
         vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
         vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
@@ -191,14 +193,14 @@ void vertexSpecification() {
     }
 
     // -y dashes
-    for (int i = -AXIS_LENGTH; i < 0; i++) {
+    for (int i = -gAxisLength; i < 0; i++) {
         vertex(-gDashWidth, i, -gDashLength, AXIS_COLOR);
         vertex(gDashWidth, i, -gDashLength, AXIS_COLOR);
         vertex(-gDashWidth, i, gDashLength, AXIS_COLOR);
         vertex(gDashWidth, i, gDashLength, AXIS_COLOR);
     }
     // +y dashes
-    for (int i = 1; i <= AXIS_LENGTH; i++) {
+    for (int i = 1; i <= gAxisLength; i++) {
         vertex(-gDashWidth, i, -gDashLength, AXIS_COLOR);
         vertex(gDashWidth, i, -gDashLength, AXIS_COLOR);
         vertex(-gDashWidth, i, gDashLength, AXIS_COLOR);
@@ -206,38 +208,38 @@ void vertexSpecification() {
     }
 
     // -x grid
-    for (int i = -AXIS_LENGTH; i < 0; i++) {
-        vertex(i, -gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
-        vertex(i, gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
-        vertex(i, -gGridWidth, AXIS_LENGTH, AXIS_COLOR);
-        vertex(i, gGridWidth, AXIS_LENGTH, AXIS_COLOR);
+    for (int i = -gAxisLength; i < 0; i++) {
+        vertex(i, -gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, gAxisLength, AXIS_COLOR);
     }
     // +x grid
-    for (int i = 1; i <= AXIS_LENGTH; i++) {
-        vertex(i, -gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
-        vertex(i, gGridWidth, -AXIS_LENGTH, AXIS_COLOR);
-        vertex(i, -gGridWidth, AXIS_LENGTH, AXIS_COLOR);
-        vertex(i, gGridWidth, AXIS_LENGTH, AXIS_COLOR);
+    for (int i = 1; i <= gAxisLength; i++) {
+        vertex(i, -gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, gAxisLength, AXIS_COLOR);
     }
 
     // -z grid
-    for (int i = -AXIS_LENGTH; i < 0; i++) {
-        vertex(-AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
-        vertex(-AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
-        vertex(AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
-        vertex(AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
+    for (int i = -gAxisLength; i < 0; i++) {
+        vertex(-gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(-gAxisLength, gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, gGridWidth, i, AXIS_COLOR);
     }
     // +z grid
-    for (int i = 1; i <= AXIS_LENGTH; i++) {
-        vertex(-AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
-        vertex(-AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
-        vertex(AXIS_LENGTH, -gGridWidth, i, AXIS_COLOR);
-        vertex(AXIS_LENGTH, gGridWidth, i, AXIS_COLOR);
+    for (int i = 1; i <= gAxisLength; i++) {
+        vertex(-gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(-gAxisLength, gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, gGridWidth, i, AXIS_COLOR);
     }
 
     // function
-    for (int i = -X_BOUNDS * RECTS_PER_UNIT; i <= X_BOUNDS * RECTS_PER_UNIT; i++) {
-        for (int j = -Y_BOUNDS * RECTS_PER_UNIT; j <= Y_BOUNDS * RECTS_PER_UNIT; j++) {
+    for (int i = -gXBounds * RECTS_PER_UNIT; i <= gXBounds * RECTS_PER_UNIT; i++) {
+        for (int j = -gYBounds * RECTS_PER_UNIT; j <= gYBounds * RECTS_PER_UNIT; j++) {
             double x = (double)i / (double)RECTS_PER_UNIT; 
             double y = (double)j / (double)RECTS_PER_UNIT;
             double z = FUNCTION;
@@ -253,7 +255,7 @@ void vertexSpecification() {
     }
     
     // grid and axes rectangles
-    for (int i = 0; i < (AXIS_VERTICE_COUNT / 6); i += 4) {
+    for (int i = 0; i < (gVerticeCount / 6); i += 4) {
         indices.push_back(i);
         indices.push_back(i + 1);
         indices.push_back(i + 2);
@@ -263,10 +265,10 @@ void vertexSpecification() {
     }
 
     // function triangles
-    for (int i = (AXIS_VERTICE_COUNT / 6); i < (vertices.size() / 6); i++) {
-        if (vertices[i * 6 + 2] == (float)Y_BOUNDS) {
+    for (int i = (gVerticeCount / 6); i < (vertices.size() / 6); i++) {
+        if (vertices[i * 6 + 2] == (float)gYBounds) {
             continue;
-        } else if (vertices[i * 6] == (float)X_BOUNDS) {
+        } else if (vertices[i * 6] == (float)gXBounds) {
             continue;
         } else if (vertices[i * 6 + 1] != vertices[i * 6 + 1]) {
             continue;
@@ -275,9 +277,9 @@ void vertexSpecification() {
         }
         indices.push_back(i);
         indices.push_back(i + 1);
-        indices.push_back(i + 2 + 2 * Y_BOUNDS * RECTS_PER_UNIT);
-        indices.push_back(i + 2 + 2 * Y_BOUNDS * RECTS_PER_UNIT);
-        indices.push_back(i + 1 + 2 * Y_BOUNDS * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + 2 * gYBounds * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + 2 * gYBounds * RECTS_PER_UNIT);
+        indices.push_back(i + 1 + 2 * gYBounds * RECTS_PER_UNIT);
         indices.push_back(i);
     }
 
@@ -418,6 +420,8 @@ void findUniformVars() {
     }
 }
 
+bool gADown = false;
+bool gBDown = false;
 void input() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
@@ -471,7 +475,36 @@ void input() {
                         gMouseX = gMouseX / 2.0 - gTheta;
                         gMouseY = gMouseY / 2.0 + gPhi;
                         break;
+                    case SDLK_a:
+                        gADown = true;
+                        gBDown = false;
+                        break;
+                    case SDLK_b:
+                        gBDown = true;
+                        gADown = false;
+                        break;
                     default:
+                        if (gBDown && e.key.keysym.sym > 48 && e.key.keysym.sym <= 57) {
+                            gXBounds = e.key.keysym.sym - 48;
+                            gYBounds = e.key.keysym.sym - 48;
+                            if (gXBounds > gAxisLength) {
+                                gAxisLength = gXBounds;
+                                gVerticeCount = 72 + gAxisLength * 240;
+                            }
+                            vertexSpecification();
+                            gBDown = false;
+                        }
+                        if (gADown && e.key.keysym.sym > 48 && e.key.keysym.sym <= 57) {
+                            gAxisLength = e.key.keysym.sym - 48;
+                            gVerticeCount = 72 + gAxisLength * 240;
+                            if (gAxisLength < gXBounds) {
+                                gXBounds = gAxisLength;
+                                gYBounds = gAxisLength;
+                            }
+                            vertexSpecification();
+                            gADown = false;
+                        }
+
                         break;
                 }
                 break;
@@ -523,8 +556,8 @@ void predraw() {
     vertices[66] = -yX;
     vertices[68] = -yZ;
     // -x dashes
-    for (int i = 72; i < 72 + AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - 72) / 24 - AXIS_LENGTH;
+    for (int i = 72; i < 72 + gAxisLength * 24; i += 24) {
+        int offset = (i - 72) / 24 - gAxisLength;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -538,8 +571,8 @@ void predraw() {
         vertices[i + 19] = -zY;
     }
     // +x dashes
-    for (int i = 72 + AXIS_LENGTH * 24; i < 72 + 2 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + AXIS_LENGTH * 24)) / 24 + 1;
+    for (int i = 72 + gAxisLength * 24; i < 72 + 2 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + gAxisLength * 24)) / 24 + 1;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -553,8 +586,8 @@ void predraw() {
         vertices[i + 19] = -zY;
     }
     // -z dashes
-    for (int i = 72 + 2 * AXIS_LENGTH * 24; i < 72 + 3 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 2 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
+    for (int i = 72 + 2 * gAxisLength * 24; i < 72 + 3 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 2 * gAxisLength * 24)) / 24 - gAxisLength;
         xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
         xY = -gDashWidth * sin(xAngle);
         xZ = gDashWidth * cos(xAngle);
@@ -568,8 +601,8 @@ void predraw() {
         vertices[i + 20] = -xZ + offset;
     }
     // +z dashes
-    for (int i = 72 + 3 * AXIS_LENGTH * 24; i < 72 + 4 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 3 * AXIS_LENGTH * 24)) / 24 + 1;
+    for (int i = 72 + 3 * gAxisLength * 24; i < 72 + 4 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 3 * gAxisLength * 24)) / 24 + 1;
         xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
         xY = -gDashWidth * sin(xAngle);
         xZ = gDashWidth * cos(xAngle);
@@ -583,8 +616,8 @@ void predraw() {
         vertices[i + 20] = -xZ + offset;
     }
     // -y dashes
-    for (int i = 72 + 4 * AXIS_LENGTH * 24; i < 72 + 5 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 4 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
+    for (int i = 72 + 4 * gAxisLength * 24; i < 72 + 5 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 4 * gAxisLength * 24)) / 24 - gAxisLength;
         zAngle = M_PI / 2.0 - atan(gCameraPos.x / (gCameraPos.y - offset));
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -598,8 +631,8 @@ void predraw() {
         vertices[i + 19] = -zY + offset;
     }
     // +y dashes
-    for (int i = 72 + 5 * AXIS_LENGTH * 24; i < 72 + 6 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 5 * AXIS_LENGTH * 24)) / 24 + 1;
+    for (int i = 72 + 5 * gAxisLength * 24; i < 72 + 6 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 5 * gAxisLength * 24)) / 24 + 1;
         zAngle = M_PI / 2.0 - atan(gCameraPos.x / (gCameraPos.y - offset));
         zX = -gDashWidth * sin(zAngle);
         zY = gDashWidth * cos(zAngle);
@@ -613,8 +646,8 @@ void predraw() {
         vertices[i + 19] = -zY + offset;
     }
     // -x grid
-    for (int i = 72 + 6 * AXIS_LENGTH * 24; i < 72 + 7 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 6 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
+    for (int i = 72 + 6 * gAxisLength * 24; i < 72 + 7 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 6 * gAxisLength * 24)) / 24 - gAxisLength;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gGridWidth * sin(zAngle);
         zY = gGridWidth * cos(zAngle);
@@ -628,8 +661,8 @@ void predraw() {
         vertices[i + 19] = -zY;
     }
     // +x grid
-    for (int i = 72 + 7 * AXIS_LENGTH * 24; i < 72 + 8 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 7 * AXIS_LENGTH * 24)) / 24 + 1;
+    for (int i = 72 + 7 * gAxisLength * 24; i < 72 + 8 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 7 * gAxisLength * 24)) / 24 + 1;
         zAngle = M_PI / 2.0 - atan((gCameraPos.x - offset) / gCameraPos.y);
         zX = -gGridWidth * sin(zAngle);
         zY = gGridWidth * cos(zAngle);
@@ -643,8 +676,8 @@ void predraw() {
         vertices[i + 19] = -zY;
     }
     // -z grid
-    for (int i = 72 + 8 * AXIS_LENGTH * 24; i < 72 + 9 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 8 * AXIS_LENGTH * 24)) / 24 - AXIS_LENGTH;
+    for (int i = 72 + 8 * gAxisLength * 24; i < 72 + 9 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 8 * gAxisLength * 24)) / 24 - gAxisLength;
         xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
         xY = -gGridWidth * sin(xAngle);
         xZ = gGridWidth * cos(xAngle);
@@ -658,8 +691,8 @@ void predraw() {
         vertices[i + 20] = -xZ + offset;
     }
     // +z grid
-    for (int i = 72 + 9 * AXIS_LENGTH * 24; i < 72 + 10 * AXIS_LENGTH * 24; i += 24) {
-        int offset = (i - (72 + 9 * AXIS_LENGTH * 24)) / 24 + 1;
+    for (int i = 72 + 9 * gAxisLength * 24; i < 72 + 10 * gAxisLength * 24; i += 24) {
+        int offset = (i - (72 + 9 * gAxisLength * 24)) / 24 + 1;
         xAngle = M_PI / 2.0 - atan(gCameraPos.y / (gCameraPos.z - offset));
         xY = -gGridWidth * sin(xAngle);
         xZ = gGridWidth * cos(xAngle);
@@ -717,10 +750,10 @@ void predraw() {
 
 void draw() {
     glDisable(GL_BLEND);
-    glDrawElements(GL_TRIANGLES, (AXIS_VERTICE_COUNT / 4), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, (gVerticeCount / 4), GL_UNSIGNED_INT, 0);
 
     glEnable(GL_BLEND);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (const void*)(sizeof(GLfloat) * (AXIS_VERTICE_COUNT / 4)));
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (const void*)(sizeof(GLfloat) * (gVerticeCount / 4)));
 }
 
 void postdraw() {

@@ -1,8 +1,6 @@
-.vscode/
 *.dll
 *.exe
+.vscode/
 include/
 lib/
 src/
-gladold/
-glad/
