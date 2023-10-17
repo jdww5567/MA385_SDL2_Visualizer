@@ -85,6 +85,8 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
     gWindow = SDL_CreateWindow(
         "MA_385_Project",
         SDL_WINDOWPOS_UNDEFINED,
@@ -124,7 +126,8 @@ void setup() {
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
-    glClearColor(BG_COLOR, 1.0f);
+    glEnable(GL_BLEND);
+    glClearColor(BG_COLOR, 0.0f);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -138,9 +141,10 @@ void vertex(float x, float y, float z, float r, float g, float b) {
     vertices.push_back(b);
 }
 
-void vertexSpecification() {
+void vertexUpdate() {
     vertices.clear();
     indices.clear();
+
     // -x axis
     vertex(-gAxisLength, -gAxisWidth, 0.0f, AXIS_COLOR);
     vertex(-gAxisLength, gAxisWidth, 0.0f, AXIS_COLOR);
@@ -265,7 +269,167 @@ void vertexSpecification() {
     }
 
     // function triangles
-    for (int i = (gVerticeCount / 6); i < (vertices.size() / 6); i++) {
+    for (std::vector<float>::size_type i = (gVerticeCount / 6); i < (vertices.size() / 6); i++) {
+        if (vertices[i * 6 + 2] == (float)gYBounds) {
+            continue;
+        } else if (vertices[i * 6] == (float)gXBounds) {
+            continue;
+        } else if (vertices[i * 6 + 1] != vertices[i * 6 + 1]) {
+            continue;
+        } else if (50 < vertices[i * 6 + 1] || vertices[i * 6 + 1] < -50) {
+            continue;
+        }
+        indices.push_back(i);
+        indices.push_back(i + 1);
+        indices.push_back(i + 2 + 2 * gYBounds * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + 2 * gYBounds * RECTS_PER_UNIT);
+        indices.push_back(i + 1 + 2 * gYBounds * RECTS_PER_UNIT);
+        indices.push_back(i);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        vertices.size() * sizeof(GLfloat),
+        vertices.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        indices.size() * sizeof(GLint),
+        indices.data(),
+        GL_DYNAMIC_DRAW
+    );
+}
+
+void vertexSpecification() {
+    // -x axis
+    vertex(-gAxisLength, -gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(-gAxisLength, gAxisWidth, 0.0f, AXIS_COLOR);
+    // +x axis
+    vertex(gAxisLength, -gAxisWidth, 0.0f, AXIS_COLOR);
+    vertex(gAxisLength, gAxisWidth, 0.0f, AXIS_COLOR);
+
+    // -z axis
+    vertex(0.0f, -gAxisWidth, -gAxisLength, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, -gAxisLength, AXIS_COLOR);
+    // +z axis
+    vertex(0.0f, -gAxisWidth, gAxisLength, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, gAxisLength, AXIS_COLOR);
+
+    // -y axis
+    vertex(-gAxisWidth, -gAxisLength, 0.0f, AXIS_COLOR);
+    vertex(gAxisWidth, -gAxisLength, 0.0f, AXIS_COLOR);
+    // +y axis
+    vertex(-gAxisWidth, gAxisLength, 0.0f, AXIS_COLOR);
+    vertex(gAxisWidth, gAxisLength, 0.0f, AXIS_COLOR);
+
+    // -x dashes
+    for (int i = -gAxisLength; i < 0; i++) {
+        vertex(i, -gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, -gDashWidth, gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, gDashLength, AXIS_COLOR);
+    }
+    // +x dashes
+    for (int i = 1; i <= gAxisLength; i++) {
+        vertex(i, -gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, -gDashLength, AXIS_COLOR);
+        vertex(i, -gDashWidth, gDashLength, AXIS_COLOR);
+        vertex(i, gDashWidth, gDashLength, AXIS_COLOR);
+    }
+
+    // -z dashes
+    for (int i = -gAxisLength; i < 0; i++) {
+        vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, gDashWidth, i, AXIS_COLOR);
+    }
+    // +z dashes
+    for (int i = 1; i <= gAxisLength; i++) {
+        vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
+        vertex(gDashLength, gDashWidth, i, AXIS_COLOR);
+    }
+
+    // -y dashes
+    for (int i = -gAxisLength; i < 0; i++) {
+        vertex(-gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(-gDashWidth, i, gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, gDashLength, AXIS_COLOR);
+    }
+    // +y dashes
+    for (int i = 1; i <= gAxisLength; i++) {
+        vertex(-gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, -gDashLength, AXIS_COLOR);
+        vertex(-gDashWidth, i, gDashLength, AXIS_COLOR);
+        vertex(gDashWidth, i, gDashLength, AXIS_COLOR);
+    }
+
+    // -x grid
+    for (int i = -gAxisLength; i < 0; i++) {
+        vertex(i, -gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, gAxisLength, AXIS_COLOR);
+    }
+    // +x grid
+    for (int i = 1; i <= gAxisLength; i++) {
+        vertex(i, -gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, -gAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, gAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, gAxisLength, AXIS_COLOR);
+    }
+
+    // -z grid
+    for (int i = -gAxisLength; i < 0; i++) {
+        vertex(-gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(-gAxisLength, gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, gGridWidth, i, AXIS_COLOR);
+    }
+    // +z grid
+    for (int i = 1; i <= gAxisLength; i++) {
+        vertex(-gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(-gAxisLength, gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, -gGridWidth, i, AXIS_COLOR);
+        vertex(gAxisLength, gGridWidth, i, AXIS_COLOR);
+    }
+
+    // function
+    for (int i = -gXBounds * RECTS_PER_UNIT; i <= gXBounds * RECTS_PER_UNIT; i++) {
+        for (int j = -gYBounds * RECTS_PER_UNIT; j <= gYBounds * RECTS_PER_UNIT; j++) {
+            double x = (double)i / (double)RECTS_PER_UNIT; 
+            double y = (double)j / (double)RECTS_PER_UNIT;
+            double z = FUNCTION;
+            vertex(
+                x,
+                z,
+                y,
+                abs(sin(z / 2.0)) / 1.2,
+                abs(sin(z / 2.0 + M_PI / 3)) / 1.2,
+                abs(sin(z / 2.0 + (2 * M_PI) / 3)) / 1.2
+            );
+        }
+    }
+    
+    // grid and axes rectangles
+    for (int i = 0; i < (gVerticeCount / 6); i += 4) {
+        indices.push_back(i);
+        indices.push_back(i + 1);
+        indices.push_back(i + 2);
+        indices.push_back(i + 2);
+        indices.push_back(i + 3);
+        indices.push_back(i + 1);
+    }
+
+    // function triangles
+    for (std::vector<float>::size_type i = (gVerticeCount / 6); i < (vertices.size() / 6); i++) {
         if (vertices[i * 6 + 2] == (float)gYBounds) {
             continue;
         } else if (vertices[i * 6] == (float)gXBounds) {
@@ -292,7 +456,7 @@ void vertexSpecification() {
         GL_ARRAY_BUFFER,
         vertices.size() * sizeof(GLfloat),
         vertices.data(),
-        GL_STATIC_DRAW
+        GL_DYNAMIC_DRAW
     );
 
     glGenBuffers(1, &gIndexBufferObject);
@@ -301,7 +465,7 @@ void vertexSpecification() {
         GL_ELEMENT_ARRAY_BUFFER,
         indices.size() * sizeof(GLint),
         indices.data(),
-        GL_STATIC_DRAW
+        GL_DYNAMIC_DRAW
     );
 
     glEnableVertexAttribArray(0);
@@ -491,7 +655,7 @@ void input() {
                                 gAxisLength = gXBounds;
                                 gVerticeCount = 72 + gAxisLength * 240;
                             }
-                            vertexSpecification();
+                            vertexUpdate();
                             gBDown = false;
                         }
                         if (gADown && e.key.keysym.sym > 48 && e.key.keysym.sym <= 57) {
@@ -501,7 +665,7 @@ void input() {
                                 gXBounds = gAxisLength;
                                 gYBounds = gAxisLength;
                             }
-                            vertexSpecification();
+                            vertexUpdate();
                             gADown = false;
                         }
 
@@ -744,7 +908,7 @@ void predraw() {
         GL_ARRAY_BUFFER, 
         vertices.size() * sizeof(GLfloat),
         vertices.data(), 
-        GL_STATIC_DRAW
+        GL_DYNAMIC_DRAW
     );
 }
 
@@ -753,7 +917,7 @@ void draw() {
     glDrawElements(GL_TRIANGLES, (gVerticeCount / 4), GL_UNSIGNED_INT, 0);
 
     glEnable(GL_BLEND);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (const void*)(sizeof(GLfloat) * (gVerticeCount / 4)));
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 }
 
 void postdraw() {
@@ -762,24 +926,13 @@ void postdraw() {
 }
 
 void loop() {
-    double deltaTime = 0;
-    Uint64 currTime = SDL_GetPerformanceCounter();
-    Uint64 prevTime = 0;
+    Uint64 prevCounter = SDL_GetPerformanceCounter();
+    Uint64 currCounter = 0;
+    double elapsedTime = 0.0;
+    int frameCount = 0;
     int fps = 0;
-    int loopCount = 0;
-    while (gRunning) {
-        prevTime = currTime;
-        currTime = SDL_GetPerformanceCounter();
-        deltaTime += (double)((double)(currTime - prevTime) / (double)SDL_GetPerformanceFrequency());
-        loopCount += 1;
-        if (loopCount == 50) {
-            fps = 50.0 / deltaTime;
-            std::string title = std::to_string(fps) + " FPS";
-            SDL_SetWindowTitle(gWindow, title.c_str());
-            loopCount = 0;
-            deltaTime = 0.0;
-        }
 
+    while (gRunning) {
         input();
 
         predraw();
@@ -789,6 +942,22 @@ void loop() {
         postdraw();
 
         SDL_GL_SwapWindow(gWindow);
+
+        currCounter = SDL_GetPerformanceCounter();
+        double frameTime = (double)(currCounter - prevCounter) / SDL_GetPerformanceFrequency();
+        elapsedTime += frameTime;
+
+        if (elapsedTime >= 1.0) {
+            fps = frameCount;
+            std::string title = std::to_string(fps) + " FPS";
+            SDL_SetWindowTitle(gWindow, title.c_str());
+
+            frameCount = 0;
+            elapsedTime = 0.0;
+        }
+
+        frameCount++;
+        prevCounter = currCounter;
     }
 }
 
