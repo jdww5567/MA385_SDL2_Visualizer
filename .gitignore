@@ -1,6 +1,6 @@
-*.dll
-*.exe
 .vscode/
 include/
 lib/
 src/
+build/
+dlls/

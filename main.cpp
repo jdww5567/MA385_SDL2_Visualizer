@@ -1,7 +1,13 @@
 #include <SDL2/SDL.h>
+
 #include <glad/glad.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+
+// #include <imgui/imgui.h>
+// #include <imgui/imgui_impl_sdl2.h>
+// #include <imgui/imgui_impl_opengl3.h>
 
 #include <iostream>
 #include <vector>
@@ -104,8 +110,8 @@ void setup() {
         exit(1);
     }
 
-    SDL_GLContext context = SDL_GL_CreateContext(gWindow);
-    if (!context) {
+    SDL_GLContext glContext = SDL_GL_CreateContext(gWindow);
+    if (!glContext) {
         std::cout
             << "Error: Failed to create OpenGL context\nSDL Error: "
             << SDL_GetError()
@@ -130,6 +136,16 @@ void setup() {
     glClearColor(BG_COLOR, 0.0f);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // // Setup Dear ImGui context
+    // IMGUI_CHECKVERSION();
+    // ImGui::CreateContext();
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+
+    // // Setup Platform/Renderer backends
+    // ImGui_ImplSDL2_InitForOpenGL(gWindow, glContext);
+    // ImGui_ImplOpenGL3_Init();
 }
 
 void vertex(float x, float y, float z, float r, float g, float b) {
@@ -570,8 +586,8 @@ std::string loadShader(const std::string& fileName) {
 }
 
 void createGraphicsPipeline() {
-    const std::string vertexShaderSource   = loadShader("./shaders/vertex.glsl");
-    const std::string fragmentShaderSource = loadShader("./shaders/fragment.glsl");
+    const std::string vertexShaderSource   = loadShader("../shaders/vertex.glsl");
+    const std::string fragmentShaderSource = loadShader("../shaders/fragment.glsl");
     
     gGraphicsPipelineObject = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 }

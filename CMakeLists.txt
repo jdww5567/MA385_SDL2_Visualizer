@@ -1,14 +1,23 @@
+# Set the cmake version to at least 3.24.2
 cmake_minimum_required(VERSION 3.24.2)
 
-project(Grapher)
+# Set the project name and languages
+project(Grapher LANGUAGES CXX C)
 
 # Set the C++ standard to C++17
 set(CMAKE_CXX_STANDARD 17)
 
-# Add your source files here (replace these placeholders)
-set(SOURCE_FILES
+# Add your source files here
+set(SOURCES
     ${CMAKE_SOURCE_DIR}/main.cpp
-    ${CMAKE_SOURCE_DIR}/src/*.c
+    ${CMAKE_SOURCE_DIR}/src/glad.c
+    ${CMAKE_SOURCE_DIR}/src/imgui.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui_demo.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui_draw.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui_impl_opengl3.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui_impl_sdl2.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui_tables.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui_widgets.cpp
 )
 
 # Include directories
@@ -29,7 +38,12 @@ set(LIBRARIES
 )
 
 # Create the executable
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Link the libraries
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+
+# Set Compiler Flags
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g -Wall)
+endif()
