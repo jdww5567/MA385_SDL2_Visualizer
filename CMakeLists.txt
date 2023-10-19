@@ -10,13 +10,14 @@ set(CMAKE_CXX_STANDARD 17)
 # Add your source files here
 set(SOURCES
     ${CMAKE_SOURCE_DIR}/main.cpp
-    ${CMAKE_SOURCE_DIR}/src/glad.c
-    ${CMAKE_SOURCE_DIR}/src/imgui.cpp
-    ${CMAKE_SOURCE_DIR}/src/imgui_draw.cpp
-    ${CMAKE_SOURCE_DIR}/src/imgui_impl_opengl3.cpp
-    ${CMAKE_SOURCE_DIR}/src/imgui_impl_sdl2.cpp
-    ${CMAKE_SOURCE_DIR}/src/imgui_tables.cpp
-    ${CMAKE_SOURCE_DIR}/src/imgui_widgets.cpp
+    ${CMAKE_SOURCE_DIR}/src/pipeline.cpp
+    ${CMAKE_SOURCE_DIR}/src/glad/glad.c
+    ${CMAKE_SOURCE_DIR}/src/imgui/imgui.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui/imgui_draw.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui/imgui_impl_opengl3.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui/imgui_impl_sdl2.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui/imgui_tables.cpp
+    ${CMAKE_SOURCE_DIR}/src/imgui/imgui_widgets.cpp
 )
 
 # Include directories

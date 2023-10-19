@@ -15,6 +15,8 @@
 #include <fstream>
 #include <cmath>
 
+#include <mine/pipeline.hpp>
+
 #define SCREEN_WIDTH 960
 #define SCREEN_HEIGHT 720
 
@@ -27,28 +29,26 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
-#define FUNCTION x * x - y * y
+#define FUNCTION x * x - z * z
 
 int gXBounds  = 2;
-int gYBounds  = 2;
+int gZBounds  = 2;
 int gXNBounds = 2;
-int gYNBounds = 2;
+int gZNBounds = 2;
 
 int gAxisLength = 5;
 int gXAxisLength  = 5;
-int gYAxisLength  = 5;
+int gZAxisLength  = 5;
 int gXNAxisLength = 5;
-int gYNAxisLength = 5;
-int gVerticeCount = 72 + gAxisLength * 48 + gXAxisLength * 48 + gXNAxisLength * 48 + gYAxisLength * 48 + gYNAxisLength * 48;
+int gZNAxisLength = 5;
+int gVerticeCount = 72 + gAxisLength * 48 + gXAxisLength * 48 + gXNAxisLength * 48 + gZAxisLength * 48 + gZNAxisLength * 48;
 
 SDL_Window *gWindow = nullptr;
 
 GLuint gVertexArrayObject      = 0;
 GLuint gVertexBufferObject     = 0;
 GLuint gIndexBufferObject      = 0;
-GLuint gGraphicsPipelineObject = 0;
-
-GLint gViewMatrixLoc = 0;
+Pipeline gGraphicsPipeline{};
 
 bool gRunning  = true;
 
@@ -165,11 +165,11 @@ void setVertices () {
     vertex(gXAxisLength, gAxisWidth, 0.0f, AXIS_COLOR);
 
     // -z axis
-    vertex(0.0f, -gAxisWidth, -gYNAxisLength, AXIS_COLOR);
-    vertex(0.0f, gAxisWidth, -gYNAxisLength, AXIS_COLOR);
+    vertex(0.0f, -gAxisWidth, -gZNAxisLength, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, -gZNAxisLength, AXIS_COLOR);
     // +z axis
-    vertex(0.0f, -gAxisWidth, gYAxisLength, AXIS_COLOR);
-    vertex(0.0f, gAxisWidth, gYAxisLength, AXIS_COLOR);
+    vertex(0.0f, -gAxisWidth, gZAxisLength, AXIS_COLOR);
+    vertex(0.0f, gAxisWidth, gZAxisLength, AXIS_COLOR);
 
     // -y axis
     vertex(-gAxisWidth, -gAxisLength, 0.0f, AXIS_COLOR);
@@ -194,14 +194,14 @@ void setVertices () {
     }
 
     // -z dashes
-    for (int i = -gYNAxisLength; i < 0; i++) {
+    for (int i = -gZNAxisLength; i < 0; i++) {
         vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
         vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
         vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
         vertex(gDashLength, gDashWidth, i, AXIS_COLOR);
     }
     // +z dashes
-    for (int i = 1; i <= gYAxisLength; i++) {
+    for (int i = 1; i <= gZAxisLength; i++) {
         vertex(-gDashLength, -gDashWidth, i, AXIS_COLOR);
         vertex(-gDashLength, gDashWidth, i, AXIS_COLOR);
         vertex(gDashLength, -gDashWidth, i, AXIS_COLOR);
@@ -225,28 +225,28 @@ void setVertices () {
 
     // -x grid
     for (int i = -gXNAxisLength; i < 0; i++) {
-        vertex(i, -gGridWidth, -gYNAxisLength, AXIS_COLOR);
-        vertex(i, gGridWidth, -gYNAxisLength, AXIS_COLOR);
-        vertex(i, -gGridWidth, gYAxisLength, AXIS_COLOR);
-        vertex(i, gGridWidth, gYAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, -gZNAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, -gZNAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, gZAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, gZAxisLength, AXIS_COLOR);
     }
     // +x grid
     for (int i = 1; i <= gXAxisLength; i++) {
-        vertex(i, -gGridWidth, -gYNAxisLength, AXIS_COLOR);
-        vertex(i, gGridWidth, -gYNAxisLength, AXIS_COLOR);
-        vertex(i, -gGridWidth, gYAxisLength, AXIS_COLOR);
-        vertex(i, gGridWidth, gYAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, -gZNAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, -gZNAxisLength, AXIS_COLOR);
+        vertex(i, -gGridWidth, gZAxisLength, AXIS_COLOR);
+        vertex(i, gGridWidth, gZAxisLength, AXIS_COLOR);
     }
 
     // -z grid
-    for (int i = -gYNAxisLength; i < 0; i++) {
+    for (int i = -gZNAxisLength; i < 0; i++) {
         vertex(-gXNAxisLength, -gGridWidth, i, AXIS_COLOR);
         vertex(-gXNAxisLength, gGridWidth, i, AXIS_COLOR);
         vertex(gXAxisLength, -gGridWidth, i, AXIS_COLOR);
         vertex(gXAxisLength, gGridWidth, i, AXIS_COLOR);
     }
     // +z grid
-    for (int i = 1; i <= gYAxisLength; i++) {
+    for (int i = 1; i <= gZAxisLength; i++) {
         vertex(-gXNAxisLength, -gGridWidth, i, AXIS_COLOR);
         vertex(-gXNAxisLength, gGridWidth, i, AXIS_COLOR);
         vertex(gXAxisLength, -gGridWidth, i, AXIS_COLOR);
@@ -255,17 +255,17 @@ void setVertices () {
 
     // function
     for (int i = -gXNBounds * RECTS_PER_UNIT; i <= gXBounds * RECTS_PER_UNIT; i++) {
-        for (int j = -gYNBounds * RECTS_PER_UNIT; j <= gYBounds * RECTS_PER_UNIT; j++) {
+        for (int j = -gZNBounds * RECTS_PER_UNIT; j <= gZBounds * RECTS_PER_UNIT; j++) {
             double x = (double)i / (double)RECTS_PER_UNIT;
-            double y = (double)j / (double)RECTS_PER_UNIT;
-            double z = FUNCTION;
+            double z = (double)j / (double)RECTS_PER_UNIT;
+            double y = FUNCTION;
             vertex(
                 x,
-                z,
                 y,
-                abs(sin(z / 2.0)) / 1.2,
-                abs(sin(z / 2.0 + M_PI / 3)) / 1.2,
-                abs(sin(z / 2.0 + (2 * M_PI) / 3)) / 1.2
+                z,
+                abs(sin(y / 2.0)) / 1.2,
+                abs(sin(y / 2.0 + M_PI / 3)) / 1.2,
+                abs(sin(y / 2.0 + (2 * M_PI) / 3)) / 1.2
             );
         }
     }
@@ -282,7 +282,7 @@ void setVertices () {
 
     // function triangles
     for (std::vector<float>::size_type i = gVerticeCount / 6; i < (vertices.size() / 6); i++) {
-        if (vertices[i * 6 + 2] == (float)gYBounds) {
+        if (vertices[i * 6 + 2] == (float)gZBounds) {
             continue;
         } else if (vertices[i * 6] == (float)gXBounds) {
             continue;
@@ -293,9 +293,9 @@ void setVertices () {
         }
         indices.push_back(i);
         indices.push_back(i + 1);
-        indices.push_back(i + 2 + (gYBounds + gYNBounds) * RECTS_PER_UNIT);
-        indices.push_back(i + 2 + (gYBounds + gYNBounds) * RECTS_PER_UNIT);
-        indices.push_back(i + 1 + (gYBounds + gYNBounds) * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + (gZBounds + gZNBounds) * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + (gZBounds + gZNBounds) * RECTS_PER_UNIT);
+        indices.push_back(i + 1 + (gZBounds + gZNBounds) * RECTS_PER_UNIT);
         indices.push_back(i);
     }
 }
@@ -372,107 +372,9 @@ void vertexSpecification() {
     glDisableVertexAttribArray(1);
 }
 
-GLuint compileShader(GLuint type, const std::string& source) {
-    GLuint shaderObject = glCreateShader(type); 
-
-    const char* src = source.c_str();
-    glShaderSource(shaderObject, 1, &src, nullptr);
-    glCompileShader(shaderObject);
-
-    GLint status = 0;
-    glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
-
-    if (!status) {
-        GLint logSize = 0;
-        glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &logSize);
-
-        std::vector<GLchar> errorLog(logSize);
-        glGetShaderInfoLog(shaderObject, logSize, &logSize, &errorLog[0]);
-
-        if (type == GL_VERTEX_SHADER) {
-            std::cout 
-                << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
-                << errorLog.data() 
-                << std::endl
-            ;
-        } else if (type == GL_FRAGMENT_SHADER) {
-            std::cout 
-                << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
-                << errorLog.data() 
-                << std::endl
-            ;
-        }
-
-        glDeleteShader(shaderObject);
-
-        return 0;
-    }
-
-    return shaderObject;
-}
-
-GLuint createShaderProgram(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) {
-    GLuint programObject = glCreateProgram();
-
-    GLuint vertexShader   = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
-    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
-
-    glAttachShader(programObject, vertexShader);
-    glAttachShader(programObject, fragmentShader);
-    glLinkProgram(programObject);
-    glValidateProgram(programObject);
-
-    glDetachShader(programObject, vertexShader);
-    glDetachShader(programObject, fragmentShader);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return programObject;
-}
-
-std::string loadShader(const std::string& fileName) {
-    std::string src  = "";
-    std::string line = "";
-
-    std::ifstream file(fileName.c_str());
-
-    if (file.is_open()) {
-        while (std::getline(file, line)) {
-            src += line + '\n';
-        }
-
-        file.close();
-    }
-
-    return src;
-}
-
 void createGraphicsPipeline() {
-    const std::string vertexShaderSource   = loadShader("./shaders/vertex.glsl");
-    const std::string fragmentShaderSource = loadShader("./shaders/fragment.glsl");
-    
-    gGraphicsPipelineObject = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+    gGraphicsPipeline.setProgram("./shaders/vertex.glsl", "./shaders/fragment.glsl", "uViewMatrix");
 }
-
-void findUniformVars() {
-    gViewMatrixLoc = glGetUniformLocation(gGraphicsPipelineObject, "uViewMatrix");
-    if (gViewMatrixLoc < 0) {
-        std::cout << "Error: uViewMatrix not found in GPU memory" << std::endl;
-        exit(2);
-    }
-}
-
-enum limits {
-    NEG_X_BOUNDS,
-    POS_X_BOUNDS,
-    NEG_Y_BOUNDS,
-    POS_Y_BOUNDS,
-    NEG_X_AXIS,
-    POS_X_AXIS,
-    NEG_Y_AXIS,
-    POS_Y_AXIS
-};
 
 void input() {
     static int mouseX = 0;
@@ -541,6 +443,17 @@ void input() {
     }
 }
 
+enum limits {
+    NEG_X_BOUNDS,
+    POS_X_BOUNDS,
+    NEG_Z_BOUNDS,
+    POS_Z_BOUNDS,
+    NEG_X_AXIS,
+    POS_X_AXIS,
+    NEG_Z_AXIS,
+    POS_Z_AXIS
+};
+
 void updateGui() {
     // Start a new ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -559,7 +472,7 @@ void updateGui() {
         ImGui::Text("Parsed String: %s", inputString);
     }
 
-    static int values[8] = {gXNBounds, gXBounds, gYNBounds, gYBounds, gXNAxisLength, gXAxisLength, gYNAxisLength, gYAxisLength}; 
+    static int values[8] = {gXNBounds, gXBounds, gZNBounds, gZBounds, gXNAxisLength, gXAxisLength, gZNAxisLength, gZAxisLength}; 
 
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
@@ -573,12 +486,12 @@ void updateGui() {
     ImGui::InputInt(("##IntInput" + std::to_string(POS_X_BOUNDS)).c_str(), &values[POS_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(NEG_Y_BOUNDS)).c_str(), &values[NEG_Y_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(NEG_Z_BOUNDS)).c_str(), &values[NEG_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= y <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(POS_Y_BOUNDS)).c_str(), &values[POS_Y_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(POS_Z_BOUNDS)).c_str(), &values[POS_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
     ImGui::InputInt(("##IntInput" + std::to_string(NEG_X_AXIS)).c_str(), &values[NEG_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
@@ -589,19 +502,19 @@ void updateGui() {
     ImGui::InputInt(("##IntInput" + std::to_string(POS_X_AXIS)).c_str(), &values[POS_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(NEG_Y_AXIS)).c_str(), &values[NEG_Y_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(NEG_Z_AXIS)).c_str(), &values[NEG_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= Y <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(POS_Y_AXIS)).c_str(), &values[POS_Y_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(POS_Z_AXIS)).c_str(), &values[POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
     
     if (ImGui::Button("Update Limits")) {
         gXNAxisLength = values[NEG_X_AXIS];
         gXAxisLength  = values[POS_X_AXIS];
-        gYNAxisLength = values[NEG_Y_AXIS];
-        gYAxisLength  = values[POS_Y_AXIS];
-        gVerticeCount = 72 + gAxisLength * 48 + gXAxisLength * 48 + gXNAxisLength * 48 + gYAxisLength * 48 + gYNAxisLength * 48;
+        gZNAxisLength = values[NEG_Z_AXIS];
+        gZAxisLength  = values[POS_Z_AXIS];
+        gVerticeCount = 72 + gAxisLength * 48 + gXAxisLength * 48 + gXNAxisLength * 48 + gZAxisLength * 48 + gZNAxisLength * 48;
         if (values[NEG_X_BOUNDS] > gXNAxisLength) {
             values[NEG_X_BOUNDS] = gXNAxisLength;
         }
@@ -610,14 +523,14 @@ void updateGui() {
             values[POS_X_BOUNDS] = gXAxisLength;
         }
         gXBounds = values[POS_X_BOUNDS];
-        if (values[NEG_Y_BOUNDS] > gYNAxisLength) {
-            values[NEG_Y_BOUNDS] = gYNAxisLength;
+        if (values[NEG_Z_BOUNDS] > gZNAxisLength) {
+            values[NEG_Z_BOUNDS] = gZNAxisLength;
         }
-        gYNBounds = values[NEG_Y_BOUNDS];
-        if (values[POS_Y_BOUNDS] > gYAxisLength) {
-            values[POS_Y_BOUNDS] = gYAxisLength;
+        gZNBounds = values[NEG_Z_BOUNDS];
+        if (values[POS_Z_BOUNDS] > gZAxisLength) {
+            values[POS_Z_BOUNDS] = gZAxisLength;
         }
-        gYBounds = values[POS_Y_BOUNDS];
+        gZBounds = values[POS_Z_BOUNDS];
         vertexUpdate();
     }
 
@@ -693,7 +606,7 @@ void calcGridOrientation(int start, float angle, int offset, bool x) {
 void predraw() {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(gGraphicsPipelineObject);
+    glUseProgram(gGraphicsPipeline.getProgram());
 
     // x axis
     calcAxisOrientation(1, gCameraPos.y / gCameraPos.z);
@@ -735,8 +648,8 @@ void predraw() {
     }
     // -z dashes
     position = position + 24 * gXAxisLength;
-    for (int i = position; i < position + 24 * gYNAxisLength; i += 24) {
-        int offset = (i - position) / 24 - gYNAxisLength;
+    for (int i = position; i < position + 24 * gZNAxisLength; i += 24) {
+        int offset = (i - position) / 24 - gZNAxisLength;
         calcDashOrientation(
             i + 1,
             gCameraPos.y / (gCameraPos.z - offset),
@@ -745,8 +658,8 @@ void predraw() {
         );
     }
     // +z dashes
-    position = position + 24 * gYNAxisLength;
-    for (int i = position; i < position + 24 * gYAxisLength; i += 24) {
+    position = position + 24 * gZNAxisLength;
+    for (int i = position; i < position + 24 * gZAxisLength; i += 24) {
         int offset = (i - position) / 24 + 1;
         calcDashOrientation(
             i + 1,
@@ -756,7 +669,7 @@ void predraw() {
         );
     }
     // -y dashes
-    position = position + 24 * gYAxisLength;
+    position = position + 24 * gZAxisLength;
     for (int i = position; i < position + 24 * gAxisLength; i += 24) {
         int offset = (i - position) / 24 - gAxisLength;
         calcDashOrientation(
@@ -801,8 +714,8 @@ void predraw() {
     }
     // -z grid
     position = position + 24 * gXAxisLength;
-    for (int i = position; i < position + 24 * gYNAxisLength; i += 24) {
-        int offset = (i - position) / 24 - gYNAxisLength;
+    for (int i = position; i < position + 24 * gZNAxisLength; i += 24) {
+        int offset = (i - position) / 24 - gZNAxisLength;
         calcGridOrientation(
             i + 1,
             gCameraPos.y / (gCameraPos.z - offset),
@@ -811,7 +724,7 @@ void predraw() {
         );
     }
     // +z grid
-    position = position + 24 * gYNAxisLength;
+    position = position + 24 * gZNAxisLength;
     for (int i = position; i < gVerticeCount; i += 24) {
         int offset = (i - position) / 24 + 1;
         calcGridOrientation(
@@ -850,10 +763,10 @@ void predraw() {
         glm::radians(60.0f),
         (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
         0.01f,
-        100.0f
+        1000.0f
     ) * view;
 
-    glUniformMatrix4fv(gViewMatrixLoc, 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrix(), 1, GL_FALSE, &view[0][0]);
 
     glBindVertexArray(gVertexArrayObject);
     glBufferData(
@@ -929,7 +842,7 @@ void cleanup() {
     glDeleteBuffers(1, &gIndexBufferObject);
     glDeleteVertexArrays(1, &gVertexArrayObject);
 
-    glDeleteProgram(gGraphicsPipelineObject);
+    glDeleteProgram(gGraphicsPipeline.getProgram());
 
     SDL_Quit();
 }
@@ -940,8 +853,6 @@ int main (int argc, char** argv) {
     vertexSpecification();
 
     createGraphicsPipeline();
-
-    findUniformVars();
 
     loop();
 

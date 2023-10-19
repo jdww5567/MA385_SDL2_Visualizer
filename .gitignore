@@ -1,7 +1,12 @@
 .vscode/
-include/
-lib/
-src/
 build/
 dlls/
+include/glad
+include/glm
+include/imgui
+include/KHR
+include/SDL2
+lib/
+src/glad
+src/imgui
 *.ini
