@@ -12,7 +12,6 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/main.cpp
     ${CMAKE_SOURCE_DIR}/src/glad.c
     ${CMAKE_SOURCE_DIR}/src/imgui.cpp
-    ${CMAKE_SOURCE_DIR}/src/imgui_demo.cpp
     ${CMAKE_SOURCE_DIR}/src/imgui_draw.cpp
     ${CMAKE_SOURCE_DIR}/src/imgui_impl_opengl3.cpp
     ${CMAKE_SOURCE_DIR}/src/imgui_impl_sdl2.cpp
