@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-class Pipeline 
+class Pipeline
 {
 	GLint program;
 	GLint viewMatrix;
