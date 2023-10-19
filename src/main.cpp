@@ -48,7 +48,7 @@ SDL_Window *gWindow = nullptr;
 GLuint gVertexArrayObject      = 0;
 GLuint gVertexBufferObject     = 0;
 GLuint gIndexBufferObject      = 0;
-Pipeline gGraphicsPipeline{};
+mine::pipeline gGraphicsPipeline{};
 
 bool gRunning  = true;
 

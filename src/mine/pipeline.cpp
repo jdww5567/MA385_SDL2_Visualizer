@@ -2,12 +2,13 @@
 #include <fstream>
 #include <vector>
 
-Pipeline::Pipeline() {
+namespace mine {
+pipeline::pipeline() {
     program = 0;
     viewMatrix = 0;
 }
 
-Pipeline::Pipeline(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
+pipeline::pipeline(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
     program = createProgram(loadShader(vertexSrcLoc), loadShader(fragmentSrcLoc));
     viewMatrix = glGetUniformLocation(program, viewMatrixName.c_str());
     if (viewMatrix < 0) {
@@ -16,7 +17,7 @@ Pipeline::Pipeline(const std::string& vertexSrcLoc, const std::string& fragmentS
     }
 }
 
-std::string Pipeline::loadShader(const std::string& srcLoc) {
+std::string pipeline::loadShader(const std::string& srcLoc) {
     std::string src  = "";
     std::string line = "";
 
@@ -33,7 +34,7 @@ std::string Pipeline::loadShader(const std::string& srcLoc) {
     return src;
 }
 
-GLuint Pipeline::createProgram(const std::string& vertexSrc, const std::string& fragmentSrc) {
+GLuint pipeline::createProgram(const std::string& vertexSrc, const std::string& fragmentSrc) {
     GLuint programObject = glCreateProgram();
 
     GLuint vertexShader   = compileShader(GL_VERTEX_SHADER, vertexSrc);
@@ -52,7 +53,7 @@ GLuint Pipeline::createProgram(const std::string& vertexSrc, const std::string& 
     return programObject;
 }
 
-GLuint Pipeline::compileShader(GLuint type, const std::string& source) {
+GLuint pipeline::compileShader(GLuint type, const std::string& source) {
     GLuint shaderObject = glCreateShader(type); 
 
     const char* src = source.c_str();
@@ -91,19 +92,20 @@ GLuint Pipeline::compileShader(GLuint type, const std::string& source) {
     return shaderObject;
 }
 
-GLint Pipeline::getProgram() {
+GLint pipeline::getProgram() {
     return program;
 }
 
-GLint Pipeline::getViewMatrix() {
+GLint pipeline::getViewMatrix() {
     return viewMatrix;
 }
 
-void Pipeline::setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
+void pipeline::setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
     program = createProgram(loadShader(vertexSrcLoc), loadShader(fragmentSrcLoc));
     viewMatrix = glGetUniformLocation(program, viewMatrixName.c_str());
     if (viewMatrix < 0) {
         std::cout << "Error: " << viewMatrixName << " not found in GPU memory" << std::endl;
         exit(2);
     }
+}
 }

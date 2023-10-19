@@ -1,18 +1,17 @@
-#ifndef MINE_PIPELINE_HPP
-#define MINE_PIPELINE_HPP
+#ifndef MINE_VECTORHANDLER_HPP
+#define MINE_VECTORHANDLER_HPP
 
 #include "glad/glad.h"
 #include <iostream>
 #include <string>
 
-namespace mine {
-class pipeline 
+class Pipeline 
 {
 	GLint program;
 	GLint viewMatrix;
 public:
-	pipeline();
-	pipeline(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName);
+	Pipeline();
+	Pipeline(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName);
 	GLint getProgram();
 	void setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName);
 	GLint getViewMatrix();
@@ -21,7 +20,5 @@ private:
 	GLuint createProgram(const std::string& vertexSrc, const std::string& fragmentSrc);
 	GLuint compileShader(GLuint type, const std::string& src);
 };
-}
-
 
 #endif
