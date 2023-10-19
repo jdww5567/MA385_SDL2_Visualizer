@@ -27,12 +27,12 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
+#define FUNCTION x * x - y * y
+
 int gXBounds  = 2;
 int gYBounds  = 2;
 int gXNBounds = 2;
 int gYNBounds = 2;
-
-#define FUNCTION x * x - y * y
 
 int gAxisLength = 5;
 int gXAxisLength  = 5;
@@ -51,15 +51,12 @@ GLuint gGraphicsPipelineObject = 0;
 GLint gViewMatrixLoc = 0;
 
 bool gRunning  = true;
-bool gLeftDown = false;
 
 float gAxisWidth  = 0.01f;
 float gDashLength = 12.0f * gAxisWidth;
 float gDashWidth  = 2.0f * gAxisWidth;
 float gGridWidth  = gAxisWidth / 2.0f;
 
-int gMouseX   = 0;
-int gMouseY   = 0;
 float gRadius = INITIAL_RADIUS;
 float gTheta  = INITIAL_THETA;
 float gPhi    = INITIAL_PHI;
@@ -71,8 +68,6 @@ glm::vec3 gCameraPos = glm::vec3(
 );
 glm::vec3 gCameraFront = glm::normalize(glm::vec3(-gCameraPos.x, -gCameraPos.y, -gCameraPos.z));
 glm::vec3 gCameraUp = glm::normalize(glm::vec3(0, 1.0f, 0));
-
-const Uint8 *gState = SDL_GetKeyboardState(NULL);
 
 std::vector<GLfloat> vertices {};
 
@@ -480,6 +475,9 @@ enum limits {
 };
 
 void input() {
+    static int mouseX = 0;
+    static int mouseY = 0;
+    static bool leftDown = false;
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         ImGui_ImplSDL2_ProcessEvent(&e);
@@ -500,21 +498,21 @@ void input() {
             case SDL_MOUSEBUTTONDOWN:
                 switch (e.button.button) {
                     case SDL_BUTTON_LEFT:
-                        gMouseX = e.button.x / 2.0 - gTheta;
-                        gMouseY = e.button.y / 2.0 + gPhi;
-                        gLeftDown = true;
+                        mouseX = e.button.x / 2.0 - gTheta;
+                        mouseY = e.button.y / 2.0 + gPhi;
+                        leftDown = true;
                         break;
                     default:
                         break;
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
-                gLeftDown = false;
+                leftDown = false;
                 break;
             case SDL_MOUSEMOTION:
-                if (gLeftDown) {
-                    gTheta = e.button.x / 2.0 - gMouseX;
-                    gPhi = gMouseY - e.button.y / 2.0;
+                if (leftDown) {
+                    gTheta = e.button.x / 2.0 - mouseX;
+                    gPhi = mouseY - e.button.y / 2.0;
                     if (gPhi < 1.0f) {
                         gPhi = 1.0f;
                     } else if (gPhi > 179.0f) {
@@ -529,9 +527,9 @@ void input() {
                         gTheta = INITIAL_THETA;
                         gPhi = INITIAL_PHI;
 
-                        SDL_GetMouseState(&gMouseX, &gMouseY);
-                        gMouseX = gMouseX / 2.0 - gTheta;
-                        gMouseY = gMouseY / 2.0 + gPhi;
+                        SDL_GetMouseState(&mouseX, &mouseY);
+                        mouseX = mouseX / 2.0 - gTheta;
+                        mouseY = mouseY / 2.0 + gPhi;
                         break;
                     default:
                         break;
