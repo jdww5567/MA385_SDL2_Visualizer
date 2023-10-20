@@ -46,5 +46,5 @@ target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 # Set Compiler Flags
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g -Wall)
+  target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g -Wall -Wno-narrowing)
 endif()
