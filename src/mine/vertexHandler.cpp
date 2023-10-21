@@ -157,14 +157,14 @@ void vertexHandler::setVertices() {
         for (int j = -zNegBounds * rectsPerUnit; j <= zPosBounds * rectsPerUnit; ++j) {
             double x = (double)i / (double)rectsPerUnit;
             double z = (double)j / (double)rectsPerUnit;
-            double y = x * x - z * z;
+            double y = 0;
             vertices.push_back({
                 x,
                 y,
                 z,
-                std::abs(sin(y / 2.0)) / 1.2,
-                std::abs(sin(y / 2.0 + M_PI / 3)) / 1.2,
-                std::abs(sin(y / 2.0 + (2 * M_PI) / 3)) / 1.2
+                0,
+                0,
+                0
             });
         }
     }
