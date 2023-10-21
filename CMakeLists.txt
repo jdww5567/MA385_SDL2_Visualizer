@@ -12,6 +12,7 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${CMAKE_SOURCE_DIR}/src/mine/pipeline.cpp
     ${CMAKE_SOURCE_DIR}/src/mine/vertexHandler.cpp
+    ${CMAKE_SOURCE_DIR}/src/mine/cameraHandler.cpp
     ${CMAKE_SOURCE_DIR}/src/glad/glad.c
     ${CMAKE_SOURCE_DIR}/src/imgui/imgui.cpp
     ${CMAKE_SOURCE_DIR}/src/imgui/imgui_draw.cpp

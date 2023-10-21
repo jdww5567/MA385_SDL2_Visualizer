@@ -9,13 +9,13 @@ namespace mine {
 class pipeline 
 {
 	GLint program;
-	GLint viewMatrix;
+	GLint viewMatrixLoc;
 public:
 	pipeline();
 	pipeline(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName);
 	
 	GLint getProgram();
-	GLint getViewMatrix();
+	GLint getViewMatrixLoc();
 
 	void setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName);
 private:

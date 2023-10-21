@@ -2,9 +2,6 @@
 
 #include <glad/glad.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_sdl2.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -12,11 +9,10 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <fstream>
-#include <cmath>
 
 #include <mine/pipeline.hpp>
 #include <mine/vertexHandler.hpp>
+#include <mine/cameraHandler.hpp>
 #include <mine/enums.hpp>
 
 #define SCREEN_WIDTH 960
@@ -44,6 +40,8 @@
 #define INITIAL_NEGX_AXIS_LENGTH 5
 #define INITIAL_NEGZ_AXIS_LENGTH 5
 
+#define AXIS_WIDTH 0.01f
+
 SDL_Window *gWindow = nullptr;
 
 GLuint gVertexArrayObject = 0;
@@ -52,23 +50,11 @@ GLuint gIndexBufferObject = 0;
 
 mine::pipeline gGraphicsPipeline{};
 
-bool gRunning  = true;
-
-#define AXIS_WIDTH 0.01f
-
-float gRadius = INITIAL_RADIUS;
-float gTheta  = INITIAL_THETA;
-float gPhi    = INITIAL_PHI;
-
-glm::vec3 gCameraPos = glm::vec3(
-    gRadius * sin(glm::radians(gPhi)) * cos(glm::radians(gTheta)),
-    gRadius * cos(glm::radians(gPhi)),
-    gRadius * sin(glm::radians(gPhi)) * sin(glm::radians(gTheta))
-);
-glm::vec3 gCameraFront = glm::normalize(glm::vec3(-gCameraPos.x, -gCameraPos.y, -gCameraPos.z));
-glm::vec3 gCameraUp = glm::normalize(glm::vec3(0, 1.0f, 0));
-
 mine::vertexHandler gHandler{};
+
+mine::cameraHandler gCamera{};
+
+bool gRunning  = true;
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -142,6 +128,9 @@ void setup() {
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(gWindow, glContext);
     ImGui_ImplOpenGL3_Init("#version 460 core\n");
+
+    gCamera.setScreen((float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
+    gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
 }
 
 void vertexUpdate() {
@@ -234,20 +223,13 @@ void input() {
                 gRunning = false;
                 break;
             case SDL_MOUSEWHEEL:
-                if (e.wheel.y > 0) {
-                    gRadius -= 0.1f * gRadius;
-                    if (gRadius < 0.1f) {
-                        gRadius = 0.1f;
-                    }
-                } else if (e.wheel.y < 0) {
-                    gRadius += 0.1f * gRadius;
-                }
+                gCamera.zoom(e.wheel.y > 0);
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 switch (e.button.button) {
                     case SDL_BUTTON_LEFT:
-                        mouseX = e.button.x / 2.0 - gTheta;
-                        mouseY = e.button.y / 2.0 + gPhi;
+                        mouseX = e.button.x / 2.0 - gCamera.theta;
+                        mouseY = e.button.y / 2.0 + gCamera.phi;
                         leftDown = true;
                         break;
                     default:
@@ -259,25 +241,18 @@ void input() {
                 break;
             case SDL_MOUSEMOTION:
                 if (leftDown) {
-                    gTheta = e.button.x / 2.0 - mouseX;
-                    gPhi = mouseY - e.button.y / 2.0;
-                    if (gPhi < 1.0f) {
-                        gPhi = 1.0f;
-                    } else if (gPhi > 179.0f) {
-                        gPhi = 179.0f;
-                    }
+                    gCamera.updateAngles(e.button.x / 2.0 - mouseX, mouseY - e.button.y / 2.0);
                 }
                 break;
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        gRadius = INITIAL_RADIUS;
-                        gTheta = INITIAL_THETA;
-                        gPhi = INITIAL_PHI;
+                        gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
 
                         SDL_GetMouseState(&mouseX, &mouseY);
-                        mouseX = mouseX / 2.0 - gTheta;
-                        mouseY = mouseY / 2.0 + gPhi;
+
+                        mouseX = mouseX / 2.0 - gCamera.theta;
+                        mouseY = mouseY / 2.0 + gCamera.phi;
                         break;
                     default:
                         break;
@@ -346,7 +321,7 @@ void updateGui() {
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_Z_AXIS)).c_str(), &values[mine::POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
-    
+
     if (ImGui::Button("Update Limits")) {
         gHandler.updateLimits(values);
         vertexUpdate();
@@ -362,40 +337,9 @@ void predraw() {
 
     glUseProgram(gGraphicsPipeline.getProgram());
 
-    gHandler.rotateBaseVertices(gCameraPos.x, gCameraPos.y, gCameraPos.z);
+    gHandler.rotateBaseVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
 
-    gCameraPos = glm::vec3(
-        gRadius * sin(glm::radians(gPhi)) * cos(glm::radians(gTheta)), 
-        gRadius * cos(glm::radians(gPhi)), 
-        gRadius * sin(glm::radians(gPhi)) * sin(glm::radians(gTheta))
-    );
-    gCameraFront = -glm::normalize(gCameraPos);
-    if (gCameraPos.y > 0) {
-        gCameraUp = glm::normalize(glm::vec3(
-            -gCameraPos.x,
-            (powf(gCameraPos.x, 2) + powf(gCameraPos.z, 2)) / gCameraPos.y,
-            -gCameraPos.z
-        ));
-    } else if (gCameraPos.y < 0) {
-        gCameraUp = glm::normalize(glm::vec3(
-            gCameraPos.x,
-            -(powf(gCameraPos.x, 2) + powf(gCameraPos.z, 2)) / gCameraPos.y,
-            gCameraPos.z
-        ));
-    } else {
-        gCameraUp = glm::vec3(0, 1, 0);
-    }
-
-    auto view = glm::lookAt(gCameraPos, glm::vec3(0, 0, 0), gCameraUp);
-
-    view = glm::perspective(
-        glm::radians(60.0f),
-        (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT,
-        0.01f,
-        1000.0f
-    ) * view;
-
-    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrix(), 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
 
     glBindVertexArray(gVertexArrayObject);
     glBufferData(

@@ -5,13 +5,13 @@
 namespace mine {
 pipeline::pipeline() {
     program = 0;
-    viewMatrix = 0;
+    viewMatrixLoc = 0;
 }
 
 pipeline::pipeline(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
     program = createProgram(loadShader(vertexSrcLoc), loadShader(fragmentSrcLoc));
-    viewMatrix = glGetUniformLocation(program, viewMatrixName.c_str());
-    if (viewMatrix < 0) {
+    viewMatrixLoc = glGetUniformLocation(program, viewMatrixName.c_str());
+    if (viewMatrixLoc < 0) {
         std::cout << "Error: " << viewMatrixName << " not found in GPU memory" << std::endl;
         exit(2);
     }
@@ -96,14 +96,14 @@ GLint pipeline::getProgram() {
     return program;
 }
 
-GLint pipeline::getViewMatrix() {
-    return viewMatrix;
+GLint pipeline::getViewMatrixLoc() {
+    return viewMatrixLoc;
 }
 
 void pipeline::setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
     program = createProgram(loadShader(vertexSrcLoc), loadShader(fragmentSrcLoc));
-    viewMatrix = glGetUniformLocation(program, viewMatrixName.c_str());
-    if (viewMatrix < 0) {
+    viewMatrixLoc = glGetUniformLocation(program, viewMatrixName.c_str());
+    if (viewMatrixLoc < 0) {
         std::cout << "Error: " << viewMatrixName << " not found in GPU memory" << std::endl;
         exit(2);
     }
