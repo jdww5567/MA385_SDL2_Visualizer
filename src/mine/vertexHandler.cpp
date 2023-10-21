@@ -1,4 +1,5 @@
 #include <mine/vertexHandler.hpp>
+#include <mine/enums.hpp>
 #include <cmath>
 
 namespace mine {
@@ -20,10 +21,6 @@ vertexHandler::vertexHandler() : vertices{}, indices{} {
     axisRed = 0;
     axisGreen = 0;
     axisBlue = 0;
-
-    vertexArrayObject = 0;
-    vertexBufferObject = 0;
-    indexBufferObject = 0;
 }
 
 void vertexHandler::setData(int xPosBounds_, int zPosBounds_, int xNegBounds_, int zNegBounds_, 
@@ -48,10 +45,6 @@ GLfloat axisRed_, GLfloat axisGreen_, GLfloat axisBlue_) {
     axisBlue = axisBlue_;
 
     updateDependentVars();
-
-    vertexArrayObject = 0;
-    vertexBufferObject = 0;
-    indexBufferObject = 0;
 }
 
 void vertexHandler::updateDependentVars() {
@@ -211,71 +204,6 @@ void vertexHandler::updateVertices() {
     indices.clear();
 
     setVertices();
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        vertices.size() * sizeof(vertex),
-        vertices.data(),
-        GL_DYNAMIC_DRAW
-    );
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        indices.size() * sizeof(GLint),
-        indices.data(),
-        GL_DYNAMIC_DRAW
-    );
-}
-
-void vertexHandler::bindVertices() {
-    setVertices();
-
-    glGenVertexArrays(1, &vertexArrayObject);
-    glBindVertexArray(vertexArrayObject);
-
-    glGenBuffers(1, &vertexBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        vertices.size() * sizeof(vertex),
-        vertices.data(),
-        GL_DYNAMIC_DRAW
-    );
-
-    glGenBuffers(1, &indexBufferObject);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        indices.size() * sizeof(GLint),
-        indices.data(),
-        GL_DYNAMIC_DRAW
-    );
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(vertex),
-        (GLvoid*)0
-    );
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(
-        1,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        sizeof(vertex),
-        (GLvoid*)(sizeof(GLfloat) * 3)
-    );
-
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
 }
 
 void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCamera) {
@@ -468,5 +396,30 @@ void vertexHandler::calcOrientation(int start, float angle, int offset, float sc
         vertices[start + 3].x = -firstDimension;
         vertices[start + 3].y = -secondDimension + offset;
     }
+}
+
+void vertexHandler::updateLimits(int (&values)[8]) {
+    xNegAxisLength = values[mine::NEG_X_AXIS];
+    xPosAxisLength  = values[mine::POS_X_AXIS];
+    zNegAxisLength = values[mine::NEG_Z_AXIS];
+    zPosAxisLength  = values[mine::POS_Z_AXIS];
+    baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
+    if (values[mine::NEG_X_BOUNDS] > xNegAxisLength) {
+        values[mine::NEG_X_BOUNDS] = xNegAxisLength;
+    }
+    xNegBounds = values[mine::NEG_X_BOUNDS];
+    if (values[mine::POS_X_BOUNDS] > xPosAxisLength) {
+        values[mine::POS_X_BOUNDS] = xPosAxisLength;
+    }
+    xPosBounds = values[mine::POS_X_BOUNDS];
+    if (values[mine::NEG_Z_BOUNDS] > zNegAxisLength) {
+        values[mine::NEG_Z_BOUNDS] = zNegAxisLength;
+    }
+    zNegBounds = values[mine::NEG_Z_BOUNDS];
+    if (values[mine::POS_Z_BOUNDS] > zPosAxisLength) {
+        values[mine::POS_Z_BOUNDS] = zPosAxisLength;
+    }
+    zPosBounds = values[mine::POS_Z_BOUNDS];
+    updateVertices();
 }
 }

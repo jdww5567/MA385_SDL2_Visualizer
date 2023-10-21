@@ -17,6 +17,7 @@
 
 #include <mine/pipeline.hpp>
 #include <mine/vertexHandler.hpp>
+#include <mine/enums.hpp>
 
 #define SCREEN_WIDTH 960
 #define SCREEN_HEIGHT 720
@@ -44,6 +45,11 @@
 #define INITIAL_NEGZ_AXIS_LENGTH 5
 
 SDL_Window *gWindow = nullptr;
+
+
+GLuint gVertexArrayObject = 0;
+GLuint gVertexBufferObject = 0;
+GLuint gIndexBufferObject = 0;
 
 mine::pipeline gGraphicsPipeline{};
 
@@ -139,13 +145,78 @@ void setup() {
     ImGui_ImplOpenGL3_Init("#version 460 core\n");
 }
 
+void vertexUpdate() {
+    gHandler.updateVertices();
+
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        gHandler.vertices.size() * sizeof(mine::vertex),
+        gHandler.vertices.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        gHandler.indices.size() * sizeof(GLint),
+        gHandler.indices.data(),
+        GL_DYNAMIC_DRAW
+    );
+}
+
 void vertexSpecification() {
     gHandler.setData(
         INITIAL_POSX_BOUNDS, INITIAL_POSZ_BOUNDS, INITIAL_NEGX_BOUNDS, INITIAL_NEGZ_BOUNDS,
         INITIAL_Y_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH, INITIAL_NEGX_AXIS_LENGTH, INITIAL_NEGZ_AXIS_LENGTH,
         RECTS_PER_UNIT, AXIS_WIDTH, AXIS_COLOR
     );
-    gHandler.bindVertices();
+    gHandler.setVertices();
+
+    glGenVertexArrays(1, &gVertexArrayObject);
+    glBindVertexArray(gVertexArrayObject);
+
+    glGenBuffers(1, &gVertexBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        gHandler.vertices.size() * sizeof(mine::vertex),
+        gHandler.vertices.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    glGenBuffers(1, &gIndexBufferObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        gHandler.indices.size() * sizeof(GLint),
+        gHandler.indices.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(mine::vertex),
+        (GLvoid*)0
+    );
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(
+        1,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(mine::vertex),
+        (GLvoid*)(sizeof(GLfloat) * 3)
+    );
+
+    glBindVertexArray(0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 }
 
 void createGraphicsPipeline() {
@@ -219,17 +290,6 @@ void input() {
     }
 }
 
-enum limits {
-    NEG_X_BOUNDS,
-    POS_X_BOUNDS,
-    NEG_Z_BOUNDS,
-    POS_Z_BOUNDS,
-    NEG_X_AXIS,
-    POS_X_AXIS,
-    NEG_Z_AXIS,
-    POS_Z_AXIS
-};
-
 void updateGui() {
     // Start a new ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -249,69 +309,48 @@ void updateGui() {
     }
 
     static int values[8] = {
-        INITIAL_POSX_BOUNDS, INITIAL_POSZ_BOUNDS, INITIAL_NEGX_BOUNDS, INITIAL_NEGZ_BOUNDS, 
-        INITIAL_POSX_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH, INITIAL_NEGX_AXIS_LENGTH, INITIAL_NEGZ_AXIS_LENGTH,
+        INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS, 
+        INITIAL_NEGX_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, INITIAL_NEGZ_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH,
     }; 
 
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(NEG_X_BOUNDS)).c_str(), &values[NEG_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_X_BOUNDS)).c_str(), &values[mine::NEG_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= x <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(POS_X_BOUNDS)).c_str(), &values[POS_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_X_BOUNDS)).c_str(), &values[mine::POS_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(NEG_Z_BOUNDS)).c_str(), &values[NEG_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_Z_BOUNDS)).c_str(), &values[mine::NEG_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= y <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(POS_Z_BOUNDS)).c_str(), &values[POS_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_Z_BOUNDS)).c_str(), &values[mine::POS_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(NEG_X_AXIS)).c_str(), &values[NEG_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_X_AXIS)).c_str(), &values[mine::NEG_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= X <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(POS_X_AXIS)).c_str(), &values[POS_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_X_AXIS)).c_str(), &values[mine::POS_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(NEG_Z_AXIS)).c_str(), &values[NEG_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_Z_AXIS)).c_str(), &values[mine::NEG_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= Y <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(POS_Z_AXIS)).c_str(), &values[POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_Z_AXIS)).c_str(), &values[mine::POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
     
     if (ImGui::Button("Update Limits")) {
-        gHandler.xNegAxisLength = values[NEG_X_AXIS];
-        gHandler.xPosAxisLength  = values[POS_X_AXIS];
-        gHandler.zNegAxisLength = values[NEG_Z_AXIS];
-        gHandler.zPosAxisLength  = values[POS_Z_AXIS];
-        gHandler.baseVerticeCount = 
-            12 + 8 * (gHandler.yAxisLength + gHandler.xPosAxisLength + gHandler.zPosAxisLength + gHandler.xNegAxisLength + gHandler.zNegAxisLength);
-        if (values[NEG_X_BOUNDS] > gHandler.xNegAxisLength) {
-            values[NEG_X_BOUNDS] = gHandler.xNegAxisLength;
-        }
-        gHandler.xNegBounds = values[NEG_X_BOUNDS];
-        if (values[POS_X_BOUNDS] > gHandler.xPosAxisLength) {
-            values[POS_X_BOUNDS] = gHandler.xPosAxisLength;
-        }
-        gHandler.xPosBounds = values[POS_X_BOUNDS];
-        if (values[NEG_Z_BOUNDS] > gHandler.zNegAxisLength) {
-            values[NEG_Z_BOUNDS] = gHandler.zNegAxisLength;
-        }
-        gHandler.zNegBounds = values[NEG_Z_BOUNDS];
-        if (values[POS_Z_BOUNDS] > gHandler.zPosAxisLength) {
-            values[POS_Z_BOUNDS] = gHandler.zPosAxisLength;
-        }
-        gHandler.zPosBounds = values[POS_Z_BOUNDS];
-        gHandler.updateVertices();
+        gHandler.updateLimits(values);
+        vertexUpdate();
     }
 
     // Render the ImGui elements
@@ -359,7 +398,7 @@ void predraw() {
 
     glUniformMatrix4fv(gGraphicsPipeline.getViewMatrix(), 1, GL_FALSE, &view[0][0]);
 
-    glBindVertexArray(gHandler.vertexArrayObject);
+    glBindVertexArray(gVertexArrayObject);
     glBufferData(
         GL_ARRAY_BUFFER, 
         gHandler.vertices.size() * sizeof(mine::vertex),
@@ -429,9 +468,9 @@ void cleanup() {
 
     SDL_DestroyWindow(gWindow);
 
-    glDeleteBuffers(1, &gHandler.vertexBufferObject);
-    glDeleteBuffers(1, &gHandler.indexBufferObject);
-    glDeleteVertexArrays(1, &gHandler.vertexArrayObject);
+    glDeleteBuffers(1, &gVertexBufferObject);
+    glDeleteBuffers(1, &gIndexBufferObject);
+    glDeleteVertexArrays(1, &gVertexArrayObject);
 
     glDeleteProgram(gGraphicsPipeline.getProgram());
 

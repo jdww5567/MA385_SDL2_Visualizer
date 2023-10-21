@@ -27,10 +27,6 @@ public:
     int zNegAxisLength;
     int baseVerticeCount;
 
-    GLuint vertexArrayObject;
-    GLuint vertexBufferObject;
-    GLuint indexBufferObject;
-
 	vertexHandler();
 
     void setData(int xPosBounds, int zPosBounds, int xNegBounds, int zNegBounds, 
@@ -38,9 +34,10 @@ public:
         int zNegAxisLength, int rectsPerUnit, float axisWidth, 
         GLfloat axisRed, GLfloat axisGreen, GLfloat axisBlue);
 
+    void setVertices();
     void updateVertices();
-    void bindVertices();
     void rotateBaseVertices(float xCamera, float yCamera, float zCamera);
+    void updateLimits(int (&values)[8]);
 private:
     int rectsPerUnit;
 
@@ -53,7 +50,6 @@ private:
     GLfloat axisGreen;
     GLfloat axisBlue;
     void updateDependentVars();
-    void setVertices();
     void calcOrientation(int start, float angle, int offset, float scale, bool x, bool axes);
 public:
     std::vector<vertex> vertices;
