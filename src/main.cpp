@@ -27,7 +27,7 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
-#define FUNCTION x * x - z * z
+#define INITIAL_FUNCTION "x * x - z * z"
 
 #define INITIAL_POSX_BOUNDS 2
 #define INITIAL_POSZ_BOUNDS 2
@@ -49,6 +49,8 @@ GLuint gVertexBufferObject = 0;
 GLuint gIndexBufferObject = 0;
 
 mine::pipeline gGraphicsPipeline{};
+
+mine::pipeline gComputePipeline{};
 
 mine::vertexHandler gHandler{};
 
@@ -133,8 +135,59 @@ void setup() {
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
 }
 
+bool functionUpdate(const std::string& function) {
+    // Create a temporary pipeline to check for syntax errors
+    mine::pipeline tempPipeline;
+    tempPipeline.setProgram("./shaders/compute.glsl", function);
+
+    // Check if the temporary pipeline has a valid program
+    if (tempPipeline.getProgram() != 0) {
+        // Replace the old program with the new one
+        gComputePipeline.setProgram("./shaders/compute.glsl", function);
+    } else {
+        return false;
+    }
+
+    // Set up SSBO for input and output data
+    GLuint inputBuffer;
+    glGenBuffers(1, &inputBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gHandler.vertices.size() * sizeof(mine::vertex), gHandler.vertices.data(), GL_STATIC_READ);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputBuffer);
+
+    GLuint outputBuffer;
+    glGenBuffers(1, &outputBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gHandler.vertices.size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
+
+    // Dispatch the compute shader
+    glUseProgram(gComputePipeline.getProgram());
+    glDispatchCompute(gHandler.vertices.size(), 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glUseProgram(0);
+
+    float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+
+    for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
+        gHandler.vertices[i].x = pResults[i * 6];
+        gHandler.vertices[i].y = pResults[i * 6 + 1];
+        gHandler.vertices[i].z = pResults[i * 6 + 2];
+        gHandler.vertices[i].r = pResults[i * 6 + 3];
+        gHandler.vertices[i].g = pResults[i * 6 + 4];
+        gHandler.vertices[i].b = pResults[i * 6 + 5];
+    }
+
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    return true;
+}
+
 void vertexUpdate() {
     gHandler.updateVertices();
+
+    functionUpdate(gComputePipeline.getFunction());
 
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
     glBufferData(
@@ -153,84 +206,6 @@ void vertexUpdate() {
     );
 }
 
-void grah(const std::string& function) {
-    std::string computeShaderSource_ = R"(
-        #version 460 core
-
-        layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-
-        layout(std430, binding = 0) buffer InputData {
-            float data[];
-        };
-
-        layout(std430, binding = 1) buffer OutputData {
-            float result[]; // Use an array of float
-        };
-
-        void main() {
-            uint idx = gl_GlobalInvocationID.x;
-            float x = data[idx * 6];
-            float z = data[idx * 6 + 2];
-            float y = )";
-    computeShaderSource_ += function; 
-    computeShaderSource_ += R"(;
-            float r = abs(sin(y / 2.0)) / 1.2;
-            float g = abs(sin(y / 2.0 + 3.1415926535 / 3)) / 1.2;
-            float b = abs(sin(y / 2.0 + (2 * 3.1415926535) / 3)) / 1.2;
-
-            result[idx * 6] = x;
-            result[idx * 6 + 1] = y;
-            result[idx * 6 + 2] = z;
-            result[idx * 6 + 3] = r;
-            result[idx * 6 + 4] = g;
-            result[idx * 6 + 5] = b;
-        }
-    )";
-    const char* computeShaderSource = computeShaderSource_.c_str();
-
-    // Compile and link the compute shader program
-    GLuint computeShaderProgram = glCreateProgram();
-    GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
-
-    glShaderSource(computeShader, 1, &computeShaderSource, NULL);
-    glCompileShader(computeShader);
-    glAttachShader(computeShaderProgram, computeShader);
-    glLinkProgram(computeShaderProgram);
-
-    // Set up SSBO for input and output data
-    GLuint inputBuffer;
-    glGenBuffers(1, &inputBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gHandler.vertices.size() * sizeof(mine::vertex), gHandler.vertices.data(), GL_STATIC_READ);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputBuffer);
-
-    GLuint outputBuffer;
-    glGenBuffers(1, &outputBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gHandler.vertices.size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
-
-    // Dispatch the compute shader
-    glUseProgram(computeShaderProgram);
-    glDispatchCompute(gHandler.vertices.size(), 1, 1);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    glUseProgram(0);
-
-    float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-
-    for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
-        gHandler.vertices[i].x = pResults[i * 6];
-        gHandler.vertices[i].y = pResults[i * 6 + 1];
-        gHandler.vertices[i].z = pResults[i * 6 + 2];
-        gHandler.vertices[i].r = pResults[i * 6 + 3];
-        gHandler.vertices[i].g = pResults[i * 6 + 4];
-        gHandler.vertices[i].b = pResults[i * 6 + 5];
-    }
-
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
 void vertexSpecification() {
     gHandler.setData(
         INITIAL_POSX_BOUNDS, INITIAL_POSZ_BOUNDS, INITIAL_NEGX_BOUNDS, INITIAL_NEGZ_BOUNDS,
@@ -239,7 +214,7 @@ void vertexSpecification() {
     );
     gHandler.setVertices();
 
-    grah("x*x - z*z");
+    functionUpdate(INITIAL_FUNCTION);
 
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
@@ -352,13 +327,14 @@ void updateGui() {
 
     // Create your GUI elements
     ImGui::Text("Function");
-    static char inputString[256] = ""; // Buffer to hold the user's input
+    static char inputString[256] = INITIAL_FUNCTION; // Buffer to hold the user's input
 
     ImGui::InputText("##StringInput", inputString, sizeof(inputString));
 
     if (ImGui::Button("Submit")) {
-        grah(inputString);
-        ImGui::Text("Parsed String: %s", inputString);
+        if (!functionUpdate(inputString)) {
+            strcpy(inputString, gComputePipeline.getFunction());
+        }
     }
 
     static int values[8] = {
@@ -495,6 +471,7 @@ void cleanup() {
     glDeleteVertexArrays(1, &gVertexArrayObject);
 
     glDeleteProgram(gGraphicsPipeline.getProgram());
+    glDeleteProgram(gComputePipeline.getProgram());
 
     SDL_Quit();
 }

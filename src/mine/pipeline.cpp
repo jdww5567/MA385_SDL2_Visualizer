@@ -6,15 +6,7 @@ namespace mine {
 pipeline::pipeline() {
     program = 0;
     viewMatrixLoc = 0;
-}
-
-pipeline::pipeline(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
-    program = createProgram(loadShader(vertexSrcLoc), loadShader(fragmentSrcLoc));
-    viewMatrixLoc = glGetUniformLocation(program, viewMatrixName.c_str());
-    if (viewMatrixLoc < 0) {
-        std::cout << "Error: " << viewMatrixName << " not found in GPU memory" << std::endl;
-        exit(2);
-    }
+    function = "";
 }
 
 std::string pipeline::loadShader(const std::string& srcLoc) {
@@ -25,6 +17,26 @@ std::string pipeline::loadShader(const std::string& srcLoc) {
 
     if (file.is_open()) {
         while (std::getline(file, line)) {
+            src += line + '\n';
+        }
+
+        file.close();
+    }
+
+    return src;
+}
+
+std::string pipeline::loadShader(const std::string& srcLoc, const std::string& func) {
+    std::string src  = "";
+    std::string line = "";
+
+    std::ifstream file(srcLoc.c_str());
+
+    if (file.is_open()) {
+        while (std::getline(file, line)) {
+            if (line == "    float y = ") {
+                line += func + ';';
+            }
             src += line + '\n';
         }
 
@@ -49,6 +61,27 @@ GLuint pipeline::createProgram(const std::string& vertexSrc, const std::string& 
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    return programObject;
+}
+
+GLuint pipeline::createProgram(const std::string& computeSrc) {
+    GLuint programObject = glCreateProgram();
+
+    GLuint computeShader = compileShader(GL_COMPUTE_SHADER, computeSrc);
+
+    if (computeShader == 0) {
+        return 0;
+    } else {
+
+    }
+
+    glAttachShader(programObject, computeShader);
+    glLinkProgram(programObject);
+    glValidateProgram(programObject);
+
+    glDetachShader(programObject, computeShader);
+    glDeleteShader(computeShader);
 
     return programObject;
 }
@@ -82,6 +115,12 @@ GLuint pipeline::compileShader(GLuint type, const std::string& source) {
                 << errorLog.data() 
                 << std::endl
             ;
+        } else if (type == GL_COMPUTE_SHADER) {
+            std::cout 
+                << "Error: Failed to compile GL_COMPUTE_SHADER\nglError:\n" 
+                << errorLog.data() 
+                << std::endl
+            ;
         }
 
         glDeleteShader(shaderObject);
@@ -100,6 +139,10 @@ GLint pipeline::getViewMatrixLoc() {
     return viewMatrixLoc;
 }
 
+const char* pipeline::getFunction() {
+    return function.c_str();
+}
+
 void pipeline::setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
     program = createProgram(loadShader(vertexSrcLoc), loadShader(fragmentSrcLoc));
     viewMatrixLoc = glGetUniformLocation(program, viewMatrixName.c_str());
@@ -107,5 +150,14 @@ void pipeline::setProgram(const std::string& vertexSrcLoc, const std::string& fr
         std::cout << "Error: " << viewMatrixName << " not found in GPU memory" << std::endl;
         exit(2);
     }
+}
+
+void pipeline::setProgram(const std::string& computeSrcLoc, const std::string& function_) {
+    if (program != 0) {
+        glDeleteProgram(program);
+    }
+    program = createProgram(loadShader(computeSrcLoc, function_));
+    function = function_;
+    viewMatrixLoc = -1;
 }
 }
