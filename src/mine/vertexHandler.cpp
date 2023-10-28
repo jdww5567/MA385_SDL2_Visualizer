@@ -186,10 +186,6 @@ void vertexHandler::setVertices() {
             continue;
         } else if (vertices[i].x == (float)xPosBounds) {
             continue;
-        } else if (vertices[i].y != vertices[i].y) {
-            continue;
-        } else if (50 < vertices[i].y || vertices[i].y < -50) {
-            continue;
         }
         indices.push_back(i);
         indices.push_back(i + 1);

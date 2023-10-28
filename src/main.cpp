@@ -19,7 +19,7 @@
 #define SCREEN_WIDTH 960
 #define SCREEN_HEIGHT 720
 
-#define RECTS_PER_UNIT 20
+#define RECTS_PER_UNIT 10
 
 #define INITIAL_RADIUS 9.0f
 #define INITIAL_THETA 45.0f
@@ -60,7 +60,11 @@ mine::vertexHandler gHandler{};
 
 mine::cameraHandler gCamera{};
 
-bool gRunning  = true;
+bool gRunning = true;
+
+bool gChange = true;
+
+bool guiChange = true;
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -280,13 +284,17 @@ void input() {
                 break;
             case SDL_MOUSEWHEEL:
                 gCamera.zoom(e.wheel.y > 0, e.wheel.y < 0);
+                gChange = true;
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 switch (e.button.button) {
                     case SDL_BUTTON_LEFT:
-                        mouseX = (int)(e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - gCamera.theta) % 360;
-                        mouseY = (int)(e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) + gCamera.phi) % 360;
-                        leftDown = true;
+                        if (!ImGui::GetIO().WantCaptureMouse) {
+                            mouseX = (int)(e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - gCamera.theta) % 360;
+                            mouseY = (int)(e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) + gCamera.phi) % 360;
+                            leftDown = true;
+                            gChange = true;
+                        }
                         break;
                     default:
                         break;
@@ -296,11 +304,12 @@ void input() {
                 leftDown = false;
                 break;
             case SDL_MOUSEMOTION:
-                if (leftDown && !ImGui::GetIO().WantCaptureMouse) {
+                if (leftDown) {
                     gCamera.updateAngles(
                         e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - mouseX, 
                         mouseY - e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f))
                     );
+                    gChange = true;
                 }
                 break;
             case SDL_KEYDOWN:
@@ -312,6 +321,7 @@ void input() {
 
                         mouseX = mouseX / 2.0f - gCamera.theta;
                         mouseY = mouseY / 2.0f + gCamera.phi;
+                        gChange = true;
                         break;
                     default:
                         break;
@@ -321,7 +331,7 @@ void input() {
                 if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
                     gCamera.updateScreen(e.window.data1, e.window.data2);
                     glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
-                    std::cout << gCamera.screenWidth << " " << gCamera.screenHeight << "\n";
+                    gChange = true;
                 }
             default:
                 break;
@@ -336,6 +346,18 @@ void updateGui() {
 
     ImGui::Begin("Edit Scene");
 
+    static ImVec2 frameSize = {-1, -1};
+    static ImVec2 framePosition = {-1, -1};
+
+    if (
+        framePosition.x != ImGui::GetWindowPos().x || framePosition.y != ImGui::GetWindowPos().y || 
+        frameSize.x != ImGui::GetWindowSize().x || frameSize.y != ImGui::GetWindowSize().y
+    ) {
+        framePosition = ImGui::GetWindowPos();
+        frameSize = ImGui::GetWindowSize();
+        gChange = true;
+    }
+
     ImGui::Text("Function");
     static char inputString[256] = INITIAL_FUNCTION;
 
@@ -346,6 +368,7 @@ void updateGui() {
         if (!functionUpdate(inputString)) {
             strcpy(inputString, gComputePipeline.getFunction());
         }
+        gChange = true;
     }
 
     static int values[8] = {
@@ -403,6 +426,7 @@ void updateGui() {
     if (ImGui::Button("Update Limits")) {
         gHandler.updateLimits(values);
         vertexUpdate();
+        gChange = true;
     }
 
     ImGui::End();
@@ -480,9 +504,6 @@ void draw() {
 
     glEnable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, gHandler.indices.size(), GL_UNSIGNED_INT, nullptr);
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void postdraw() {
@@ -502,11 +523,15 @@ void loop() {
 
         updateGui();
 
-        predraw();
+        if (gChange) {
+            predraw();
+            draw();
+            postdraw();
+            gChange = false;
+        }
 
-        draw();
-
-        postdraw();
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(gWindow);
 
