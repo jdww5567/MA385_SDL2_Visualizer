@@ -64,6 +64,8 @@ bool gRunning = true;
 
 bool gChange = true;
 
+bool gGuiChange = false;
+
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cout 
@@ -353,7 +355,7 @@ void updateGui() {
     ) {
         framePosition = ImGui::GetWindowPos();
         frameSize = ImGui::GetWindowSize();
-        gChange = true;
+        gGuiChange = true;
     }
 
     ImGui::Text("Function");
@@ -431,13 +433,7 @@ void updateGui() {
 }
 
 void predraw() {
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-    glUseProgram(gGraphicsPipeline.getProgram());
-
     gHandler.rotateBaseVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
-
-    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
 
     glm::vec3 camPos = gCamera.pos;
     std::vector<std::pair<mine::vertex, GLfloat>> distances{};
@@ -469,22 +465,27 @@ void predraw() {
         gSortedIndices.push_back(v.first.i);
     }
 
-    glBindVertexArray(gVertexArrayObject);
     glBufferData(
         GL_ARRAY_BUFFER, 
         gHandler.vertices.size() * sizeof(mine::vertex),
         gHandler.vertices.data(), 
         GL_DYNAMIC_DRAW
     );
+}
+
+void draw() {
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    glUseProgram(gGraphicsPipeline.getProgram());
+    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
+
+    glBindVertexArray(gVertexArrayObject);
+
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
         gHandler.indices.size() * sizeof(GLint),
         gHandler.indices.data(),
         GL_DYNAMIC_DRAW
     );
-}
-
-void draw() {
     glDisable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, 3 * (gHandler.baseVerticeCount / 2), GL_UNSIGNED_INT, 0);
 
@@ -521,6 +522,11 @@ void loop() {
             draw();
             postdraw();
             gChange = false;
+            gGuiChange = false;
+        } else if (gGuiChange) {
+            draw();
+            postdraw();
+            gGuiChange = false;
         }
 
         ImGui::Render();
