@@ -83,7 +83,7 @@ void setup() {
         SDL_WINDOWPOS_UNDEFINED,
         SCREEN_WIDTH,
         SCREEN_HEIGHT,
-        SDL_WINDOW_OPENGL
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
     if (!gWindow) {
         std::cout
@@ -275,13 +275,13 @@ void input() {
                 gRunning = false;
                 break;
             case SDL_MOUSEWHEEL:
-                gCamera.zoom(e.wheel.y > 0);
+                gCamera.zoom(e.wheel.y > 0, e.wheel.y < 0);
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 switch (e.button.button) {
                     case SDL_BUTTON_LEFT:
-                        mouseX = e.button.x / 2.0 - gCamera.theta;
-                        mouseY = e.button.y / 2.0 + gCamera.phi;
+                        mouseX = (int)(e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - gCamera.theta) % 360;
+                        mouseY = (int)(e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) + gCamera.phi) % 360;
                         leftDown = true;
                         break;
                     default:
@@ -292,8 +292,11 @@ void input() {
                 leftDown = false;
                 break;
             case SDL_MOUSEMOTION:
-                if (leftDown) {
-                    gCamera.updateAngles(e.button.x / 2.0 - mouseX, mouseY - e.button.y / 2.0);
+                if (leftDown && !ImGui::GetIO().WantCaptureMouse) {
+                    gCamera.updateAngles(
+                        e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - mouseX, 
+                        mouseY - e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f))
+                    );
                 }
                 break;
             case SDL_KEYDOWN:
@@ -303,13 +306,19 @@ void input() {
 
                         SDL_GetMouseState(&mouseX, &mouseY);
 
-                        mouseX = mouseX / 2.0 - gCamera.theta;
-                        mouseY = mouseY / 2.0 + gCamera.phi;
+                        mouseX = mouseX / 2.0f - gCamera.theta;
+                        mouseY = mouseY / 2.0f + gCamera.phi;
                         break;
                     default:
                         break;
                 }
                 break;
+            case SDL_WINDOWEVENT:
+                if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    gCamera.updateScreen(e.window.data1, e.window.data2);
+                    glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
+                    std::cout << gCamera.screenWidth << " " << gCamera.screenHeight << "\n";
+                }
             default:
                 break;
         }
@@ -321,9 +330,12 @@ void updateGui() {
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
+    ImGui::Begin("Edit Scene");
+
     ImGui::Text("Function");
     static char inputString[256] = INITIAL_FUNCTION;
 
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     ImGui::InputText("##StringInput", inputString, sizeof(inputString));
 
     if (ImGui::Button("Submit")) {
@@ -334,8 +346,8 @@ void updateGui() {
 
     static int values[8] = {
         -INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, -INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS, 
-        -INITIAL_NEGX_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, -INITIAL_NEGZ_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH,
-    }; 
+        -INITIAL_NEGX_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, -INITIAL_NEGZ_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH
+    };
 
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
@@ -389,8 +401,7 @@ void updateGui() {
         vertexUpdate();
     }
 
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui::End();
 }
 
 void predraw() {
@@ -417,6 +428,9 @@ void draw() {
 
     glEnable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, gHandler.indices.size(), GL_UNSIGNED_INT, nullptr);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void postdraw() {
@@ -441,9 +455,6 @@ void loop() {
         draw();
 
         postdraw();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(gWindow);
 

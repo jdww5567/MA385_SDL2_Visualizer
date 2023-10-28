@@ -6,9 +6,9 @@
 namespace mine {
 class cameraHandler {
     float radius;
+public:
     float screenWidth;
     float screenHeight;
-public:
     float theta;
     float phi;
     glm::vec3 pos;
@@ -17,8 +17,9 @@ public:
     cameraHandler();
     void setScreen(float screenWidth_, float screenHeight_);
     void setData(float radius_, float theta_, float phi_);
-    void zoom(bool in);
+    void zoom(bool in, bool out);
     void updateAngles(float theta_, float phi_);
+    void updateScreen(float screenWidth_, float screenHeight_);
 private:
     void updatePos();
 };

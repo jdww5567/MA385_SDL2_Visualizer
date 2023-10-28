@@ -18,6 +18,13 @@ void cameraHandler::setScreen(float screenWidth_, float screenHeight_) {
     screenHeight = screenHeight_;
 }
 
+
+void cameraHandler::updateScreen(float screenWidth_, float screenHeight_) {
+    screenWidth = screenWidth_;
+    screenHeight = screenHeight_;
+    updatePos();
+}
+
 void cameraHandler::setData(float radius_, float theta_, float phi_) {
     theta = theta_;
 
@@ -38,14 +45,17 @@ void cameraHandler::setData(float radius_, float theta_, float phi_) {
     updatePos();
 }
 
-void cameraHandler::zoom(bool in) {
+void cameraHandler::zoom(bool in, bool out) {
     if (in) {
         radius -= 0.1f * radius;
         if (radius < 0.1f) {
             radius = 0.1f;
         }
-    } else {
+    } else if (out) {
         radius += 0.1f * radius;
+        if (radius > 10000.0f) {
+            radius = 10000.0f;
+        }
     }
 
     updatePos();
@@ -77,13 +87,13 @@ void cameraHandler::updatePos() {
     if (pos.y > 0) {
         cameraUp = glm::normalize(glm::vec3(
             -pos.x,
-            (powf(pos.x, 2) + powf(pos.z, 2)) / pos.y,
+            (glm::pow(pos.x, 2) + glm::pow(pos.z, 2)) / pos.y,
             -pos.z
         ));
     } else if (pos.y < 0) {
         cameraUp = glm::normalize(glm::vec3(
             pos.x,
-            -(powf(pos.x, 2) + powf(pos.z, 2)) / pos.y,
+            -(glm::pow(pos.x, 2) + glm::pow(pos.z, 2)) / pos.y,
             pos.z
         ));
     } else {
@@ -92,11 +102,18 @@ void cameraHandler::updatePos() {
 
     view = glm::lookAt(pos, glm::vec3(0, 0, 0), cameraUp);
 
+    float fov = glm::radians(60.0f);
+    float aspectRatio = screenWidth / screenHeight;
+
+    if (aspectRatio < 1) {
+        fov = glm::atan(glm::tan(fov / 2.0f) / aspectRatio) * 2.0f;
+    }
+
     view = glm::perspective(
-        glm::radians(60.0f),
-        screenWidth / screenHeight,
+        fov,
+        aspectRatio,
         0.01f,
-        1000.0f
+        100.0f
     ) * view;
 }
 }
