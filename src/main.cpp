@@ -191,21 +191,6 @@ void vertexUpdate() {
     gHandler.updateVertices();
 
     functionUpdate(gComputePipeline.getFunction());
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        gHandler.vertices.size() * sizeof(mine::vertex),
-        gHandler.vertices.data(),
-        GL_DYNAMIC_DRAW
-    );
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        gHandler.indices.size() * sizeof(GLint),
-        gHandler.indices.data(),
-        GL_DYNAMIC_DRAW
-    );
 }
 
 void vertexSpecification() {
