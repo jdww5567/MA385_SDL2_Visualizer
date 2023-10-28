@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 #include <mine/pipeline.hpp>
 #include <mine/vertexHandler.hpp>
@@ -22,7 +23,7 @@
 
 #define INITIAL_RADIUS 9.0f
 #define INITIAL_THETA 45.0f
-#define INITIAL_PHI 45.0f
+#define INITIAL_PHI 65.0f
 
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
@@ -41,6 +42,9 @@
 #define INITIAL_NEGZ_AXIS_LENGTH 5
 
 #define AXIS_WIDTH 0.01f
+
+std::vector<mine::vertex> gSorted{};
+std::vector<GLint> gSortedIndices{};
 
 SDL_Window *gWindow = nullptr;
 
@@ -413,6 +417,41 @@ void predraw() {
 
     glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
 
+    gSorted.clear();
+    for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
+        gSorted.push_back(gHandler.vertices[i]);
+    }
+
+    auto distance = [=](const mine::vertex& a, const mine::vertex& b) {
+        glm::vec3 camPos = gCamera.pos;
+
+        float aDist = glm::pow(glm::pow(camPos.x - a.x, 2) + glm::pow(camPos.y - a.y, 2) + glm::pow(camPos.z - a.z, 2), 0.5);
+        float bDist = glm::pow(glm::pow(camPos.x - b.x, 2) + glm::pow(camPos.y - b.y, 2) + glm::pow(camPos.z - b.z, 2), 0.5);
+
+        return aDist > bDist;
+    };
+
+    std::sort(gSorted.begin(), gSorted.end(), distance);
+
+    gSortedIndices.clear();
+    for (const mine::vertex v : gSorted) {
+        if (v.z == (float)gHandler.zPosBounds) {
+            continue;
+        } else if (v.x == (float)gHandler.xPosBounds) {
+            continue;
+        } else if (v.y != v.y) {
+            continue;
+        } else if (50 < v.y || v.y < -50) {
+            continue;
+        }
+        gSortedIndices.push_back(v.i);
+        gSortedIndices.push_back(v.i + 1);
+        gSortedIndices.push_back(v.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
+        gSortedIndices.push_back(v.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
+        gSortedIndices.push_back(v.i + 1 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
+        gSortedIndices.push_back(v.i);
+    }
+
     glBindVertexArray(gVertexArrayObject);
     glBufferData(
         GL_ARRAY_BUFFER, 
@@ -420,11 +459,24 @@ void predraw() {
         gHandler.vertices.data(), 
         GL_DYNAMIC_DRAW
     );
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        gHandler.indices.size() * sizeof(GLint),
+        gHandler.indices.data(),
+        GL_DYNAMIC_DRAW
+    );
 }
 
 void draw() {
     glDisable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, 3 * (gHandler.baseVerticeCount / 2), GL_UNSIGNED_INT, 0);
+
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        gSortedIndices.size() * sizeof(GLint),
+        gSortedIndices.data(),
+        GL_DYNAMIC_DRAW
+    );
 
     glEnable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, gHandler.indices.size(), GL_UNSIGNED_INT, nullptr);

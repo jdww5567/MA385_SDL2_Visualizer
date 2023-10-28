@@ -7,13 +7,13 @@ layout(std430, binding = 0) buffer InputData {
 };
 
 layout(std430, binding = 1) buffer OutputData {
-    float result[]; // Use an array of float
+    float result[];
 };
 
 void main() {
     uint idx = gl_GlobalInvocationID.x;
-    float x = data[idx * 6];
-    float y = data[idx * 6 + 2];
+    float x = data[idx * 7];
+    float y = data[idx * 7 + 2];
     float z = 
     float r = abs(sin(z / 2.0)) / 1.2;
     float g = abs(sin(z / 2.0 + 3.1415926535 / 3)) / 1.2;
