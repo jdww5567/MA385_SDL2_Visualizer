@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <utility>
 
 #include <mine/pipeline.hpp>
 #include <mine/vertexHandler.hpp>
@@ -19,7 +20,7 @@
 #define SCREEN_WIDTH 960
 #define SCREEN_HEIGHT 720
 
-#define RECTS_PER_UNIT 10
+#define RECTS_PER_UNIT 20
 
 #define INITIAL_RADIUS 9.0f
 #define INITIAL_THETA 45.0f
@@ -43,7 +44,6 @@
 
 #define AXIS_WIDTH 0.01f
 
-std::vector<mine::vertex> gSorted{};
 std::vector<GLint> gSortedIndices{};
 
 SDL_Window *gWindow = nullptr;
@@ -63,8 +63,6 @@ mine::cameraHandler gCamera{};
 bool gRunning = true;
 
 bool gChange = true;
-
-bool guiChange = true;
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -441,39 +439,34 @@ void predraw() {
 
     glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
 
-    gSorted.clear();
+    glm::vec3 camPos = gCamera.pos;
+    std::vector<std::pair<mine::vertex, GLfloat>> distances{};
     for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
-        gSorted.push_back(gHandler.vertices[i]);
+        distances.push_back({gHandler.vertices[i], powf(powf(camPos.x - gHandler.vertices[i].x, 2) + powf(camPos.y - gHandler.vertices[i].y, 2) + powf(camPos.z - gHandler.vertices[i].z, 2), 0.5)});
     }
-
-    auto distance = [=](const mine::vertex& a, const mine::vertex& b) {
-        glm::vec3 camPos = gCamera.pos;
-
-        float aDist = glm::pow(glm::pow(camPos.x - a.x, 2) + glm::pow(camPos.y - a.y, 2) + glm::pow(camPos.z - a.z, 2), 0.5);
-        float bDist = glm::pow(glm::pow(camPos.x - b.x, 2) + glm::pow(camPos.y - b.y, 2) + glm::pow(camPos.z - b.z, 2), 0.5);
-
-        return aDist > bDist;
+    auto distance = [](const std::pair<mine::vertex, GLfloat>& a, const std::pair<mine::vertex, GLfloat>& b) {
+        return a.second > b.second;
     };
 
-    std::sort(gSorted.begin(), gSorted.end(), distance);
+    std::sort(distances.begin(), distances.end(), distance);
 
     gSortedIndices.clear();
-    for (const mine::vertex v : gSorted) {
-        if (v.z == (float)gHandler.zPosBounds) {
+    for (const std::pair<mine::vertex, GLfloat>& v : distances) {
+        if (v.first.z == (float)gHandler.zPosBounds) {
             continue;
-        } else if (v.x == (float)gHandler.xPosBounds) {
+        } else if (v.first.x == (float)gHandler.xPosBounds) {
             continue;
-        } else if (v.y != v.y) {
+        } else if (v.first.y != v.first.y) {
             continue;
-        } else if (50 < v.y || v.y < -50) {
+        } else if (50 < v.first.y || v.first.y < -50) {
             continue;
         }
-        gSortedIndices.push_back(v.i);
-        gSortedIndices.push_back(v.i + 1);
-        gSortedIndices.push_back(v.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
-        gSortedIndices.push_back(v.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
-        gSortedIndices.push_back(v.i + 1 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
-        gSortedIndices.push_back(v.i);
+        gSortedIndices.push_back(v.first.i);
+        gSortedIndices.push_back(v.first.i + 1);
+        gSortedIndices.push_back(v.first.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
+        gSortedIndices.push_back(v.first.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
+        gSortedIndices.push_back(v.first.i + 1 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
+        gSortedIndices.push_back(v.first.i);
     }
 
     glBindVertexArray(gVertexArrayObject);
