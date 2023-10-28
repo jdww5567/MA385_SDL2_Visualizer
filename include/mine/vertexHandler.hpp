@@ -12,7 +12,11 @@ struct vertex {
     GLfloat r;
     GLfloat g;
     GLfloat b;
-    GLfloat i;
+};
+
+struct order {
+    GLint i;
+    GLfloat d;
 };
 
 class vertexHandler {
@@ -38,6 +42,7 @@ public:
     void setVertices();
     void updateVertices();
     void rotateBaseVertices(float xCamera, float yCamera, float zCamera);
+    void sortVertices(float xCamera, float yCamera, float zCamera);
     void updateLimits(int (&values)[8]);
 private:
     int rectsPerUnit;
@@ -55,6 +60,7 @@ private:
 public:
     std::vector<vertex> vertices;
     std::vector<GLuint> indices;
+    std::vector<order> orders;
 };
 }
 

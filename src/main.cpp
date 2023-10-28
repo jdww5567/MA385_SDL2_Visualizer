@@ -9,8 +9,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <algorithm>
-#include <utility>
 
 #include <mine/pipeline.hpp>
 #include <mine/vertexHandler.hpp>
@@ -194,7 +192,6 @@ void vertexUpdate() {
 
     functionUpdate(gComputePipeline.getFunction());
 
-    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
     glBufferData(
         GL_ARRAY_BUFFER,
         gHandler.vertices.size() * sizeof(mine::vertex),
@@ -435,35 +432,7 @@ void updateGui() {
 void predraw() {
     gHandler.rotateBaseVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
 
-    glm::vec3 camPos = gCamera.pos;
-    std::vector<std::pair<mine::vertex, GLfloat>> distances{};
-    for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
-        distances.push_back({gHandler.vertices[i], powf(powf(camPos.x - gHandler.vertices[i].x, 2) + powf(camPos.y - gHandler.vertices[i].y, 2) + powf(camPos.z - gHandler.vertices[i].z, 2), 0.5)});
-    }
-    auto distance = [](const std::pair<mine::vertex, GLfloat>& a, const std::pair<mine::vertex, GLfloat>& b) {
-        return a.second > b.second;
-    };
-
-    std::sort(distances.begin(), distances.end(), distance);
-
-    gSortedIndices.clear();
-    for (const std::pair<mine::vertex, GLfloat>& v : distances) {
-        if (v.first.z == (float)gHandler.zPosBounds) {
-            continue;
-        } else if (v.first.x == (float)gHandler.xPosBounds) {
-            continue;
-        } else if (v.first.y != v.first.y) {
-            continue;
-        } else if (50 < v.first.y || v.first.y < -50) {
-            continue;
-        }
-        gSortedIndices.push_back(v.first.i);
-        gSortedIndices.push_back(v.first.i + 1);
-        gSortedIndices.push_back(v.first.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
-        gSortedIndices.push_back(v.first.i + 2 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
-        gSortedIndices.push_back(v.first.i + 1 + (gHandler.zPosBounds + gHandler.zNegBounds) * RECTS_PER_UNIT);
-        gSortedIndices.push_back(v.first.i);
-    }
+    gHandler.sortVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
 
     glBufferData(
         GL_ARRAY_BUFFER, 
@@ -471,30 +440,25 @@ void predraw() {
         gHandler.vertices.data(), 
         GL_DYNAMIC_DRAW
     );
-}
-
-void draw() {
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-    glUseProgram(gGraphicsPipeline.getProgram());
-    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
-
-    glBindVertexArray(gVertexArrayObject);
-
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
         gHandler.indices.size() * sizeof(GLint),
         gHandler.indices.data(),
         GL_DYNAMIC_DRAW
     );
+}
+
+void draw() {
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(gGraphicsPipeline.getProgram());
+    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
+
+    glBindVertexArray(gVertexArrayObject);
+
     glDisable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, 3 * (gHandler.baseVerticeCount / 2), GL_UNSIGNED_INT, 0);
-
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        gSortedIndices.size() * sizeof(GLint),
-        gSortedIndices.data(),
-        GL_DYNAMIC_DRAW
-    );
 
     glEnable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, gHandler.indices.size(), GL_UNSIGNED_INT, nullptr);
