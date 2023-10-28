@@ -399,23 +399,23 @@ void vertexHandler::calcOrientation(int start, float angle, int offset, float sc
 }
 
 void vertexHandler::updateLimits(int (&values)[8]) {
-    xNegAxisLength = values[mine::NEG_X_AXIS];
+    xNegAxisLength = -values[mine::NEG_X_AXIS];
     xPosAxisLength  = values[mine::POS_X_AXIS];
-    zNegAxisLength = values[mine::NEG_Z_AXIS];
+    zNegAxisLength = -values[mine::NEG_Z_AXIS];
     zPosAxisLength  = values[mine::POS_Z_AXIS];
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
-    if (values[mine::NEG_X_BOUNDS] > xNegAxisLength) {
-        values[mine::NEG_X_BOUNDS] = xNegAxisLength;
+    if (-values[mine::NEG_X_BOUNDS] > xNegAxisLength) {
+        values[mine::NEG_X_BOUNDS] = -xNegAxisLength;
     }
-    xNegBounds = values[mine::NEG_X_BOUNDS];
+    xNegBounds = -values[mine::NEG_X_BOUNDS];
     if (values[mine::POS_X_BOUNDS] > xPosAxisLength) {
         values[mine::POS_X_BOUNDS] = xPosAxisLength;
     }
     xPosBounds = values[mine::POS_X_BOUNDS];
-    if (values[mine::NEG_Z_BOUNDS] > zNegAxisLength) {
-        values[mine::NEG_Z_BOUNDS] = zNegAxisLength;
+    if (-values[mine::NEG_Z_BOUNDS] > zNegAxisLength) {
+        values[mine::NEG_Z_BOUNDS] = -zNegAxisLength;
     }
-    zNegBounds = values[mine::NEG_Z_BOUNDS];
+    zNegBounds = -values[mine::NEG_Z_BOUNDS];
     if (values[mine::POS_Z_BOUNDS] > zPosAxisLength) {
         values[mine::POS_Z_BOUNDS] = zPosAxisLength;
     }

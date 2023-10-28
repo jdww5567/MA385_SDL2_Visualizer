@@ -13,15 +13,15 @@ layout(std430, binding = 1) buffer OutputData {
 void main() {
     uint idx = gl_GlobalInvocationID.x;
     float x = data[idx * 6];
-    float z = data[idx * 6 + 2];
-    float y = 
-    float r = abs(sin(y / 2.0)) / 1.2;
-    float g = abs(sin(y / 2.0 + 3.1415926535 / 3)) / 1.2;
-    float b = abs(sin(y / 2.0 + (2 * 3.1415926535) / 3)) / 1.2;
+    float y = data[idx * 6 + 2];
+    float z = 
+    float r = abs(sin(z / 2.0)) / 1.2;
+    float g = abs(sin(z / 2.0 + 3.1415926535 / 3)) / 1.2;
+    float b = abs(sin(z / 2.0 + (2 * 3.1415926535) / 3)) / 1.2;
 
     result[idx * 6] = x;
-    result[idx * 6 + 1] = y;
-    result[idx * 6 + 2] = z;
+    result[idx * 6 + 1] = z;
+    result[idx * 6 + 2] = y;
     result[idx * 6 + 3] = r;
     result[idx * 6 + 4] = g;
     result[idx * 6 + 5] = b;

@@ -27,7 +27,7 @@
 #define BG_COLOR 0.1f, 0.1f, 0.1f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
-#define INITIAL_FUNCTION "x * x - z * z"
+#define INITIAL_FUNCTION "x * x - y * y"
 
 #define INITIAL_POSX_BOUNDS 2
 #define INITIAL_POSZ_BOUNDS 2
@@ -136,13 +136,10 @@ void setup() {
 }
 
 bool functionUpdate(const std::string& function) {
-    // Create a temporary pipeline to check for syntax errors
     mine::pipeline tempPipeline;
     tempPipeline.setProgram("./shaders/compute.glsl", function);
 
-    // Check if the temporary pipeline has a valid program
     if (tempPipeline.getProgram() != 0) {
-        // Replace the old program with the new one
         gComputePipeline.setProgram("./shaders/compute.glsl", function);
     } else {
         return false;
@@ -338,8 +335,8 @@ void updateGui() {
     }
 
     static int values[8] = {
-        INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS, 
-        INITIAL_NEGX_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, INITIAL_NEGZ_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH,
+        -INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, -INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS, 
+        -INITIAL_NEGX_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, -INITIAL_NEGZ_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH,
     }; 
 
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
@@ -376,6 +373,18 @@ void updateGui() {
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_Z_AXIS)).c_str(), &values[mine::POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
+
+    for (int i = 0; i < 8; ++i) {
+        if (i % 2 == 0) {
+            if (values[i] > 0) {
+                values[i] = 0;
+            }
+        } else {
+            if (values[i] < 0) {
+                values[i] = 0;
+            }
+        }
+    }
 
     if (ImGui::Button("Update Limits")) {
         gHandler.updateLimits(values);

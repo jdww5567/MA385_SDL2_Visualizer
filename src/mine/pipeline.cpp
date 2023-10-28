@@ -34,7 +34,7 @@ std::string pipeline::loadShader(const std::string& srcLoc, const std::string& f
 
     if (file.is_open()) {
         while (std::getline(file, line)) {
-            if (line == "    float y = ") {
+            if (line == "    float z = ") {
                 line += func + ';';
             }
             src += line + '\n';
