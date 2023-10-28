@@ -72,8 +72,6 @@ GLuint pipeline::createProgram(const std::string& computeSrc) {
 
     if (computeShader == 0) {
         return 0;
-    } else {
-
     }
 
     glAttachShader(programObject, computeShader);

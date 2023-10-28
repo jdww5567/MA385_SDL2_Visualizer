@@ -121,13 +121,10 @@ void setup() {
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-
-    // Setup Platform/Renderer backends
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     ImGui_ImplSDL2_InitForOpenGL(gWindow, glContext);
     ImGui_ImplOpenGL3_Init("#version 460 core\n");
 
@@ -140,12 +137,13 @@ bool functionUpdate(const std::string& function) {
     tempPipeline.setProgram("./shaders/compute.glsl", function);
 
     if (tempPipeline.getProgram() != 0) {
+        glDeleteProgram(tempPipeline.getProgram());
         gComputePipeline.setProgram("./shaders/compute.glsl", function);
     } else {
+        glDeleteProgram(tempPipeline.getProgram());
         return false;
     }
 
-    // Set up SSBO for input and output data
     GLuint inputBuffer;
     glGenBuffers(1, &inputBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
@@ -158,7 +156,6 @@ bool functionUpdate(const std::string& function) {
     glBufferData(GL_SHADER_STORAGE_BUFFER, gHandler.vertices.size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
 
-    // Dispatch the compute shader
     glUseProgram(gComputePipeline.getProgram());
     glDispatchCompute(gHandler.vertices.size(), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -177,6 +174,9 @@ bool functionUpdate(const std::string& function) {
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    glDeleteBuffers(1, &inputBuffer);
+    glDeleteBuffers(1, &outputBuffer);
 
     return true;
 }
@@ -317,14 +317,12 @@ void input() {
 }
 
 void updateGui() {
-    // Start a new ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    // Create your GUI elements
     ImGui::Text("Function");
-    static char inputString[256] = INITIAL_FUNCTION; // Buffer to hold the user's input
+    static char inputString[256] = INITIAL_FUNCTION;
 
     ImGui::InputText("##StringInput", inputString, sizeof(inputString));
 
@@ -391,7 +389,6 @@ void updateGui() {
         vertexUpdate();
     }
 
-    // Render the ImGui elements
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
