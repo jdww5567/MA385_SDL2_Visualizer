@@ -24,7 +24,7 @@
 #define INITIAL_THETA 45.0f
 #define INITIAL_PHI 65.0f
 
-#define BG_COLOR 0.1f, 0.1f, 0.1f
+#define BG_COLOR 0.5f, 0.5f, 0.5f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
 #define INITIAL_FUNCTION "x * x - y * y"
@@ -297,13 +297,15 @@ void input() {
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
+                        if (!ImGui::GetIO().WantCaptureKeyboard) {
+                            gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
 
-                        SDL_GetMouseState(&mouseX, &mouseY);
+                            SDL_GetMouseState(&mouseX, &mouseY);
 
-                        mouseX = mouseX / 2.0f - gCamera.theta;
-                        mouseY = mouseY / 2.0f + gCamera.phi;
-                        gChange = true;
+                            mouseX = mouseX / 2.0f - gCamera.theta;
+                            mouseY = mouseY / 2.0f + gCamera.phi;
+                            gChange = true;
+                        }
                         break;
                     default:
                         break;
@@ -315,6 +317,7 @@ void input() {
                     glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
                     gChange = true;
                 }
+                break;
             default:
                 break;
         }
