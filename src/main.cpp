@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <thread>
 
 #include <mine/pipeline.hpp>
 #include <mine/vertexHandler.hpp>
@@ -458,37 +459,49 @@ void postdraw() {
 }
 
 void loop() {
+    double refreshTime = 0;
+    SDL_DisplayMode displayMode;
+    if (!SDL_GetCurrentDisplayMode(0, &displayMode)) {
+        refreshTime = 1.0 / displayMode.refresh_rate;
+    }
+
     Uint64 prevCounter = SDL_GetPerformanceCounter();
     Uint64 currCounter = 0;
     double elapsedTime = 0.0;
+    double frameElapsedTime = 0.0;
     int frameCount = 0;
     int fps = 0;
 
     while (gRunning) {
         input();
+        if (frameElapsedTime >= refreshTime) {
+            updateGui();
 
-        updateGui();
+            if (gChange) {
+                predraw();
+                draw();
+                postdraw();
+                gChange = false;
+                gGuiChange = false;
+            } else if (gGuiChange) {
+                draw();
+                postdraw();
+                gGuiChange = false;
+            }
 
-        if (gChange) {
-            predraw();
-            draw();
-            postdraw();
-            gChange = false;
-            gGuiChange = false;
-        } else if (gGuiChange) {
-            draw();
-            postdraw();
-            gGuiChange = false;
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            SDL_GL_SwapWindow(gWindow);
+
+            frameCount++;
+            frameElapsedTime = 0.0;
         }
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        SDL_GL_SwapWindow(gWindow);
 
         currCounter = SDL_GetPerformanceCounter();
         double frameTime = (double)(currCounter - prevCounter) / SDL_GetPerformanceFrequency();
         elapsedTime += frameTime;
+        frameElapsedTime += frameTime;
 
         if (elapsedTime >= 1.0) {
             fps = frameCount;
@@ -499,7 +512,6 @@ void loop() {
             elapsedTime = 0.0;
         }
 
-        frameCount++;
         prevCounter = currCounter;
     }
 }
