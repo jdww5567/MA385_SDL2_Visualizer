@@ -413,11 +413,12 @@ void vertexHandler::sortVertices(float xCamera, float yCamera, float zCamera) {
     for (std::vector<order>::size_type i = 0; i < orders.size(); ++i) {
        orders[i].d = powf(powf(xCamera - vertices[orders[i].i].x, 2) + powf(yCamera - vertices[orders[i].i].y, 2) + powf(zCamera - vertices[orders[i].i].z, 2), 0.5);
     }
+    
     auto distance = [](const order& a, const order& b) {
         return a.d > b.d;
     };
 
-    std::sort(orders.begin(), orders.end(), distance);
+    std::stable_sort(orders.begin(), orders.end(), distance);
 
     int i = 3 * (baseVerticeCount / 2);
     for (const order& o : orders) {
