@@ -163,8 +163,8 @@ void vertexHandler::setVertices() {
     }
     
     // function
-    for (int i = -xNegBounds * rectsPerUnit; i <= xPosBounds * rectsPerUnit; ++i) {
-        for (int j = -zNegBounds * rectsPerUnit; j <= zPosBounds * rectsPerUnit; ++j) {
+    for (int i = xNegBounds * rectsPerUnit; i <= xPosBounds * rectsPerUnit; ++i) {
+        for (int j = zNegBounds * rectsPerUnit; j <= zPosBounds * rectsPerUnit; ++j) {
             double x = (double)i / (double)rectsPerUnit;
             double z = (double)j / (double)rectsPerUnit;
             double y = 0;
@@ -175,7 +175,7 @@ void vertexHandler::setVertices() {
                 0,
                 0,
                 0,
-                0.8f
+                0.75f
             });
         }
     }
@@ -203,9 +203,9 @@ void vertexHandler::setVertices() {
         }
         indices.push_back(i);
         indices.push_back(i + 1);
-        indices.push_back(i + 2 + (zPosBounds + zNegBounds) * rectsPerUnit);
-        indices.push_back(i + 2 + (zPosBounds + zNegBounds) * rectsPerUnit);
-        indices.push_back(i + 1 + (zPosBounds + zNegBounds) * rectsPerUnit);
+        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit);
+        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit);
+        indices.push_back(i + 1 + (zPosBounds - zNegBounds) * rectsPerUnit);
         indices.push_back(i);
     }
 }
@@ -434,9 +434,9 @@ void vertexHandler::sortVertices(float xCamera, float yCamera, float zCamera) {
         }
         indices[i] = o.i;
         indices[i + 1] = o.i + 1;
-        indices[i + 2] = o.i + 2 + (zPosBounds + zNegBounds) * rectsPerUnit;
-        indices[i + 3] = o.i + 2 + (zPosBounds + zNegBounds) * rectsPerUnit;
-        indices[i + 4] = o.i + 1 + (zPosBounds + zNegBounds) * rectsPerUnit;
+        indices[i + 2] = o.i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit;
+        indices[i + 3] = o.i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit;
+        indices[i + 4] = o.i + 1 + (zPosBounds - zNegBounds) * rectsPerUnit;
         indices[i + 5] = o.i;
         i = i + 6;
     }
@@ -448,22 +448,33 @@ void vertexHandler::updateLimits(int (&values)[8]) {
     zNegAxisLength = -values[mine::NEG_Z_AXIS];
     zPosAxisLength  = values[mine::POS_Z_AXIS];
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
-    if (-values[mine::NEG_X_BOUNDS] > xNegAxisLength) {
-        values[mine::NEG_X_BOUNDS] = -xNegAxisLength;
-    }
-    xNegBounds = -values[mine::NEG_X_BOUNDS];
     if (values[mine::POS_X_BOUNDS] > xPosAxisLength) {
         values[mine::POS_X_BOUNDS] = xPosAxisLength;
+    } else if (values[mine::POS_X_BOUNDS] < -xNegAxisLength) {
+        values[mine::POS_X_BOUNDS] = -xNegAxisLength;
     }
     xPosBounds = values[mine::POS_X_BOUNDS];
-    if (-values[mine::NEG_Z_BOUNDS] > zNegAxisLength) {
-        values[mine::NEG_Z_BOUNDS] = -zNegAxisLength;
+    if (values[mine::NEG_X_BOUNDS] < -xNegAxisLength) {
+        values[mine::NEG_X_BOUNDS] = -xNegAxisLength;
+    } else if (values[mine::NEG_X_BOUNDS] > xPosBounds) {
+        values[mine::NEG_X_BOUNDS] = xPosBounds;
     }
-    zNegBounds = -values[mine::NEG_Z_BOUNDS];
+    xNegBounds = values[mine::NEG_X_BOUNDS];
+
     if (values[mine::POS_Z_BOUNDS] > zPosAxisLength) {
         values[mine::POS_Z_BOUNDS] = zPosAxisLength;
+    } else if (values[mine::POS_Z_BOUNDS] < -zNegAxisLength) {
+        values[mine::POS_Z_BOUNDS] = -zNegAxisLength;
     }
     zPosBounds = values[mine::POS_Z_BOUNDS];
+    if (values[mine::NEG_Z_BOUNDS] < -zNegAxisLength) {
+        values[mine::NEG_Z_BOUNDS] = -zNegAxisLength;
+    } else if (values[mine::NEG_Z_BOUNDS] > zPosBounds) {
+        values[mine::NEG_Z_BOUNDS] = zPosBounds;
+    }
+    zNegBounds = values[mine::NEG_Z_BOUNDS];
+
+
     updateVertices();
 }
 }

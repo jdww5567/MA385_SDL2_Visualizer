@@ -32,8 +32,8 @@
 
 #define INITIAL_POSX_BOUNDS 6
 #define INITIAL_POSZ_BOUNDS 6
-#define INITIAL_NEGX_BOUNDS 6
-#define INITIAL_NEGZ_BOUNDS 6
+#define INITIAL_NEGX_BOUNDS -6
+#define INITIAL_NEGZ_BOUNDS -6
 
 #define INITIAL_Y_AXIS_LENGTH 5
 #define INITIAL_POSX_AXIS_LENGTH 6
@@ -359,7 +359,7 @@ void updateGui() {
     }
 
     static int values[8] = {
-        -INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, -INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS, 
+        INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS, 
         -INITIAL_NEGX_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, -INITIAL_NEGZ_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH
     };
 
@@ -398,14 +398,14 @@ void updateGui() {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_Z_AXIS)).c_str(), &values[mine::POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 4; i < 8; ++i) {
         if (i % 2 == 0) {
             if (values[i] > 0) {
-                values[i] = 0;
+                values[i] = -values[i];
             }
         } else {
             if (values[i] < 0) {
-                values[i] = 0;
+                values[i] = -values[i];
             }
         }
     }
