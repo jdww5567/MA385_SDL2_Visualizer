@@ -12,6 +12,7 @@ struct vertex {
     GLfloat r;
     GLfloat g;
     GLfloat b;
+    GLfloat a;
 };
 
 struct order {

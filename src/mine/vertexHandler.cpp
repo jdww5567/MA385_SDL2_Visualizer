@@ -59,69 +59,69 @@ void vertexHandler::updateDependentVars() {
 
 void vertexHandler::setVertices() {
     // -x axis
-    vertices.push_back({-xNegAxisLength, -axisWidth, 0.0f, 0.2f, 0.1f, 0.1f});
-    vertices.push_back({-xNegAxisLength, axisWidth, 0.0f, 0.2f, 0.1f, 0.1f});
+    vertices.push_back({-xNegAxisLength, -axisWidth, 0.0f, 0.2f, 0.1f, 0.1f, 1.0f});
+    vertices.push_back({-xNegAxisLength, axisWidth, 0.0f, 0.2f, 0.1f, 0.1f, 1.0f});
     // +x axis
-    vertices.push_back({xPosAxisLength, -axisWidth, 0.0f, 0.8f, 0.1f, 0.1f});
-    vertices.push_back({xPosAxisLength, axisWidth, 0.0f, 0.8f, 0.1f, 0.1f});
+    vertices.push_back({xPosAxisLength, -axisWidth, 0.0f, 0.8f, 0.1f, 0.1f, 1.0f});
+    vertices.push_back({xPosAxisLength, axisWidth, 0.0f, 0.8f, 0.1f, 0.1f, 1.0f});
 
     // -z axis
-    vertices.push_back({0.0f, -axisWidth, -zNegAxisLength, 0.1f, 0.2f, 0.1f});
-    vertices.push_back({0.0f, axisWidth, -zNegAxisLength, 0.1f, 0.2f, 0.1f});
+    vertices.push_back({0.0f, -axisWidth, -zNegAxisLength, 0.1f, 0.2f, 0.1f, 1.0f});
+    vertices.push_back({0.0f, axisWidth, -zNegAxisLength, 0.1f, 0.2f, 0.1f, 1.0f});
     // +z axis
-    vertices.push_back({0.0f, -axisWidth, zPosAxisLength, 0.1f, 0.8f, 0.1f});
-    vertices.push_back({0.0f, axisWidth, zPosAxisLength, 0.1f, 0.8f, 0.1f});
+    vertices.push_back({0.0f, -axisWidth, zPosAxisLength, 0.1f, 0.8f, 0.1f, 1.0f});
+    vertices.push_back({0.0f, axisWidth, zPosAxisLength, 0.1f, 0.8f, 0.1f, 1.0f});
 
     // -y axis
-    vertices.push_back({-axisWidth, -yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f});
-    vertices.push_back({axisWidth, -yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f});
+    vertices.push_back({-axisWidth, -yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f, 1.0f});
+    vertices.push_back({axisWidth, -yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f, 1.0f});
     // +y axis
-    vertices.push_back({-axisWidth, yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f});
-    vertices.push_back({axisWidth, yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f});
+    vertices.push_back({-axisWidth, yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f, 1.0f});
+    vertices.push_back({axisWidth, yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f, 1.0f});
 
     // -x dashes
     for (int i = -xNegAxisLength; i < 0; ++i) {
-        vertices.push_back({i, -dashWidth, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({i, dashWidth, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({i, -dashWidth, dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({i, dashWidth, dashLength, axisRed, axisGreen, axisBlue});
+        vertices.push_back({i, -dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({i, dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({i, -dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({i, dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
     }
     // +x dashes
     for (int i = 1; i <= xPosAxisLength; ++i) {
-        vertices.push_back({i, -dashWidth, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({i, dashWidth, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({i, -dashWidth, dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({i, dashWidth, dashLength, axisRed, axisGreen, axisBlue});
+        vertices.push_back({i, -dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({i, dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({i, -dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({i, dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
     }
 
     // -z dashes
     for (int i = -zNegAxisLength; i < 0; ++i) {
-        vertices.push_back({-dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue});
-        vertices.push_back({-dashLength, dashWidth, i, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashLength, dashWidth, i, axisRed, axisGreen, axisBlue});
+        vertices.push_back({-dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-dashLength, dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashLength, dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
     }
     // +z dashes
     for (int i = 1; i <= zPosAxisLength; ++i) {
-        vertices.push_back({-dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue});
-        vertices.push_back({-dashLength, dashWidth, i, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashLength, dashWidth, i, axisRed, axisGreen, axisBlue});
+        vertices.push_back({-dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-dashLength, dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashLength, -dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashLength, dashWidth, i, axisRed, axisGreen, axisBlue, 1.0f});
     }
 
     // -y dashes
     for (int i = -yAxisLength; i < 0; ++i) {
-        vertices.push_back({-dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({-dashWidth, i, dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashWidth, i, dashLength, axisRed, axisGreen, axisBlue});
+        vertices.push_back({-dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-dashWidth, i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashWidth, i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
     }
     // +y dashes
     for (int i = 1; i <= yAxisLength; ++i) {
-        vertices.push_back({-dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({-dashWidth, i, dashLength, axisRed, axisGreen, axisBlue});
-        vertices.push_back({dashWidth, i, dashLength, axisRed, axisGreen, axisBlue});
+        vertices.push_back({-dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashWidth, i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-dashWidth, i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({dashWidth, i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
     }
 
     auto xColor = [=](int i) {
@@ -130,17 +130,17 @@ void vertexHandler::setVertices() {
 
     // -x grid
     for (int i = -xNegAxisLength; i < 0; ++i) {
-        vertices.push_back({i, -gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f});
-        vertices.push_back({i, gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f});
-        vertices.push_back({i, -gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f});
-        vertices.push_back({i, gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f});
+        vertices.push_back({i, -gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({i, gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({i, -gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({i, gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
     }
     // +x grid
     for (int i = 1; i <= xPosAxisLength; ++i) {
-        vertices.push_back({i, -gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f});
-        vertices.push_back({i, gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f});
-        vertices.push_back({i, -gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f});
-        vertices.push_back({i, gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f});
+        vertices.push_back({i, -gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({i, gridWidth, -zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({i, -gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({i, gridWidth, zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
     }
 
     auto zColor = [=](int i) {
@@ -149,17 +149,17 @@ void vertexHandler::setVertices() {
 
     // -z grid
     for (int i = -zNegAxisLength; i < 0; ++i) {
-        vertices.push_back({-xNegAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({-xNegAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({xPosAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({xPosAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f});
+        vertices.push_back({-xNegAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({-xNegAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({xPosAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({xPosAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
     }
     // +z grid
     for (int i = 1; i <= zPosAxisLength; ++i) {
-        vertices.push_back({-xNegAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({-xNegAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({xPosAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({xPosAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f});
+        vertices.push_back({-xNegAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({-xNegAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({xPosAxisLength, -gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({xPosAxisLength, gridWidth, i, 0.1f, zColor(i), 0.1f, 1.0f});
     }
     
     // function
@@ -174,7 +174,8 @@ void vertexHandler::setVertices() {
                 z,
                 0,
                 0,
-                0
+                0,
+                0.8f
             });
         }
     }

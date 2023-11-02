@@ -19,27 +19,27 @@
 #define SCREEN_WIDTH 960
 #define SCREEN_HEIGHT 720
 
-#define RECTS_PER_UNIT 20
+#define RECTS_PER_UNIT 8
 
-#define INITIAL_RADIUS 9.0f
+#define INITIAL_RADIUS 13.0f
 #define INITIAL_THETA 45.0f
 #define INITIAL_PHI 65.0f
 
 #define BG_COLOR 0.5f, 0.5f, 0.5f
 #define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
-#define INITIAL_FUNCTION "x * x - y * y"
+#define INITIAL_FUNCTION "cos(x+y-sin(x*y))"
 
-#define INITIAL_POSX_BOUNDS 2
-#define INITIAL_POSZ_BOUNDS 2
-#define INITIAL_NEGX_BOUNDS 2
-#define INITIAL_NEGZ_BOUNDS 2
+#define INITIAL_POSX_BOUNDS 6
+#define INITIAL_POSZ_BOUNDS 6
+#define INITIAL_NEGX_BOUNDS 6
+#define INITIAL_NEGZ_BOUNDS 6
 
 #define INITIAL_Y_AXIS_LENGTH 5
-#define INITIAL_POSX_AXIS_LENGTH 5
-#define INITIAL_POSZ_AXIS_LENGTH 5
-#define INITIAL_NEGX_AXIS_LENGTH 5
-#define INITIAL_NEGZ_AXIS_LENGTH 5
+#define INITIAL_POSX_AXIS_LENGTH 6
+#define INITIAL_POSZ_AXIS_LENGTH 6
+#define INITIAL_NEGX_AXIS_LENGTH 6
+#define INITIAL_NEGZ_AXIS_LENGTH 6
 
 #define AXIS_WIDTH 0.01f
 
@@ -171,12 +171,13 @@ bool functionUpdate(const std::string& function) {
     float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 
     for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
-        gHandler.vertices[i].x = pResults[i * 6];
-        gHandler.vertices[i].y = pResults[i * 6 + 1];
-        gHandler.vertices[i].z = pResults[i * 6 + 2];
-        gHandler.vertices[i].r = pResults[i * 6 + 3];
-        gHandler.vertices[i].g = pResults[i * 6 + 4];
-        gHandler.vertices[i].b = pResults[i * 6 + 5];
+        gHandler.vertices[i].x = pResults[i * 7];
+        gHandler.vertices[i].y = pResults[i * 7 + 1];
+        gHandler.vertices[i].z = pResults[i * 7 + 2];
+        gHandler.vertices[i].r = pResults[i * 7 + 3];
+        gHandler.vertices[i].g = pResults[i * 7 + 4];
+        gHandler.vertices[i].b = pResults[i * 7 + 5];
+        gHandler.vertices[i].a = pResults[i * 7 + 6];
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -238,7 +239,7 @@ void vertexSpecification() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(
         1,
-        3,
+        4,
         GL_FLOAT,
         GL_FALSE,
         sizeof(mine::vertex),
@@ -446,10 +447,6 @@ void draw() {
 
     glBindVertexArray(gVertexArrayObject);
 
-    glDisable(GL_BLEND);
-    glDrawElements(GL_TRIANGLES, 3 * (gHandler.baseVerticeCount / 2), GL_UNSIGNED_INT, 0);
-
-    glEnable(GL_BLEND);
     glDrawElements(GL_TRIANGLES, gHandler.indices.size(), GL_UNSIGNED_INT, nullptr);
 }
 
