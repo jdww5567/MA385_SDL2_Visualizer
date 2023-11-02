@@ -30,16 +30,16 @@
 
 #define INITIAL_FUNCTION "cos(x+y-sin(x*y))"
 
-#define INITIAL_POSX_BOUNDS 6
-#define INITIAL_POSZ_BOUNDS 6
-#define INITIAL_NEGX_BOUNDS -6
-#define INITIAL_NEGZ_BOUNDS -6
+#define INITIAL_POSX_BOUNDS 2
+#define INITIAL_POSZ_BOUNDS 2
+#define INITIAL_NEGX_BOUNDS -2
+#define INITIAL_NEGZ_BOUNDS -2
 
 #define INITIAL_Y_AXIS_LENGTH 5
-#define INITIAL_POSX_AXIS_LENGTH 6
-#define INITIAL_POSZ_AXIS_LENGTH 6
-#define INITIAL_NEGX_AXIS_LENGTH 6
-#define INITIAL_NEGZ_AXIS_LENGTH 6
+#define INITIAL_POSX_AXIS_LENGTH 5
+#define INITIAL_POSZ_AXIS_LENGTH 5
+#define INITIAL_NEGX_AXIS_LENGTH 5
+#define INITIAL_NEGZ_AXIS_LENGTH 5
 
 #define AXIS_WIDTH 0.01f
 
@@ -137,6 +137,7 @@ void setup() {
 
     gCamera.setScreen((float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
+    gCamera.setCenter(INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS);
 }
 
 bool functionUpdate(const std::string& function) {
@@ -315,7 +316,7 @@ void input() {
                 break;
             case SDL_WINDOWEVENT:
                 if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    gCamera.updateScreen(e.window.data1, e.window.data2);
+                    gCamera.setScreen(e.window.data1, e.window.data2);
                     glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
                     gChange = true;
                 }
@@ -412,6 +413,7 @@ void updateGui() {
 
     if (ImGui::Button("Update Limits")) {
         gHandler.updateLimits(values);
+        gCamera.setCenter(gHandler.xNegBounds, gHandler.xPosBounds, gHandler.zNegBounds, gHandler.zPosBounds);
         vertexUpdate();
         gChange = true;
     }

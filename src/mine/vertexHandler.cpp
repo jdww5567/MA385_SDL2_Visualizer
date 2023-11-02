@@ -448,6 +448,7 @@ void vertexHandler::updateLimits(int (&values)[8]) {
     zNegAxisLength = -values[mine::NEG_Z_AXIS];
     zPosAxisLength  = values[mine::POS_Z_AXIS];
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
+
     if (values[mine::POS_X_BOUNDS] > xPosAxisLength) {
         values[mine::POS_X_BOUNDS] = xPosAxisLength;
     } else if (values[mine::POS_X_BOUNDS] < -xNegAxisLength) {
@@ -473,7 +474,6 @@ void vertexHandler::updateLimits(int (&values)[8]) {
         values[mine::NEG_Z_BOUNDS] = zPosBounds;
     }
     zNegBounds = values[mine::NEG_Z_BOUNDS];
-
 
     updateVertices();
 }

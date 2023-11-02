@@ -10,18 +10,14 @@ cameraHandler::cameraHandler() {
     screenWidth = 0;
     screenHeight = 0;
     pos = glm::vec3();
+    center = glm::vec3();
     view = glm::highp_mat4();
 }
 
 void cameraHandler::setScreen(float screenWidth_, float screenHeight_) {
     screenWidth = screenWidth_;
     screenHeight = screenHeight_;
-}
 
-
-void cameraHandler::updateScreen(float screenWidth_, float screenHeight_) {
-    screenWidth = screenWidth_;
-    screenHeight = screenHeight_;
     updatePos();
 }
 
@@ -41,6 +37,13 @@ void cameraHandler::setData(float radius_, float theta_, float phi_) {
     } else {
         phi = phi_;
     }
+
+    updatePos();
+}
+
+void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
+    center.x = (xNB + xPB) / 2.0;
+    center.z = (zNB + zPB) / 2.0;
 
     updatePos();
 }
@@ -77,30 +80,30 @@ void cameraHandler::updateAngles(float theta_, float phi_) {
 
 void cameraHandler::updatePos() {
     pos = glm::vec3(
-        radius * sin(glm::radians(phi)) * cos(glm::radians(theta)),
-        radius * cos(glm::radians(phi)),
-        radius * sin(glm::radians(phi)) * sin(glm::radians(theta))
+        radius * sin(glm::radians(phi)) * cos(glm::radians(theta)) + center.x,
+        radius * cos(glm::radians(phi)) + center.y,
+        radius * sin(glm::radians(phi)) * sin(glm::radians(theta)) + center.z
     );
 
     glm::vec3 cameraUp = glm::vec3();
 
     if (pos.y > 0) {
         cameraUp = glm::normalize(glm::vec3(
-            -pos.x,
-            (glm::pow(pos.x, 2) + glm::pow(pos.z, 2)) / pos.y,
-            -pos.z
+            -(pos.x - center.x),
+            (glm::pow(pos.x - center.x, 2) + glm::pow(pos.z - center.z, 2)) / (pos.y - center.y),
+            -(pos.z - center.z)
         ));
     } else if (pos.y < 0) {
         cameraUp = glm::normalize(glm::vec3(
-            pos.x,
-            -(glm::pow(pos.x, 2) + glm::pow(pos.z, 2)) / pos.y,
-            pos.z
+            pos.x - center.x,
+            -(glm::pow(pos.x - center.x, 2) + glm::pow(pos.z - center.z, 2)) / (pos.y - center.y),
+            pos.z - center.z
         ));
     } else {
         cameraUp = glm::vec3(0, 1, 0);
     }
 
-    view = glm::lookAt(pos, glm::vec3(0, 0, 0), cameraUp);
+    view = glm::lookAt(pos, center, cameraUp);
 
     float fov = glm::radians(60.0f);
     float aspectRatio = screenWidth / screenHeight;

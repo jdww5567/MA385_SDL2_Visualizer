@@ -12,14 +12,15 @@ public:
     float theta;
     float phi;
     glm::vec3 pos;
+    glm::vec3 center;
     glm::highp_mat4 view;
 
     cameraHandler();
     void setScreen(float screenWidth_, float screenHeight_);
     void setData(float radius_, float theta_, float phi_);
+    void setCenter(float xNB, float xPB, float zNB, float zPB);
     void zoom(bool in, bool out);
     void updateAngles(float theta_, float phi_);
-    void updateScreen(float screenWidth_, float screenHeight_);
 private:
     void updatePos();
 };
