@@ -124,7 +124,7 @@ void setup() {
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glClearColor(BG_COLOR, 0.0f);
+    glClearColor(BG_COLOR, 1.0f);
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -326,7 +326,10 @@ void input() {
                 break;
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
+                    #pragma GCC diagnostic push
+                    #pragma GCC diagnostic ignored "-Wswitch-unreachable"
                     if (ImGui::GetIO().WantCaptureKeyboard) {
+                        #pragma GCC diagnostic pop
                         break;
                     }
                     case SDLK_x:
