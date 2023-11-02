@@ -419,7 +419,7 @@ void vertexHandler::sortVertices(float xCamera, float yCamera, float zCamera) {
         return a.d > b.d;
     };
 
-    std::stable_sort(orders.begin(), orders.end(), distance);
+    std::sort(orders.begin(), orders.end(), distance);
 
     int i = 3 * (baseVerticeCount / 2);
     for (const order& o : orders) {

@@ -9,6 +9,8 @@ cameraHandler::cameraHandler() {
     phi = 0;
     screenWidth = 0;
     screenHeight = 0;
+    aspectRatio = 0;
+    fov = glm::radians(60.0f);
     pos = glm::vec3();
     center = glm::vec3();
     view = glm::highp_mat4();
@@ -17,6 +19,12 @@ cameraHandler::cameraHandler() {
 void cameraHandler::setScreen(float screenWidth_, float screenHeight_) {
     screenWidth = screenWidth_;
     screenHeight = screenHeight_;
+    aspectRatio = screenWidth / screenHeight;
+
+    fov = glm::radians(60.0f);
+    if (aspectRatio < 1) {
+        fov = glm::atan(glm::tan(fov / 2.0f) / aspectRatio) * 2.0f;
+    }
 
     updatePos();
 }
@@ -49,6 +57,9 @@ void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
 }
 
 void cameraHandler::setPlane(float y) {
+    if (y > 10000.0f || y < -10000.0f) {
+        return;
+    }
     center.y = y;
 
     updatePos();
@@ -110,14 +121,7 @@ void cameraHandler::updatePos() {
     }
 
     view = glm::lookAt(pos, center, cameraUp);
-
-    float fov = glm::radians(60.0f);
-    float aspectRatio = screenWidth / screenHeight;
-
-    if (aspectRatio < 1) {
-        fov = glm::atan(glm::tan(fov / 2.0f) / aspectRatio) * 2.0f;
-    }
-
+    
     view = glm::perspective(
         fov,
         aspectRatio,

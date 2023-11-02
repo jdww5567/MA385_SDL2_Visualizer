@@ -9,6 +9,8 @@ class cameraHandler {
 public:
     float screenWidth;
     float screenHeight;
+    float aspectRatio;
+    float fov;
     float theta;
     float phi;
     glm::vec3 pos;

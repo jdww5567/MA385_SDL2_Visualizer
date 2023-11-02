@@ -30,16 +30,16 @@
 
 #define INITIAL_FUNCTION "cos(x+y-sin(x*y))"
 
-#define INITIAL_POSX_BOUNDS 2
-#define INITIAL_POSZ_BOUNDS 2
-#define INITIAL_NEGX_BOUNDS -2
-#define INITIAL_NEGZ_BOUNDS -2
+#define INITIAL_POSX_BOUNDS 6
+#define INITIAL_POSZ_BOUNDS 6
+#define INITIAL_NEGX_BOUNDS -6
+#define INITIAL_NEGZ_BOUNDS -6
 
 #define INITIAL_Y_AXIS_LENGTH 5
-#define INITIAL_POSX_AXIS_LENGTH 5
-#define INITIAL_POSZ_AXIS_LENGTH 5
-#define INITIAL_NEGX_AXIS_LENGTH 5
-#define INITIAL_NEGZ_AXIS_LENGTH 5
+#define INITIAL_POSX_AXIS_LENGTH 6
+#define INITIAL_POSZ_AXIS_LENGTH 6
+#define INITIAL_NEGX_AXIS_LENGTH 6
+#define INITIAL_NEGZ_AXIS_LENGTH 6
 
 #define AXIS_WIDTH 0.01f
 
@@ -261,7 +261,10 @@ void input() {
     static int mouseY = 0;
     static bool leftDown = false;
     static bool rightDown = false;
-    static double yStart = 0;
+    static float yStart = 0.0;
+    static float widthSpeed = 2.0f;
+    static float heightSpeed = 2.0f;
+    
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         ImGui_ImplSDL2_ProcessEvent(&e);
@@ -282,15 +285,15 @@ void input() {
                         if (rightDown) {
                             break;
                         }
-                        mouseX = (int)(e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - gCamera.theta) % 360;
-                        mouseY = (int)(e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) + gCamera.phi) % 360;
+                        mouseX = (int)(e.button.x / widthSpeed - gCamera.theta) % 360;
+                        mouseY = (int)(e.button.y / heightSpeed + gCamera.phi) % 360;
                         leftDown = true;
                         break;
                     case SDL_BUTTON_RIGHT:
                         if (leftDown) {
                             break;
                         }
-                        yStart = e.button.y / (64.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) - gCamera.center.y;
+                        yStart = e.button.y / (32.0f * heightSpeed) - gCamera.center.y;
                         rightDown = true;
                         break;
                     default:
@@ -312,12 +315,12 @@ void input() {
             case SDL_MOUSEMOTION:
                 if (leftDown) {
                     gCamera.updateAngles(
-                        e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - mouseX, 
-                        mouseY - e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f))
+                        e.button.x / widthSpeed - mouseX, 
+                        mouseY - e.button.y / heightSpeed
                     );
                     gChange = true;
                 } else if (rightDown) {
-                    gCamera.setPlane(-yStart + e.button.y / (64.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)));
+                    gCamera.setPlane(-yStart + e.button.y / (32.0f * heightSpeed));
                     gChange = true;
                 }
                 break;
@@ -342,6 +345,8 @@ void input() {
                 if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
                     gCamera.setScreen(e.window.data1, e.window.data2);
                     glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
+                    widthSpeed = 2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f);
+                    heightSpeed = 2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f);
                     gChange = true;
                 }
                 break;
