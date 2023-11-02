@@ -30,10 +30,10 @@ void cameraHandler::setData(float radius_, float theta_, float phi_) {
         radius = radius_;
     }
 
-    if (phi_ < 1.0f) {
-        phi = 1.0f;
-    } else if (phi_ > 179.0f) {
-        phi = 179.0f;
+    if (phi_ < 2.0f) {
+        phi = 2.0f;
+    } else if (phi_ > 178.0f) {
+        phi = 178.0f;
     } else {
         phi = phi_;
     }
@@ -44,6 +44,12 @@ void cameraHandler::setData(float radius_, float theta_, float phi_) {
 void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
     center.x = (xNB + xPB) / 2.0;
     center.z = (zNB + zPB) / 2.0;
+
+    updatePos();
+}
+
+void cameraHandler::setPlane(float y) {
+    center.y = y;
 
     updatePos();
 }
@@ -67,10 +73,10 @@ void cameraHandler::zoom(bool in, bool out) {
 void cameraHandler::updateAngles(float theta_, float phi_) {
     theta = theta_;
 
-    if (phi_ < 1.0f) {
-        phi = 1.0f;
-    } else if (phi_ > 179.0f) {
-        phi = 179.0f;
+    if (phi_ < 2.0f) {
+        phi = 2.0f;
+    } else if (phi_ > 178.0f) {
+        phi = 178.0f;
     } else {
         phi = phi_;
     }
@@ -87,13 +93,13 @@ void cameraHandler::updatePos() {
 
     glm::vec3 cameraUp = glm::vec3();
 
-    if (pos.y > 0) {
+    if (pos.y > center.y) {
         cameraUp = glm::normalize(glm::vec3(
             -(pos.x - center.x),
             (glm::pow(pos.x - center.x, 2) + glm::pow(pos.z - center.z, 2)) / (pos.y - center.y),
             -(pos.z - center.z)
         ));
-    } else if (pos.y < 0) {
+    } else if (pos.y < center.y) {
         cameraUp = glm::normalize(glm::vec3(
             pos.x - center.x,
             -(glm::pow(pos.x - center.x, 2) + glm::pow(pos.z - center.z, 2)) / (pos.y - center.y),

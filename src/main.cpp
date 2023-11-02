@@ -260,6 +260,8 @@ void input() {
     static int mouseX = 0;
     static int mouseY = 0;
     static bool leftDown = false;
+    static bool rightDown = false;
+    static double yStart = 0;
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         ImGui_ImplSDL2_ProcessEvent(&e);
@@ -272,21 +274,40 @@ void input() {
                 gChange = true;
                 break;
             case SDL_MOUSEBUTTONDOWN:
+                if (ImGui::GetIO().WantCaptureMouse) {
+                    break;
+                }
                 switch (e.button.button) {
                     case SDL_BUTTON_LEFT:
-                        if (!ImGui::GetIO().WantCaptureMouse) {
-                            mouseX = (int)(e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - gCamera.theta) % 360;
-                            mouseY = (int)(e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) + gCamera.phi) % 360;
-                            leftDown = true;
-                            gChange = true;
+                        if (rightDown) {
+                            break;
                         }
+                        mouseX = (int)(e.button.x / (2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f)) - gCamera.theta) % 360;
+                        mouseY = (int)(e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) + gCamera.phi) % 360;
+                        leftDown = true;
+                        break;
+                    case SDL_BUTTON_RIGHT:
+                        if (leftDown) {
+                            break;
+                        }
+                        yStart = e.button.y / (64.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)) - gCamera.center.y;
+                        rightDown = true;
                         break;
                     default:
                         break;
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
-                leftDown = false;
+                switch (e.button.button) {
+                    case SDL_BUTTON_LEFT:
+                        leftDown = false;
+                        break;
+                    case SDL_BUTTON_RIGHT:
+                        rightDown = false;
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case SDL_MOUSEMOTION:
                 if (leftDown) {
@@ -295,20 +316,23 @@ void input() {
                         mouseY - e.button.y / (2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f))
                     );
                     gChange = true;
+                } else if (rightDown) {
+                    gCamera.setPlane(-yStart + e.button.y / (64.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f)));
+                    gChange = true;
                 }
                 break;
             case SDL_KEYDOWN:
                 switch (e.key.keysym.sym) {
+                    if (ImGui::GetIO().WantCaptureKeyboard) {
+                        break;
+                    }
                     case SDLK_x:
-                        if (!ImGui::GetIO().WantCaptureKeyboard) {
-                            gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-
-                            SDL_GetMouseState(&mouseX, &mouseY);
-
-                            mouseX = mouseX / 2.0f - gCamera.theta;
-                            mouseY = mouseY / 2.0f + gCamera.phi;
-                            gChange = true;
-                        }
+                        gCamera.setPlane(0);
+                        gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
+                        SDL_GetMouseState(&mouseX, &mouseY);
+                        mouseX = mouseX / 2.0f - gCamera.theta;
+                        mouseY = mouseY / 2.0f + gCamera.phi;
+                        gChange = true;
                         break;
                     default:
                         break;
