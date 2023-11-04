@@ -1,5 +1,7 @@
 #include <mine/cameraHandler.hpp>
+
 #include <cmath>
+
 #include <glm/gtx/transform.hpp>
 
 namespace mine {

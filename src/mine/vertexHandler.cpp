@@ -1,7 +1,9 @@
 #include <mine/vertexHandler.hpp>
-#include <mine/enums.hpp>
-#include <cmath>
+
 #include <algorithm>
+#include <cmath>
+
+#include <mine/enums.hpp>
 
 namespace mine {
 vertexHandler::vertexHandler() : vertices{}, indices{}, orders{} {
@@ -424,37 +426,37 @@ void vertexHandler::sortVertices(float xCamera, float yCamera, float zCamera) {
 }
 
 void vertexHandler::updateLimits(int (&values)[8]) {
-    xNegAxisLength = -values[static_cast<int>(index::NEG_X_AXIS)];
-    xPosAxisLength  = values[static_cast<int>(index::POS_X_AXIS)];
-    zNegAxisLength = -values[static_cast<int>(index::NEG_Z_AXIS)];
-    zPosAxisLength  = values[static_cast<int>(index::POS_Z_AXIS)];
-    baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
+    xNegAxisLength = -values[NEG_X_AXIS];
+    xPosAxisLength  = values[POS_X_AXIS];
+    zNegAxisLength = -values[NEG_Z_AXIS];
+    zPosAxisLength  = values[POS_Z_AXIS];
+    updateDependentVars();
 
-    if (values[static_cast<int>(index::POS_X_BOUNDS)] > xPosAxisLength) {
-        values[static_cast<int>(index::POS_X_BOUNDS)] = xPosAxisLength;
-    } else if (values[static_cast<int>(index::POS_X_BOUNDS)] < -xNegAxisLength) {
-        values[static_cast<int>(index::POS_X_BOUNDS)] = -xNegAxisLength;
+    if (values[POS_X_BOUNDS] > xPosAxisLength) {
+        values[POS_X_BOUNDS] = xPosAxisLength;
+    } else if (values[POS_X_BOUNDS] < -xNegAxisLength) {
+        values[POS_X_BOUNDS] = -xNegAxisLength;
     }
-    xPosBounds = values[static_cast<int>(index::POS_X_BOUNDS)];
-    if (values[static_cast<int>(index::NEG_X_BOUNDS)] < -xNegAxisLength) {
-        values[static_cast<int>(index::NEG_X_BOUNDS)] = -xNegAxisLength;
-    } else if (values[static_cast<int>(index::NEG_X_BOUNDS)] > xPosBounds) {
-        values[static_cast<int>(index::NEG_X_BOUNDS)] = xPosBounds;
+    xPosBounds = values[POS_X_BOUNDS];
+    if (values[NEG_X_BOUNDS] < -xNegAxisLength) {
+        values[NEG_X_BOUNDS] = -xNegAxisLength;
+    } else if (values[NEG_X_BOUNDS] > xPosBounds) {
+        values[NEG_X_BOUNDS] = xPosBounds;
     }
-    xNegBounds = values[static_cast<int>(index::NEG_X_BOUNDS)];
+    xNegBounds = values[NEG_X_BOUNDS];
 
-    if (values[static_cast<int>(index::POS_Z_BOUNDS)] > zPosAxisLength) {
-        values[static_cast<int>(index::POS_Z_BOUNDS)] = zPosAxisLength;
-    } else if (values[static_cast<int>(index::POS_Z_BOUNDS)] < -zNegAxisLength) {
-        values[static_cast<int>(index::POS_Z_BOUNDS)] = -zNegAxisLength;
+    if (values[POS_Z_BOUNDS] > zPosAxisLength) {
+        values[POS_Z_BOUNDS] = zPosAxisLength;
+    } else if (values[POS_Z_BOUNDS] < -zNegAxisLength) {
+        values[POS_Z_BOUNDS] = -zNegAxisLength;
     }
-    zPosBounds = values[static_cast<int>(index::POS_Z_BOUNDS)];
-    if (values[static_cast<int>(index::NEG_Z_BOUNDS)] < -zNegAxisLength) {
-        values[static_cast<int>(index::NEG_Z_BOUNDS)] = -zNegAxisLength;
-    } else if (values[static_cast<int>(index::NEG_Z_BOUNDS)] > zPosBounds) {
-        values[static_cast<int>(index::NEG_Z_BOUNDS)] = zPosBounds;
+    zPosBounds = values[POS_Z_BOUNDS];
+    if (values[NEG_Z_BOUNDS] < -zNegAxisLength) {
+        values[NEG_Z_BOUNDS] = -zNegAxisLength;
+    } else if (values[NEG_Z_BOUNDS] > zPosBounds) {
+        values[NEG_Z_BOUNDS] = zPosBounds;
     }
-    zNegBounds = values[static_cast<int>(index::NEG_Z_BOUNDS)];
+    zNegBounds = values[NEG_Z_BOUNDS];
 
     updateVertices();
 }

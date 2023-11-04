@@ -20,7 +20,6 @@ void main() {
     float b = abs(sin(z / 2.0 + (2 * 3.1415926535) / 3)) / 1.2;
     float a = data[idx * 7 + 6];
 
-    
     result[idx * 7] = x;
     result[idx * 7 + 1] = z;
     result[idx * 7 + 2] = y;

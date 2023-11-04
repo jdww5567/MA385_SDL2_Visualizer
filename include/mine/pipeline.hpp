@@ -1,9 +1,10 @@
 #ifndef MINE_PIPELINE_HPP
 #define MINE_PIPELINE_HPP
 
-#include "glad/glad.h"
 #include <iostream>
 #include <string>
+
+#include <glad/glad.h>
 
 namespace mine {
 class pipeline 

@@ -1,24 +1,22 @@
-#define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
+#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
 
 #include <glad/glad.h>
-
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_sdl2.h>
 #include <imgui/imgui_impl_opengl3.h>
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <thread>
-
-#include <mine/pipeline.hpp>
-#include <mine/vertexHandler.hpp>
 #include <mine/cameraHandler.hpp>
 #include <mine/enums.hpp>
+#include <mine/pipeline.hpp>
+#include <mine/vertexHandler.hpp>
 
-#define SCREEN_WIDTH 960
-#define SCREEN_HEIGHT 720
+#define INITIAL_SCREEN_WIDTH 960
+#define INITIAL_SCREEN_HEIGHT 720
 
 #define INITIAL_RADIUS 13.0f
 #define INITIAL_THETA 45.0f
@@ -59,8 +57,6 @@ bool gChange = true;
 
 bool gGuiChange = false;
 
-static std::string intInput = "##intInput";
-
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cout 
@@ -84,8 +80,8 @@ void setup() {
         "MA_385_Project",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
+        INITIAL_SCREEN_WIDTH,
+        INITIAL_SCREEN_HEIGHT,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
     if (!gWindow) {
@@ -123,7 +119,7 @@ void setup() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glViewport(0, 0, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -132,7 +128,7 @@ void setup() {
     ImGui_ImplSDL2_InitForOpenGL(gWindow, glContext);
     ImGui_ImplOpenGL3_Init("#version 460 core\n");
 
-    gCamera.setScreen((float)SCREEN_WIDTH, (float)SCREEN_HEIGHT);
+    gCamera.setScreen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
     gCamera.setCenter(INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS);
 }
@@ -341,8 +337,8 @@ void input() {
                 if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
                     gCamera.setScreen(e.window.data1, e.window.data2);
                     glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
-                    widthSpeed = 2.0f * expf((gCamera.screenWidth - SCREEN_WIDTH) / 1000.0f);
-                    heightSpeed = 2.0f * expf((gCamera.screenHeight - SCREEN_HEIGHT) / 1000.0f);
+                    widthSpeed = 2.0f * expf((gCamera.screenWidth - INITIAL_SCREEN_WIDTH) / 1000.0f);
+                    heightSpeed = 2.0f * expf((gCamera.screenHeight - INITIAL_SCREEN_HEIGHT) / 1000.0f);
                     gChange = true;
                 }
                 break;

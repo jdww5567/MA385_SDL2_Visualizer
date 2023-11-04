@@ -1,8 +1,9 @@
 #ifndef MINE_VERTEXHANDLER_HPP
 #define MINE_VERTEXHANDLER_HPP
 
-#include "glad/glad.h"
 #include <vector>
+
+#include <glad/glad.h>
 
 namespace mine {
 struct vertex {

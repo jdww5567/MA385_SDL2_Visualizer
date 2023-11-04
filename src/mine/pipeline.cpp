@@ -1,4 +1,5 @@
 #include <mine/pipeline.hpp>
+
 #include <fstream>
 #include <vector>
 
