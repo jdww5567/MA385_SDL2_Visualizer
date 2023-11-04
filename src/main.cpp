@@ -20,14 +20,9 @@
 #define SCREEN_WIDTH 960
 #define SCREEN_HEIGHT 720
 
-#define RECTS_PER_UNIT 8
-
 #define INITIAL_RADIUS 13.0f
 #define INITIAL_THETA 45.0f
 #define INITIAL_PHI 65.0f
-
-#define BG_COLOR 0.5f, 0.5f, 0.5f
-#define AXIS_COLOR 1.0f, 1.0f, 1.0f
 
 #define INITIAL_FUNCTION "cos(x+y-sin(x*y))"
 
@@ -41,8 +36,6 @@
 #define INITIAL_POSZ_AXIS_LENGTH 6
 #define INITIAL_NEGX_AXIS_LENGTH 6
 #define INITIAL_NEGZ_AXIS_LENGTH 6
-
-#define AXIS_WIDTH 0.01f
 
 std::vector<GLint> gSortedIndices{};
 
@@ -65,6 +58,8 @@ bool gRunning = true;
 bool gChange = true;
 
 bool gGuiChange = false;
+
+static std::string intInput = "##intInput";
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -124,10 +119,11 @@ void setup() {
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_BLEND);
-    glClearColor(BG_COLOR, 1.0f);
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -200,8 +196,7 @@ void vertexUpdate() {
 void vertexSpecification() {
     gHandler.setData(
         INITIAL_POSX_BOUNDS, INITIAL_POSZ_BOUNDS, INITIAL_NEGX_BOUNDS, INITIAL_NEGZ_BOUNDS,
-        INITIAL_Y_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH, INITIAL_NEGX_AXIS_LENGTH, INITIAL_NEGZ_AXIS_LENGTH,
-        RECTS_PER_UNIT, AXIS_WIDTH, AXIS_COLOR
+        INITIAL_Y_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH, INITIAL_NEGX_AXIS_LENGTH, INITIAL_NEGZ_AXIS_LENGTH
     );
     gHandler.setVertices();
 
@@ -326,13 +321,10 @@ void input() {
                 }
                 break;
             case SDL_KEYDOWN:
+                if (ImGui::GetIO().WantCaptureKeyboard) {
+                    break;
+                }
                 switch (e.key.keysym.sym) {
-                    #pragma GCC diagnostic push
-                    #pragma GCC diagnostic ignored "-Wswitch-unreachable"
-                    if (ImGui::GetIO().WantCaptureKeyboard) {
-                        #pragma GCC diagnostic pop
-                        break;
-                    }
                     case SDLK_x:
                         gCamera.setPlane(0);
                         gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
@@ -401,36 +393,36 @@ void updateGui() {
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_X_BOUNDS)).c_str(), &values[mine::NEG_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_X_BOUNDS)).c_str(), &values[mine::NEG_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= x <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_X_BOUNDS)).c_str(), &values[mine::POS_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_X_BOUNDS)).c_str(), &values[mine::POS_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_Z_BOUNDS)).c_str(), &values[mine::NEG_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_Z_BOUNDS)).c_str(), &values[mine::NEG_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= y <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_Z_BOUNDS)).c_str(), &values[mine::POS_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_Z_BOUNDS)).c_str(), &values[mine::POS_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_X_AXIS)).c_str(), &values[mine::NEG_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_X_AXIS)).c_str(), &values[mine::NEG_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= X <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_X_AXIS)).c_str(), &values[mine::POS_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_X_AXIS)).c_str(), &values[mine::POS_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
 
     ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::NEG_Z_AXIS)).c_str(), &values[mine::NEG_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_Z_AXIS)).c_str(), &values[mine::NEG_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
     ImGui::SameLine();
     ImGui::Text("<= Y <=");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##IntInput" + std::to_string(mine::POS_Z_AXIS)).c_str(), &values[mine::POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_Z_AXIS)).c_str(), &values[mine::POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
 
     for (int i = 4; i < 8; ++i) {
         if (i % 2 == 0) {
@@ -565,7 +557,7 @@ void cleanup() {
     SDL_Quit();
 }
 
-int main (int argc, char** argv) {
+int main() {
     setup();
 
     vertexSpecification();

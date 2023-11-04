@@ -31,5 +31,5 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} SDL2)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g -Wall)
+  target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g -Wall -Wextra)
 endif()

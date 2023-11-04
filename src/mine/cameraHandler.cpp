@@ -53,6 +53,10 @@ void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
     center.x = (xNB + xPB) / 2.0;
     center.z = (zNB + zPB) / 2.0;
 
+    if (center.x == 0 || center.z == 0) {
+        center = glm::vec3{0, center.y, 0};
+    }
+
     updatePos();
 }
 

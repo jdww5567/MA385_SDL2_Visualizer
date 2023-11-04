@@ -2,7 +2,6 @@
 #include <mine/enums.hpp>
 #include <cmath>
 #include <algorithm>
-#include <iostream>
 
 namespace mine {
 vertexHandler::vertexHandler() : vertices{}, indices{}, orders{} {
@@ -16,20 +15,11 @@ vertexHandler::vertexHandler() : vertices{}, indices{}, orders{} {
     xNegAxisLength = 0;
     zNegAxisLength = 0;
 
-    rectsPerUnit = 0;
-
     updateDependentVars();
-
-    axisRed = 0;
-    axisGreen = 0;
-    axisBlue = 0;
 }
 
 void vertexHandler::setData(int xPosBounds_, int zPosBounds_, int xNegBounds_, int zNegBounds_, 
-int yAxisLength_, int xPosAxisLength_, int zPosAxisLength_, int xNegAxisLength_, int zNegAxisLength_,
-int rectsPerUnit_, 
-float axisWidth_, 
-GLfloat axisRed_, GLfloat axisGreen_, GLfloat axisBlue_) {
+int yAxisLength_, int xPosAxisLength_, int zPosAxisLength_, int xNegAxisLength_, int zNegAxisLength_) {
     xPosBounds = xPosBounds_;
     zPosBounds = zPosBounds_;
     xNegBounds = xNegBounds_;
@@ -40,88 +30,79 @@ GLfloat axisRed_, GLfloat axisGreen_, GLfloat axisBlue_) {
     zPosAxisLength = zPosAxisLength_;
     xNegAxisLength = xNegAxisLength_;
     zNegAxisLength = zNegAxisLength_;
-    rectsPerUnit = rectsPerUnit_;
-    axisWidth = axisWidth_;
-    axisRed = axisRed_;
-    axisGreen = axisGreen_;
-    axisBlue = axisBlue_;
 
     updateDependentVars();
 }
 
 void vertexHandler::updateDependentVars() {
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
-
-    dashLength = 12.0f * axisWidth;
-    dashWidth = 2.0f * axisWidth;
-    gridWidth = axisWidth / 2.0f;
 }
 
 void vertexHandler::setVertices() {
     // -x axis
-    vertices.push_back({-(float)xNegAxisLength, -axisWidth, 0.0f, 0.2f, 0.1f, 0.1f, 1.0f});
-    vertices.push_back({-(float)xNegAxisLength, axisWidth, 0.0f, 0.2f, 0.1f, 0.1f, 1.0f});
+    vertices.push_back({-(float)xNegAxisLength, -AXIS_WIDTH, 0.0f, 0.2f, 0.1f, 0.1f, 1.0f});
+    vertices.push_back({-(float)xNegAxisLength, AXIS_WIDTH, 0.0f, 0.2f, 0.1f, 0.1f, 1.0f});
     // +x axis
-    vertices.push_back({(float)xPosAxisLength, -axisWidth, 0.0f, 0.8f, 0.1f, 0.1f, 1.0f});
-    vertices.push_back({(float)xPosAxisLength, axisWidth, 0.0f, 0.8f, 0.1f, 0.1f, 1.0f});
+    vertices.push_back({(float)xPosAxisLength, -AXIS_WIDTH, 0.0f, 0.8f, 0.1f, 0.1f, 1.0f});
+    vertices.push_back({(float)xPosAxisLength, AXIS_WIDTH, 0.0f, 0.8f, 0.1f, 0.1f, 1.0f});
 
     // -z axis
-    vertices.push_back({0.0f, -axisWidth, -(float)zNegAxisLength, 0.1f, 0.2f, 0.1f, 1.0f});
-    vertices.push_back({0.0f, axisWidth, -(float)zNegAxisLength, 0.1f, 0.2f, 0.1f, 1.0f});
+    vertices.push_back({0.0f, -AXIS_WIDTH, -(float)zNegAxisLength, 0.1f, 0.2f, 0.1f, 1.0f});
+    vertices.push_back({0.0f, AXIS_WIDTH, -(float)zNegAxisLength, 0.1f, 0.2f, 0.1f, 1.0f});
     // +z axis
-    vertices.push_back({0.0f, -axisWidth, (float)zPosAxisLength, 0.1f, 0.8f, 0.1f, 1.0f});
-    vertices.push_back({0.0f, axisWidth, (float)zPosAxisLength, 0.1f, 0.8f, 0.1f, 1.0f});
+    vertices.push_back({0.0f, -AXIS_WIDTH, (float)zPosAxisLength, 0.1f, 0.8f, 0.1f, 1.0f});
+    vertices.push_back({0.0f, AXIS_WIDTH, (float)zPosAxisLength, 0.1f, 0.8f, 0.1f, 1.0f});
 
     // -y axis
-    vertices.push_back({-axisWidth, -(float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f, 1.0f});
-    vertices.push_back({axisWidth, -(float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f, 1.0f});
+    vertices.push_back({-AXIS_WIDTH, -(float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f, 1.0f});
+    vertices.push_back({AXIS_WIDTH, -(float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.2f, 1.0f});
     // +y axis
-    vertices.push_back({-axisWidth, (float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f, 1.0f});
-    vertices.push_back({axisWidth, (float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f, 1.0f});
+    vertices.push_back({-AXIS_WIDTH, (float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f, 1.0f});
+    vertices.push_back({AXIS_WIDTH, (float)yAxisLength, 0.0f, 0.1f, 0.1f, 0.8f, 1.0f});
 
     // -x dashes
     for (int i = -xNegAxisLength; i < 0; ++i) {
-        vertices.push_back({(float)i, -dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({(float)i, dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({(float)i, -dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({(float)i, dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({(float)i, -DASH_WIDTH, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({(float)i, DASH_WIDTH, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({(float)i, -DASH_WIDTH, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({(float)i, DASH_WIDTH, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
     }
     // +x dashes
     for (int i = 1; i <= xPosAxisLength; ++i) {
-        vertices.push_back({(float)i, -dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({(float)i, dashWidth, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({(float)i, -dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({(float)i, dashWidth, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({(float)i, -DASH_WIDTH, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({(float)i, DASH_WIDTH, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({(float)i, -DASH_WIDTH, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({(float)i, DASH_WIDTH, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
     }
 
     // -z dashes
     for (int i = -zNegAxisLength; i < 0; ++i) {
-        vertices.push_back({-dashLength, -dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({-dashLength, dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashLength, -dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashLength, dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-DASH_LENGTH, -DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({-DASH_LENGTH, DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_LENGTH, -DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_LENGTH, DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
     }
     // +z dashes
     for (int i = 1; i <= zPosAxisLength; ++i) {
-        vertices.push_back({-dashLength, -dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({-dashLength, dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashLength, -dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashLength, dashWidth, (float)i, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-DASH_LENGTH, -DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({-DASH_LENGTH, DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_LENGTH, -DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_LENGTH, DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
     }
 
     // -y dashes
     for (int i = -yAxisLength; i < 0; ++i) {
-        vertices.push_back({-dashWidth, (float)i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashWidth, (float)i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({-dashWidth, (float)i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashWidth, (float)i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-DASH_WIDTH, (float)i, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_WIDTH, (float)i, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({-DASH_WIDTH, (float)i, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_WIDTH, (float)i, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
     }
     // +y dashes
     for (int i = 1; i <= yAxisLength; ++i) {
-        vertices.push_back({-dashWidth, (float)i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashWidth, (float)i, -dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({-dashWidth, (float)i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
-        vertices.push_back({dashWidth, (float)i, dashLength, axisRed, axisGreen, axisBlue, 1.0f});
+        vertices.push_back({-DASH_WIDTH, (float)i, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_WIDTH, (float)i, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({-DASH_WIDTH, (float)i, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
+        vertices.push_back({DASH_WIDTH, (float)i, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE, 1.0f});
     }
 
     auto xColor = [=](int i) {
@@ -130,17 +111,17 @@ void vertexHandler::setVertices() {
 
     // -x grid
     for (int i = -xNegAxisLength; i < 0; ++i) {
-        vertices.push_back({(float)i, -gridWidth, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
-        vertices.push_back({(float)i, gridWidth, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
-        vertices.push_back({(float)i, -gridWidth, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
-        vertices.push_back({(float)i, gridWidth, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, -GRID_WIDTH, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, GRID_WIDTH, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, -GRID_WIDTH, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, GRID_WIDTH, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
     }
     // +x grid
     for (int i = 1; i <= xPosAxisLength; ++i) {
-        vertices.push_back({(float)i, -gridWidth, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
-        vertices.push_back({(float)i, gridWidth, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
-        vertices.push_back({(float)i, -gridWidth, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
-        vertices.push_back({(float)i, gridWidth, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, -GRID_WIDTH, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, GRID_WIDTH, -(float)zNegAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, -GRID_WIDTH, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
+        vertices.push_back({(float)i, GRID_WIDTH, (float)zPosAxisLength, xColor(i), 0.1f, 0.1f, 1.0f});
     }
 
     auto zColor = [=](int i) {
@@ -149,24 +130,24 @@ void vertexHandler::setVertices() {
 
     // -z grid
     for (int i = -zNegAxisLength; i < 0; ++i) {
-        vertices.push_back({-(float)xNegAxisLength, -gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
-        vertices.push_back({-(float)xNegAxisLength, gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
-        vertices.push_back({(float)xPosAxisLength, -gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
-        vertices.push_back({(float)xPosAxisLength, gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({-(float)xNegAxisLength, -GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({-(float)xNegAxisLength, GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({(float)xPosAxisLength, -GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({(float)xPosAxisLength, GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
     }
     // +z grid
     for (int i = 1; i <= zPosAxisLength; ++i) {
-        vertices.push_back({-(float)xNegAxisLength, -gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
-        vertices.push_back({-(float)xNegAxisLength, gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
-        vertices.push_back({(float)xPosAxisLength, -gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
-        vertices.push_back({(float)xPosAxisLength, gridWidth, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({-(float)xNegAxisLength, -GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({-(float)xNegAxisLength, GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({(float)xPosAxisLength, -GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
+        vertices.push_back({(float)xPosAxisLength, GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f, 1.0f});
     }
     
     // function
-    for (int i = xNegBounds * rectsPerUnit; i <= xPosBounds * rectsPerUnit; ++i) {
-        for (int j = zNegBounds * rectsPerUnit; j <= zPosBounds * rectsPerUnit; ++j) {
-            float x = (float)i / (float)rectsPerUnit;
-            float z = (float)j / (float)rectsPerUnit;
+    for (int i = xNegBounds * RECTS_PER_UNIT; i <= xPosBounds * RECTS_PER_UNIT; ++i) {
+        for (int j = zNegBounds * RECTS_PER_UNIT; j <= zPosBounds * RECTS_PER_UNIT; ++j) {
+            float x = (float)i / (float)RECTS_PER_UNIT;
+            float z = (float)j / (float)RECTS_PER_UNIT;
             float y = 0.0f;
             vertices.push_back({
                 x,
@@ -175,7 +156,7 @@ void vertexHandler::setVertices() {
                 0.0f,
                 0.0f,
                 0.0f,
-                0.75f
+                1.0f
             });
         }
     }
@@ -203,9 +184,9 @@ void vertexHandler::setVertices() {
         }
         indices.push_back(i);
         indices.push_back(i + 1);
-        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit);
-        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit);
-        indices.push_back(i + 1 + (zPosBounds - zNegBounds) * rectsPerUnit);
+        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT);
+        indices.push_back(i + 1 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT);
         indices.push_back(i);
     }
 }
@@ -263,13 +244,13 @@ void vertexHandler::calcOrientation(int start, float angle, int offset, float sc
 
 void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCamera) {
     // x axis
-    calcOrientation(0, yCamera / zCamera, 0, axisWidth, true , true);
+    calcOrientation(0, yCamera / zCamera, 0, AXIS_WIDTH, true , true);
     // z axis
-    calcOrientation(4, xCamera / yCamera, 0, axisWidth, false, true);
+    calcOrientation(4, xCamera / yCamera, 0, AXIS_WIDTH, false, true);
     // y axis
     float yAngle = M_PI / 2.0 - atan(zCamera / xCamera);
-    float yZ = -axisWidth * sin(yAngle);
-    float yX = axisWidth * cos(yAngle);
+    float yZ = -AXIS_WIDTH * sin(yAngle);
+    float yX = AXIS_WIDTH * cos(yAngle);
     vertices[8].x = yX;
     vertices[8].z = yZ;
     vertices[9].x = -yX;
@@ -286,7 +267,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             (xCamera - offset) / yCamera, 
             offset,
-            dashWidth,
+            DASH_WIDTH,
             true,
             false
         );
@@ -299,7 +280,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             (xCamera - offset) / yCamera,
             offset,
-            dashWidth,
+            DASH_WIDTH,
             true,
             false
         );
@@ -312,7 +293,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             yCamera / (zCamera - offset),
             offset,
-            dashWidth,
+            DASH_WIDTH,
             false,
             false
         );
@@ -325,7 +306,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             yCamera / (zCamera - offset),
             offset,
-            dashWidth,
+            DASH_WIDTH,
             false,
             false
         );
@@ -338,7 +319,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             xCamera / (yCamera - offset),
             offset,
-            dashWidth,
+            DASH_WIDTH,
             false,
             true
         );
@@ -351,7 +332,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             xCamera / (yCamera - offset),
             offset,
-            dashWidth,
+            DASH_WIDTH,
             false,
             true
         );
@@ -364,7 +345,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             (xCamera - offset) / yCamera,
             offset,
-            gridWidth,
+            GRID_WIDTH,
             true,
             false
         );
@@ -377,7 +358,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             (xCamera - offset) / yCamera,
             offset,
-            gridWidth,
+            GRID_WIDTH,
             true,
             false
         );
@@ -390,7 +371,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             yCamera / (zCamera - offset),
             offset,
-            gridWidth,
+            GRID_WIDTH,
             false,
             false
         );
@@ -403,7 +384,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
             i,
             yCamera / (zCamera - offset),
             offset,
-            gridWidth,
+            GRID_WIDTH,
             false,
             false
         );
@@ -434,46 +415,46 @@ void vertexHandler::sortVertices(float xCamera, float yCamera, float zCamera) {
         }
         indices[i] = o.i;
         indices[i + 1] = o.i + 1;
-        indices[i + 2] = o.i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit;
-        indices[i + 3] = o.i + 2 + (zPosBounds - zNegBounds) * rectsPerUnit;
-        indices[i + 4] = o.i + 1 + (zPosBounds - zNegBounds) * rectsPerUnit;
+        indices[i + 2] = o.i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT;
+        indices[i + 3] = o.i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT;
+        indices[i + 4] = o.i + 1 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT;
         indices[i + 5] = o.i;
         i = i + 6;
     }
 }
 
 void vertexHandler::updateLimits(int (&values)[8]) {
-    xNegAxisLength = -values[mine::NEG_X_AXIS];
-    xPosAxisLength  = values[mine::POS_X_AXIS];
-    zNegAxisLength = -values[mine::NEG_Z_AXIS];
-    zPosAxisLength  = values[mine::POS_Z_AXIS];
+    xNegAxisLength = -values[static_cast<int>(index::NEG_X_AXIS)];
+    xPosAxisLength  = values[static_cast<int>(index::POS_X_AXIS)];
+    zNegAxisLength = -values[static_cast<int>(index::NEG_Z_AXIS)];
+    zPosAxisLength  = values[static_cast<int>(index::POS_Z_AXIS)];
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
 
-    if (values[mine::POS_X_BOUNDS] > xPosAxisLength) {
-        values[mine::POS_X_BOUNDS] = xPosAxisLength;
-    } else if (values[mine::POS_X_BOUNDS] < -xNegAxisLength) {
-        values[mine::POS_X_BOUNDS] = -xNegAxisLength;
+    if (values[static_cast<int>(index::POS_X_BOUNDS)] > xPosAxisLength) {
+        values[static_cast<int>(index::POS_X_BOUNDS)] = xPosAxisLength;
+    } else if (values[static_cast<int>(index::POS_X_BOUNDS)] < -xNegAxisLength) {
+        values[static_cast<int>(index::POS_X_BOUNDS)] = -xNegAxisLength;
     }
-    xPosBounds = values[mine::POS_X_BOUNDS];
-    if (values[mine::NEG_X_BOUNDS] < -xNegAxisLength) {
-        values[mine::NEG_X_BOUNDS] = -xNegAxisLength;
-    } else if (values[mine::NEG_X_BOUNDS] > xPosBounds) {
-        values[mine::NEG_X_BOUNDS] = xPosBounds;
+    xPosBounds = values[static_cast<int>(index::POS_X_BOUNDS)];
+    if (values[static_cast<int>(index::NEG_X_BOUNDS)] < -xNegAxisLength) {
+        values[static_cast<int>(index::NEG_X_BOUNDS)] = -xNegAxisLength;
+    } else if (values[static_cast<int>(index::NEG_X_BOUNDS)] > xPosBounds) {
+        values[static_cast<int>(index::NEG_X_BOUNDS)] = xPosBounds;
     }
-    xNegBounds = values[mine::NEG_X_BOUNDS];
+    xNegBounds = values[static_cast<int>(index::NEG_X_BOUNDS)];
 
-    if (values[mine::POS_Z_BOUNDS] > zPosAxisLength) {
-        values[mine::POS_Z_BOUNDS] = zPosAxisLength;
-    } else if (values[mine::POS_Z_BOUNDS] < -zNegAxisLength) {
-        values[mine::POS_Z_BOUNDS] = -zNegAxisLength;
+    if (values[static_cast<int>(index::POS_Z_BOUNDS)] > zPosAxisLength) {
+        values[static_cast<int>(index::POS_Z_BOUNDS)] = zPosAxisLength;
+    } else if (values[static_cast<int>(index::POS_Z_BOUNDS)] < -zNegAxisLength) {
+        values[static_cast<int>(index::POS_Z_BOUNDS)] = -zNegAxisLength;
     }
-    zPosBounds = values[mine::POS_Z_BOUNDS];
-    if (values[mine::NEG_Z_BOUNDS] < -zNegAxisLength) {
-        values[mine::NEG_Z_BOUNDS] = -zNegAxisLength;
-    } else if (values[mine::NEG_Z_BOUNDS] > zPosBounds) {
-        values[mine::NEG_Z_BOUNDS] = zPosBounds;
+    zPosBounds = values[static_cast<int>(index::POS_Z_BOUNDS)];
+    if (values[static_cast<int>(index::NEG_Z_BOUNDS)] < -zNegAxisLength) {
+        values[static_cast<int>(index::NEG_Z_BOUNDS)] = -zNegAxisLength;
+    } else if (values[static_cast<int>(index::NEG_Z_BOUNDS)] > zPosBounds) {
+        values[static_cast<int>(index::NEG_Z_BOUNDS)] = zPosBounds;
     }
-    zNegBounds = values[mine::NEG_Z_BOUNDS];
+    zNegBounds = values[static_cast<int>(index::NEG_Z_BOUNDS)];
 
     updateVertices();
 }
