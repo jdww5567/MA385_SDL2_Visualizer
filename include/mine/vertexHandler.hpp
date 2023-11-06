@@ -34,19 +34,15 @@ public:
     int zNegAxisLength;
     int baseVerticeCount;
 
-	vertexHandler();
-
     void setData(int xPosBounds, int zPosBounds, int xNegBounds, int zNegBounds, 
         int yAxisLength, int xPosAxisLength, int zPosAxisLength, int xNegAxisLength, 
         int zNegAxisLength);
-
     void setVertices();
     void updateVertices();
     void rotateBaseVertices(float xCamera, float yCamera, float zCamera);
     void sortVertices(float xCamera, float yCamera, float zCamera);
     void updateLimits(int (&values)[8]);
 private:
-    void updateDependentVars();
     void calcOrientation(int start, float angle, int offset, float scale, bool x, bool axes);
 public:
     std::vector<vertex> vertices;

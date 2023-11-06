@@ -59,21 +59,15 @@ bool gGuiChange = false;
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cout 
-            << "Error: Failed to initialize SDL video subsytem\nSDL Error: " 
-            << SDL_GetError() 
-            << std::endl
-        ;
+        std::cerr << "Error: Failed to initialize SDL video subsytem\nSDL Error: " << SDL_GetError() << std::endl;
         exit(1);
     }
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
-
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     gWindow = SDL_CreateWindow(
@@ -85,26 +79,18 @@ void setup() {
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
     if (!gWindow) {
-        std::cout
-            << "Error: Failed to create window\nSDL Error: "
-            << SDL_GetError()
-            << std::endl
-        ;
+        std::cerr << "Error: Failed to create window\nSDL Error: " << SDL_GetError() << std::endl;
         exit(1);
     }
 
     SDL_GLContext glContext = SDL_GL_CreateContext(gWindow);
     if (!glContext) {
-        std::cout
-            << "Error: Failed to create OpenGL context\nSDL Error: "
-            << SDL_GetError()
-            << std::endl
-        ;
+        std::cerr << "Error: Failed to create OpenGL context\nSDL Error: " << SDL_GetError() << std::endl;
         exit(1);
     }
 
     if(!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
-        std::cout << "Error: Failed to initialize glad" << std::endl;
+        std::cerr << "Error: Failed to initialize glad" << std::endl;
         exit(1);
     }
 
@@ -388,37 +374,20 @@ void updateGui() {
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
 
-    ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_X_BOUNDS)).c_str(), &values[mine::NEG_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
-    ImGui::SameLine();
-    ImGui::Text("<= x <=");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_X_BOUNDS)).c_str(), &values[mine::POS_X_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
+    static auto domain = [&](const char * str, int neg) {
+        ImGui::SetNextItemWidth(halfSpace);
+        ImGui::InputInt(("##intInput" + std::to_string(neg)).c_str(), &values[neg], 0, 0, ImGuiInputTextFlags_None);
+        ImGui::SameLine();
+        ImGui::Text(str);
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::InputInt(("##intInput" + std::to_string(neg + 1)).c_str(), &values[neg + 1], 0, 0, ImGuiInputTextFlags_None);
+    };
 
-    ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_Z_BOUNDS)).c_str(), &values[mine::NEG_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
-    ImGui::SameLine();
-    ImGui::Text("<= y <=");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_Z_BOUNDS)).c_str(), &values[mine::POS_Z_BOUNDS], 0, 0, ImGuiInputTextFlags_None);
-
-    ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_X_AXIS)).c_str(), &values[mine::NEG_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
-    ImGui::SameLine();
-    ImGui::Text("<= X <=");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_X_AXIS)).c_str(), &values[mine::POS_X_AXIS], 0, 0, ImGuiInputTextFlags_None);
-
-    ImGui::SetNextItemWidth(halfSpace);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::NEG_Z_AXIS)).c_str(), &values[mine::NEG_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
-    ImGui::SameLine();
-    ImGui::Text("<= Y <=");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputInt(("##intInput" + std::to_string(mine::POS_Z_AXIS)).c_str(), &values[mine::POS_Z_AXIS], 0, 0, ImGuiInputTextFlags_None);
+    domain("<= x <=", mine::NEG_X_BOUNDS);
+    domain("<= y <=", mine::NEG_Z_BOUNDS);
+    domain("<= X <=", mine::NEG_X_AXIS);
+    domain("<= Y <=", mine::NEG_Z_AXIS);
 
     for (int i = 4; i < 8; ++i) {
         if (i % 2 == 0) {
