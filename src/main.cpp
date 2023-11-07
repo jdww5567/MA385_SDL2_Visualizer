@@ -235,11 +235,9 @@ void createGraphicsPipeline() {
 }
 
 void input() {
-    static int mouseX = 0;
-    static int mouseY = 0;
+    static float mouseX = 0.0f;
+    static float mouseY = 0.0f;
     static bool leftDown = false;
-    static bool rightDown = false;
-    static float yStart = 0.0;
     static float widthSpeed = 2.0f;
     static float heightSpeed = 2.0f;
     
@@ -260,19 +258,9 @@ void input() {
                 }
                 switch (e.button.button) {
                     case SDL_BUTTON_LEFT:
-                        if (rightDown) {
-                            break;
-                        }
-                        mouseX = (int)(e.button.x / widthSpeed - gCamera.theta) % 360;
-                        mouseY = (int)(e.button.y / heightSpeed + gCamera.phi) % 360;
+                        mouseX = e.button.x;
+                        mouseY = e.button.y;
                         leftDown = true;
-                        break;
-                    case SDL_BUTTON_RIGHT:
-                        if (leftDown) {
-                            break;
-                        }
-                        yStart = e.button.y / (32.0f * heightSpeed) - gCamera.center.y;
-                        rightDown = true;
                         break;
                     default:
                         break;
@@ -283,9 +271,6 @@ void input() {
                     case SDL_BUTTON_LEFT:
                         leftDown = false;
                         break;
-                    case SDL_BUTTON_RIGHT:
-                        rightDown = false;
-                        break;
                     default:
                         break;
                 }
@@ -293,12 +278,11 @@ void input() {
             case SDL_MOUSEMOTION:
                 if (leftDown) {
                     gCamera.updateAngles(
-                        e.button.x / widthSpeed - mouseX, 
-                        mouseY - e.button.y / heightSpeed
+                        (e.button.x - mouseX) / widthSpeed, 
+                        (mouseY - e.button.y) / heightSpeed
                     );
-                    gChange = true;
-                } else if (rightDown) {
-                    gCamera.setPlane(-yStart + e.button.y / (32.0f * heightSpeed));
+                    mouseX = e.button.x;
+                    mouseY = e.button.y;
                     gChange = true;
                 }
                 break;
@@ -308,11 +292,7 @@ void input() {
                 }
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        gCamera.setPlane(0);
                         gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-                        SDL_GetMouseState(&mouseX, &mouseY);
-                        mouseX = mouseX / 2.0f - gCamera.theta;
-                        mouseY = mouseY / 2.0f + gCamera.phi;
                         gChange = true;
                         break;
                     default:

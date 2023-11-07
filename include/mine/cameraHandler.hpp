@@ -21,7 +21,6 @@ public:
     void setScreen(float screenWidth_, float screenHeight_);
     void setData(float radius_, float theta_, float phi_);
     void setCenter(float xNB, float xPB, float zNB, float zPB);
-    void setPlane(float y);
     void zoom(bool in, bool out);
     void updateAngles(float theta_, float phi_);
 private:

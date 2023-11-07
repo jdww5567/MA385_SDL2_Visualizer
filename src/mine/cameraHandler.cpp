@@ -1,6 +1,7 @@
 #include <mine/cameraHandler.hpp>
 
 #include <cmath>
+#include <iostream>
 
 #include <glm/gtx/transform.hpp>
 
@@ -62,15 +63,6 @@ void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
     updatePos();
 }
 
-void cameraHandler::setPlane(float y) {
-    if (y > 10000.0f || y < -10000.0f) {
-        return;
-    }
-    center.y = y;
-
-    updatePos();
-}
-
 void cameraHandler::zoom(bool in, bool out) {
     if (in) {
         radius -= 0.1f * radius;
@@ -88,14 +80,19 @@ void cameraHandler::zoom(bool in, bool out) {
 }
 
 void cameraHandler::updateAngles(float theta_, float phi_) {
-    theta = theta_;
+    theta += theta_;
+    phi += phi_;
 
-    if (phi_ < 2.0f) {
+    if (theta > 360.0f) {
+        theta = theta - 360.0f;
+    } else if (theta < -360.0f) {
+        theta = theta + 360.0f;
+    }
+
+    if (phi < 2.0f) {
         phi = 2.0f;
-    } else if (phi_ > 178.0f) {
+    } else if (phi > 178.0f) {
         phi = 178.0f;
-    } else {
-        phi = phi_;
     }
 
     updatePos();
