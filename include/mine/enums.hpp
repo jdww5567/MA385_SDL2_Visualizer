@@ -1,7 +1,8 @@
 #ifndef MINE_ENUMS_HPP
 #define MINE_ENUMS_HPP
 
-#define RECTS_PER_UNIT 8
+#define X_RECTS 96
+#define Z_RECTS 96
 #define AXIS_RED 1.0f
 #define AXIS_GREEN 1.0f
 #define AXIS_BLUE 1.0f

@@ -95,10 +95,14 @@ void vertexHandler::setVertices() {
     }
     
     // function
-    for (int i = xNegBounds * RECTS_PER_UNIT; i <= xPosBounds * RECTS_PER_UNIT; ++i) {
-        for (int j = zNegBounds * RECTS_PER_UNIT; j <= zPosBounds * RECTS_PER_UNIT; ++j) {
-            float x = (float)i / (float)RECTS_PER_UNIT;
-            float z = (float)j / (float)RECTS_PER_UNIT;
+    float xReference = (float)(xPosBounds - xNegBounds) / X_RECTS;
+    float zReference = (float)(zPosBounds - zNegBounds) / Z_RECTS;
+    for (int i = 0; i <= X_RECTS; ++i) {
+        for (int j = 0; j <= Z_RECTS; ++j) {
+            float xOffset = i * xReference;
+            float zOffset = j * zReference;
+            float x = xNegBounds + xOffset;
+            float z = zNegBounds + zOffset;
             float y = 0.0f;
             vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f, 0.8f});
         }
@@ -127,9 +131,9 @@ void vertexHandler::setVertices() {
         }
         indices.push_back(i);
         indices.push_back(i + 1);
-        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT);
-        indices.push_back(i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT);
-        indices.push_back(i + 1 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT);
+        indices.push_back(i + 2 + Z_RECTS);
+        indices.push_back(i + 2 + Z_RECTS);
+        indices.push_back(i + 1 + Z_RECTS);
         indices.push_back(i);
     }
 }
@@ -288,15 +292,28 @@ void vertexHandler::sortVertices(float xCamera, float yCamera, float zCamera) {
         }
         indices[i] = o.i;
         indices[i + 1] = o.i + 1;
-        indices[i + 2] = o.i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT;
-        indices[i + 3] = o.i + 2 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT;
-        indices[i + 4] = o.i + 1 + (zPosBounds - zNegBounds) * RECTS_PER_UNIT;
+        indices[i + 2] = o.i + 2 + Z_RECTS;
+        indices[i + 3] = o.i + 2 + Z_RECTS;
+        indices[i + 4] = o.i + 1 + Z_RECTS;
         indices[i + 5] = o.i;
         i = i + 6;
     }
 }
 
 void vertexHandler::updateLimits(int (&values)[8]) {
+    if (values[POS_X_AXIS] > 1000) {
+        values[POS_X_AXIS] = 1000;
+    }
+    if (values[NEG_X_AXIS] < -1000) {
+        values[NEG_X_AXIS] = -1000;
+    }
+    if (values[POS_Z_AXIS] > 1000) {
+        values[POS_Z_AXIS] = 1000;
+    }
+    if (values[NEG_Z_AXIS] < -1000) {
+        values[NEG_Z_AXIS] = -1000;
+    }
+
     xNegAxisLength = -values[NEG_X_AXIS];
     xPosAxisLength  = values[POS_X_AXIS];
     zNegAxisLength = -values[NEG_Z_AXIS];
