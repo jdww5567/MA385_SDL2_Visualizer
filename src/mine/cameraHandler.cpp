@@ -54,7 +54,7 @@ void cameraHandler::setData(float radius_, float theta_, float phi_) {
 
 void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
     if (xNB - xPB == 0 || zNB - zPB == 0) {
-        center = glm::vec3{0, center.y, 0};
+        center = glm::vec3{0, 0, 0};
     } else {
         center.x = (xNB + xPB) / 2.0;
         center.z = (zNB + zPB) / 2.0;

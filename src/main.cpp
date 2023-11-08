@@ -35,8 +35,6 @@
 #define INITIAL_NEGX_AXIS_LENGTH 6
 #define INITIAL_NEGZ_AXIS_LENGTH 6
 
-std::vector<GLint> gSortedIndices{};
-
 SDL_Window *gWindow = nullptr;
 
 GLuint gVertexArrayObject = 0;
