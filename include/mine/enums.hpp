@@ -1,15 +1,15 @@
 #ifndef MINE_ENUMS_HPP
 #define MINE_ENUMS_HPP
 
-#define X_RECTS 96
-#define Z_RECTS 96
-#define AXIS_RED 1.0f
-#define AXIS_GREEN 1.0f
-#define AXIS_BLUE 1.0f
-#define AXIS_WIDTH 0.01f
-#define DASH_LENGTH 12.0f * AXIS_WIDTH
-#define DASH_WIDTH 2.0f * AXIS_WIDTH
-#define GRID_WIDTH AXIS_WIDTH / 2.0f
+constexpr unsigned int X_RECTS = 96;
+constexpr unsigned int Z_RECTS = 96;
+constexpr float AXIS_RED = 1.0f;
+constexpr float AXIS_GREEN = 1.0f;
+constexpr float AXIS_BLUE = 1.0f;
+constexpr float AXIS_WIDTH = 0.01f;
+constexpr float DASH_LENGTH = 12.0f * AXIS_WIDTH;
+constexpr float DASH_WIDTH = 2.0f * AXIS_WIDTH;
+constexpr float GRID_WIDTH = AXIS_WIDTH / 2.0f;
 
 namespace mine {
 enum index {

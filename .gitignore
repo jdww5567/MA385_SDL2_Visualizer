@@ -10,3 +10,4 @@ lib/
 src/glad
 src/imgui
 *.ini
+CMakePresets.json

@@ -97,8 +97,8 @@ void vertexHandler::setVertices() {
     // function
     float xReference = (float)(xPosBounds - xNegBounds) / X_RECTS;
     float zReference = (float)(zPosBounds - zNegBounds) / Z_RECTS;
-    for (int i = 0; i <= X_RECTS; ++i) {
-        for (int j = 0; j <= Z_RECTS; ++j) {
+    for (unsigned int i = 0; i <= X_RECTS; ++i) {
+        for (unsigned int j = 0; j <= Z_RECTS; ++j) {
             float xOffset = i * xReference;
             float zOffset = j * zReference;
             float x = xNegBounds + xOffset;

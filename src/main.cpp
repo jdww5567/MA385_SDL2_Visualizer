@@ -15,45 +15,44 @@
 #include <mine/pipeline.hpp>
 #include <mine/vertexHandler.hpp>
 
-#define INITIAL_SCREEN_WIDTH 960
-#define INITIAL_SCREEN_HEIGHT 720
-
-#define INITIAL_RADIUS 13.0f
-#define INITIAL_THETA 45.0f
-#define INITIAL_PHI 65.0f
-
 #define INITIAL_FUNCTION "cos(x+y-sin(x*y))"
 
-#define INITIAL_POSX_BOUNDS 6
-#define INITIAL_POSZ_BOUNDS 6
-#define INITIAL_NEGX_BOUNDS -6
-#define INITIAL_NEGZ_BOUNDS -6
+constexpr int INITIAL_SCREEN_WIDTH = 960;
+constexpr int INITIAL_SCREEN_HEIGHT = 720;
 
-#define INITIAL_Y_AXIS_LENGTH 5
-#define INITIAL_POSX_AXIS_LENGTH 6
-#define INITIAL_POSZ_AXIS_LENGTH 6
-#define INITIAL_NEGX_AXIS_LENGTH 6
-#define INITIAL_NEGZ_AXIS_LENGTH 6
+constexpr float INITIAL_RADIUS = 13.0f;
+constexpr float INITIAL_THETA = 45.0f;
+constexpr float INITIAL_PHI = 65.0f;
+
+constexpr int INITIAL_POSX_BOUNDS = 6;
+constexpr int INITIAL_POSZ_BOUNDS = 6;
+constexpr int INITIAL_NEGX_BOUNDS = -6;
+constexpr int INITIAL_NEGZ_BOUNDS = -6;
+
+constexpr int INITIAL_Y_AXIS_LENGTH = 5;
+constexpr int INITIAL_POSX_AXIS_LENGTH = 6;
+constexpr int INITIAL_POSZ_AXIS_LENGTH = 6;
+constexpr int INITIAL_NEGX_AXIS_LENGTH = 6;
+constexpr int INITIAL_NEGZ_AXIS_LENGTH = 6;
 
 SDL_Window *gWindow = nullptr;
+
+SDL_DisplayMode gDisplayMode{};
 
 GLuint gVertexArrayObject = 0;
 GLuint gVertexBufferObject = 0;
 GLuint gIndexBufferObject = 0;
 
 mine::pipeline gGraphicsPipeline{};
-
 mine::pipeline gComputePipeline{};
-
 mine::vertexHandler gHandler{};
-
 mine::cameraHandler gCamera{};
 
 bool gRunning = true;
-
 bool gChange = true;
-
 bool gGuiChange = false;
+
+double gRefreshTime = 0;
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -115,6 +114,10 @@ void setup() {
     gCamera.setScreen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
     gCamera.setCenter(INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS);
+
+    if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
+        gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
+    }
 }
 
 bool functionUpdate(const std::string& function) {
@@ -298,14 +301,25 @@ void input() {
                 }
                 break;
             case SDL_WINDOWEVENT:
-                if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    gCamera.setScreen(e.window.data1, e.window.data2);
-                    glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
-                    widthSpeed = 2.0f * expf((gCamera.screenWidth - INITIAL_SCREEN_WIDTH) / 1000.0f);
-                    heightSpeed = 2.0f * expf((gCamera.screenHeight - INITIAL_SCREEN_HEIGHT) / 1000.0f);
-                    gChange = true;
+                switch (e.window.event) {
+                    case SDL_WINDOWEVENT_RESIZED:
+                        gCamera.setScreen(e.window.data1, e.window.data2);
+                        glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
+                        widthSpeed = 2.0f * expf((gCamera.screenWidth - INITIAL_SCREEN_WIDTH) / 1000.0f);
+                        heightSpeed = 2.0f * expf((gCamera.screenHeight - INITIAL_SCREEN_HEIGHT) / 1000.0f);
+                        if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
+                            gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
+                        }
+                        gChange = true;
+                        break;
+                    case SDL_WINDOWEVENT_MOVED:
+                        if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
+                            gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
+                        }
+                        break;
+                    default:
+                        break;
                 }
-                break;
             default:
                 break;
         }
@@ -426,12 +440,6 @@ void postdraw() {
 }
 
 void loop() {
-    double refreshTime = 0;
-    SDL_DisplayMode displayMode;
-    if (!SDL_GetCurrentDisplayMode(0, &displayMode)) {
-        refreshTime = 1.0 / displayMode.refresh_rate;
-    }
-
     Uint64 prevCounter = SDL_GetPerformanceCounter();
     Uint64 currCounter = 0;
     double elapsedTime = 0.0;
@@ -441,7 +449,7 @@ void loop() {
 
     while (gRunning) {
         input();
-        if (frameElapsedTime >= refreshTime) {
+        if (frameElapsedTime >= gRefreshTime) {
             updateGui();
 
             if (gChange) {
