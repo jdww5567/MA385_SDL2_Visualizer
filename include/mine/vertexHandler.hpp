@@ -13,7 +13,6 @@ struct vertex {
     GLfloat r;
     GLfloat g;
     GLfloat b;
-    GLfloat a;
 };
 
 struct order {
@@ -40,7 +39,6 @@ public:
     void setVertices();
     void updateVertices();
     void rotateBaseVertices(float xCamera, float yCamera, float zCamera);
-    void sortVertices(float xCamera, float yCamera, float zCamera);
     void updateLimits(int (&values)[8]);
 private:
     void calcOrientation(int start, float angle, int offset, float scale, bool x, bool axes);

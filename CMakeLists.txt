@@ -16,6 +16,10 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/src/imgui/imgui_widgets.cpp
 )
 
+configure_file(${CMAKE_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/shaders/compute.glsl ${CMAKE_BINARY_DIR}/shaders/compute.glsl COPYONLY)
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
 )

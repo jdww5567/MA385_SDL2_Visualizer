@@ -1,8 +1,8 @@
 #ifndef MINE_ENUMS_HPP
 #define MINE_ENUMS_HPP
 
-constexpr unsigned int X_RECTS = 96;
-constexpr unsigned int Z_RECTS = 96;
+constexpr unsigned int X_RECTS = 200;
+constexpr unsigned int Z_RECTS = 200;
 constexpr float AXIS_RED = 1.0f;
 constexpr float AXIS_GREEN = 1.0f;
 constexpr float AXIS_BLUE = 1.0f;

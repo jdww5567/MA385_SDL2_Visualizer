@@ -99,8 +99,6 @@ void setup() {
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glViewport(0, 0, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT);
 
@@ -152,13 +150,12 @@ bool functionUpdate(const std::string& function) {
     float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 
     for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
-        gHandler.vertices[i].x = pResults[i * 7];
-        gHandler.vertices[i].y = pResults[i * 7 + 1];
-        gHandler.vertices[i].z = pResults[i * 7 + 2];
-        gHandler.vertices[i].r = pResults[i * 7 + 3];
-        gHandler.vertices[i].g = pResults[i * 7 + 4];
-        gHandler.vertices[i].b = pResults[i * 7 + 5];
-        gHandler.vertices[i].a = pResults[i * 7 + 6];
+        gHandler.vertices[i].x = pResults[i * 6];
+        gHandler.vertices[i].y = pResults[i * 6 + 1];
+        gHandler.vertices[i].z = pResults[i * 6 + 2];
+        gHandler.vertices[i].r = pResults[i * 6 + 3];
+        gHandler.vertices[i].g = pResults[i * 6 + 4];
+        gHandler.vertices[i].b = pResults[i * 6 + 5];
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -405,8 +402,6 @@ void updateGui() {
 
 void predraw() {
     gHandler.rotateBaseVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
-
-    gHandler.sortVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
 
     glBufferData(
         GL_ARRAY_BUFFER, 
