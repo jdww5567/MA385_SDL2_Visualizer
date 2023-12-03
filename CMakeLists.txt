@@ -19,6 +19,7 @@ set(SOURCES
 configure_file(${CMAKE_SOURCE_DIR}/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/shaders/compute.glsl ${CMAKE_BINARY_DIR}/shaders/compute.glsl COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/dlls/SDL2.dll ${CMAKE_BINARY_DIR}/SDL2.dll COPYONLY)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/include

@@ -222,10 +222,6 @@ void vertexSpecification() {
         sizeof(mine::vertex),
         (GLvoid*)(sizeof(GLfloat) * 3)
     );
-
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
 }
 
 void createGraphicsPipeline() {
@@ -424,13 +420,10 @@ void draw() {
     glUseProgram(gGraphicsPipeline.getProgram());
     glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
 
-    glBindVertexArray(gVertexArrayObject);
-
     glDrawElements(GL_TRIANGLES, gHandler.indices.size(), GL_UNSIGNED_INT, nullptr);
 }
 
 void postdraw() {
-    glBindVertexArray(0);
     glUseProgram(0);
 }
 
