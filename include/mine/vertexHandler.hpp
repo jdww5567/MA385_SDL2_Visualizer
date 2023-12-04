@@ -15,11 +15,6 @@ struct vertex {
     GLfloat b;
 };
 
-struct order {
-    GLint i;
-    GLfloat d;
-};
-
 class vertexHandler {
 public:
     int xPosBounds;
@@ -45,7 +40,6 @@ private:
 public:
     std::vector<vertex> vertices;
     std::vector<GLuint> indices;
-    std::vector<order> orders;
 };
 }
 

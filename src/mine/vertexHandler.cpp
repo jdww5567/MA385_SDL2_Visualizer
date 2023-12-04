@@ -107,10 +107,6 @@ void vertexHandler::setVertices() {
             vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f});
         }
     }
-
-    for (std::vector<vertex>::size_type i = baseVerticeCount; i < vertices.size(); ++i) {
-        orders.push_back({(int)i, 0.0f});
-    }
     
     // grid and axes rectangles
     for (int i = 0; i < baseVerticeCount; i += 4) {
@@ -141,7 +137,6 @@ void vertexHandler::setVertices() {
 void vertexHandler::updateVertices() {
     vertices.clear();
     indices.clear();
-    orders.clear();
 
     setVertices();
 }
