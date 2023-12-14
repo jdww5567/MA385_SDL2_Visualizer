@@ -49,7 +49,7 @@ mine::vertexHandler gHandler{};
 mine::cameraHandler gCamera{};
 
 bool gRunning = true;
-bool gChange = true;
+bool gSceneChange = true;
 bool gGuiChange = false;
 
 double gRefreshTime = 0;
@@ -108,6 +108,8 @@ void setup() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     ImGui_ImplSDL2_InitForOpenGL(gWindow, glContext);
     ImGui_ImplOpenGL3_Init("#version 460 core\n");
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 
     gCamera.setScreen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
@@ -243,8 +245,11 @@ void input() {
                 gRunning = false;
                 break;
             case SDL_MOUSEWHEEL:
+                if (ImGui::GetIO().WantCaptureMouse) {
+                    break;
+                }
                 gCamera.zoom(e.wheel.y > 0, e.wheel.y < 0);
-                gChange = true;
+                gSceneChange = true;
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (ImGui::GetIO().WantCaptureMouse) {
@@ -277,7 +282,7 @@ void input() {
                     );
                     mouseX = e.button.x;
                     mouseY = e.button.y;
-                    gChange = true;
+                    gSceneChange = true;
                 }
                 break;
             case SDL_KEYDOWN:
@@ -287,7 +292,7 @@ void input() {
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
                         gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-                        gChange = true;
+                        gSceneChange = true;
                         break;
                     default:
                         break;
@@ -303,7 +308,7 @@ void input() {
                         if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
                             gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
                         }
-                        gChange = true;
+                        gSceneChange = true;
                         break;
                     case SDL_WINDOWEVENT_MOVED:
                         if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
@@ -338,17 +343,49 @@ void updateGui() {
         gGuiChange = true;
     }
 
-    ImGui::Text("Function");
-    static char inputString[256] = INITIAL_FUNCTION;
+    ImGui::Text("Functions");
+    static int count = 1;
+    static char inputStrings[8][256] = {INITIAL_FUNCTION, "", "", "", "", "", "", ""};
+    static const char ids[16][12] = {
+        "##Function1",
+        "Submit####1",
+        "##Function2",
+        "Submit####2",
+        "##Function3",
+        "Submit####3",
+        "##Function4",
+        "Submit####4",
+        "##Function5",
+        "Submit####5",
+        "##Function6",
+        "Submit####6",
+        "##Function7",
+        "Submit####7",
+        "##Function8",
+        "Submit####8"
+    };
 
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    ImGui::InputText("##StringInput", inputString, sizeof(inputString));
-
-    if (ImGui::Button("Submit")) {
-        if (!functionUpdate(inputString)) {
-            strcpy(inputString, gComputePipeline.getFunction());
+    for (int i = 0; i < count; ++i) {
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::InputText(ids[2*i], inputStrings[i], sizeof(inputStrings[i]));
+        if (ImGui::Button(ids[2*i + 1])) {
+            if (!functionUpdate(inputStrings[i])) {
+                strcpy(inputStrings[i], gComputePipeline.getFunction());
+            }
+            gSceneChange = true;
         }
-        gChange = true;
+    }
+
+    if (count < 8 && ImGui::Button("+")) {
+        strcpy(inputStrings[count], INITIAL_FUNCTION);
+        count++;
+    }
+    if (count < 8 && count > 0) {
+        ImGui::SameLine();
+    }
+    if (count > 0 && ImGui::Button("-")) {
+        strcpy(inputStrings[count - 1], "");
+        count--;
     }
 
     static int values[8] = {
@@ -390,7 +427,7 @@ void updateGui() {
         gHandler.updateLimits(values);
         gCamera.setCenter(gHandler.xNegBounds, gHandler.xPosBounds, gHandler.zNegBounds, gHandler.zPosBounds);
         vertexUpdate();
-        gChange = true;
+        gSceneChange = true;
     }
 
     ImGui::End();
@@ -440,11 +477,11 @@ void loop() {
         if (frameElapsedTime >= gRefreshTime) {
             updateGui();
 
-            if (gChange) {
+            if (gSceneChange) {
                 predraw();
                 draw();
                 postdraw();
-                gChange = false;
+                gSceneChange = false;
                 gGuiChange = false;
             } else if (gGuiChange) {
                 draw();

@@ -2,6 +2,7 @@
 #define MINE_VERTEXHANDLER_HPP
 
 #include <vector>
+#include <array>
 
 #include <glad/glad.h>
 
