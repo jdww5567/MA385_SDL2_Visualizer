@@ -22,10 +22,13 @@ public:
 
     plot();
 
+    void addFunction();
+    void removeFunction();
     void setVertices();
     void updateVertices();
     void rotateBaseVertices(float xCamera, float yCamera, float zCamera);
-    void updateLimits(int (&values)[8]);
+    void updateAxes(int (&axes)[4]);
+    void updateBounds(int (&bounds_)[8][4]);
 private:
     void calcOrientation(int start, float angle, int offset, float scale, bool x, bool axes);
 public:

@@ -15,6 +15,22 @@ plot::plot() {
     functions.resize(1);
 }
 
+void plot::addFunction() {
+    bounds[functions.size()][NEG_X_BOUND] = INIT_NEG_X_BOUND;
+    bounds[functions.size()][NEG_Z_BOUND] = INIT_NEG_Z_BOUND;
+    bounds[functions.size()][POS_X_BOUND] = INIT_POS_X_BOUND;
+    bounds[functions.size()][POS_Z_BOUND] = INIT_POS_Z_BOUND;
+    functions.resize(functions.size() + 1);
+}
+
+void plot::removeFunction() {
+    bounds[functions.size() - 1][NEG_X_BOUND] = 0;
+    bounds[functions.size() - 1][NEG_Z_BOUND] = 0;
+    bounds[functions.size() - 1][POS_X_BOUND] = 0;
+    bounds[functions.size() - 1][POS_Z_BOUND] = 0;
+    functions.pop_back();
+}
+
 void plot::setVertices() {
     // x axis
     vertices.push_back({-(float)xNegAxisLength, -AXIS_WIDTH, 0.0f, 0.2f, 0.1f, 0.1f});
@@ -262,51 +278,53 @@ void plot::rotateBaseVertices(float xCamera, float yCamera, float zCamera) {
     }
 }
 
-void plot::updateLimits(int (&values)[8]) {
-    if (values[POS_X_AXIS] > 1000) {
-        values[POS_X_AXIS] = 1000;
-    }
-    if (values[NEG_X_AXIS] < -1000) {
-        values[NEG_X_AXIS] = -1000;
-    }
-    if (values[POS_Z_AXIS] > 1000) {
-        values[POS_Z_AXIS] = 1000;
-    }
-    if (values[NEG_Z_AXIS] < -1000) {
-        values[NEG_Z_AXIS] = -1000;
-    }
+void plot::updateAxes(int (&axes)[4]) {
+    if      (axes[0] < -1000) { axes[0] = -1000; }
+    else if (axes[0] >     0) { axes[0] =     0; }
+    if      (axes[1] >  1000) { axes[1] =  1000; }
+    else if (axes[1] <     0) { axes[1] =     0; }
+    if      (axes[2] < -1000) { axes[2] = -1000; }
+    else if (axes[2] >     0) { axes[2] =     0; }
+    if      (axes[3] >  1000) { axes[3] =  1000; }
+    else if (axes[3] <     0) { axes[3] =     0; }
 
-    xNegAxisLength = -values[NEG_X_AXIS];
-    xPosAxisLength  = values[POS_X_AXIS];
-    zNegAxisLength = -values[NEG_Z_AXIS];
-    zPosAxisLength  = values[POS_Z_AXIS];
+    xNegAxisLength = -axes[0];
+    xPosAxisLength  = axes[1];
+    zNegAxisLength = -axes[2];
+    zPosAxisLength  = axes[3];
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
 
-    if (values[POS_X_BOUND] > xPosAxisLength) {
-        values[POS_X_BOUND] = xPosAxisLength;
-    } else if (values[POS_X_BOUND] < -xNegAxisLength) {
-        values[POS_X_BOUND] = -xNegAxisLength;
-    }
-    bounds[0][POS_X_BOUND] = values[POS_X_BOUND];
-    if (values[NEG_X_BOUND] < -xNegAxisLength) {
-        values[NEG_X_BOUND] = -xNegAxisLength;
-    } else if (values[NEG_X_BOUND] > bounds[0][POS_X_BOUND]) {
-        values[NEG_X_BOUND] = bounds[0][POS_X_BOUND];
-    }
-    bounds[0][NEG_X_BOUND] = values[NEG_X_BOUND];
+    updateVertices();
+}
 
-    if (values[POS_Z_BOUND] > zPosAxisLength) {
-        values[POS_Z_BOUND] = zPosAxisLength;
-    } else if (values[POS_Z_BOUND] < -zNegAxisLength) {
-        values[POS_Z_BOUND] = -zNegAxisLength;
+void plot::updateBounds(int (&bounds_)[8][4]) {
+    for (std::vector<std::array<mine::vertex, (X_RECTS) * (Z_RECTS)> >::size_type i = 0; i < functions.size(); ++i) {
+        if (bounds_[i][POS_X_BOUND] > xPosAxisLength) {
+            bounds_[i][POS_X_BOUND] = xPosAxisLength;
+        } else if (bounds_[i][POS_X_BOUND] < -xNegAxisLength) {
+            bounds_[i][POS_X_BOUND] = -xNegAxisLength;
+        }
+        bounds[i][POS_X_BOUND] = bounds_[i][POS_X_BOUND];
+        if (bounds_[i][NEG_X_BOUND] < -xNegAxisLength) {
+            bounds_[i][NEG_X_BOUND] = -xNegAxisLength;
+        } else if (bounds_[i][NEG_X_BOUND] > bounds[i][POS_X_BOUND]) {
+            bounds_[i][NEG_X_BOUND] = bounds[i][POS_X_BOUND];
+        }
+        bounds[i][NEG_X_BOUND] = bounds_[i][NEG_X_BOUND];
+
+        if (bounds_[i][POS_Z_BOUND] > zPosAxisLength) {
+            bounds_[i][POS_Z_BOUND] = zPosAxisLength;
+        } else if (bounds_[i][POS_Z_BOUND] < -zNegAxisLength) {
+            bounds_[i][POS_Z_BOUND] = -zNegAxisLength;
+        }
+        bounds[i][POS_Z_BOUND] = bounds_[i][POS_Z_BOUND];
+        if (bounds_[i][NEG_Z_BOUND] < -zNegAxisLength) {
+            bounds_[i][NEG_Z_BOUND] = -zNegAxisLength;
+        } else if (bounds_[i][NEG_Z_BOUND] > bounds[i][POS_Z_BOUND]) {
+            bounds_[i][NEG_Z_BOUND] = bounds[i][POS_Z_BOUND];
+        }
+        bounds[i][NEG_Z_BOUND] = bounds_[i][NEG_Z_BOUND];
     }
-    bounds[0][POS_Z_BOUND] = values[POS_Z_BOUND];
-    if (values[NEG_Z_BOUND] < -zNegAxisLength) {
-        values[NEG_Z_BOUND] = -zNegAxisLength;
-    } else if (values[NEG_Z_BOUND] > bounds[0][POS_Z_BOUND]) {
-        values[NEG_Z_BOUND] = bounds[0][POS_Z_BOUND];
-    }
-    bounds[0][NEG_Z_BOUND] = values[NEG_Z_BOUND];
 
     updateVertices();
 }

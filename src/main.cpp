@@ -109,7 +109,10 @@ void setup() {
     }
 }
 
-bool functionUpdate(const std::string& function) {
+bool functionUpdate(const std::string& function, int i) {
+    if (i == -1) {
+        return false;
+    }
     mine::pipeline tempPipeline;
     tempPipeline.setProgram("./shaders/compute.glsl", function);
 
@@ -124,29 +127,29 @@ bool functionUpdate(const std::string& function) {
     GLuint inputBuffer;
     glGenBuffers(1, &inputBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.vertices.size() * sizeof(mine::vertex), gPlot.vertices.data(), GL_STATIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.functions[i].size() * sizeof(mine::vertex), gPlot.functions[i].data(), GL_STATIC_READ);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputBuffer);
 
     GLuint outputBuffer;
     glGenBuffers(1, &outputBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.vertices.size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.functions[i].size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
 
     glUseProgram(gComputePipeline.getProgram());
-    glDispatchCompute(gPlot.vertices.size(), 1, 1);
+    glDispatchCompute(gPlot.functions[i].size(), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glUseProgram(0);
 
     float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 
-    for (std::vector<mine::vertex>::size_type i = gPlot.baseVerticeCount; i < gPlot.vertices.size(); ++i) {
-        gPlot.vertices[i].x = pResults[i * 6];
-        gPlot.vertices[i].y = pResults[i * 6 + 1];
-        gPlot.vertices[i].z = pResults[i * 6 + 2];
-        gPlot.vertices[i].r = pResults[i * 6 + 3];
-        gPlot.vertices[i].g = pResults[i * 6 + 4];
-        gPlot.vertices[i].b = pResults[i * 6 + 5];
+    for (std::vector<mine::vertex>::size_type j = 0; j < (X_RECTS + 1) * (Z_RECTS + 1); ++j) {
+        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].x = pResults[j * 6];
+        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].y = pResults[j * 6 + 1];
+        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].z = pResults[j * 6 + 2];
+        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].r = pResults[j * 6 + 3];
+        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].g = pResults[j * 6 + 4];
+        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].b = pResults[j * 6 + 5];
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -158,16 +161,15 @@ bool functionUpdate(const std::string& function) {
     return true;
 }
 
-void vertexUpdate() {
+void vertexUpdate(int i) {
     gPlot.updateVertices();
-
-    functionUpdate(gComputePipeline.getFunction());
+    functionUpdate(gComputePipeline.getFunction(), i);
 }
 
 void vertexSpecification() {
     gPlot.setVertices();
 
-    functionUpdate(INITIAL_FUNCTION);
+    functionUpdate(INITIAL_FUNCTION, 0);
 
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
@@ -329,32 +331,60 @@ void updateGui() {
     }
 
     ImGui::Text("Functions");
+
     static int count = 1;
-    static char inputStrings[8][256] = {INITIAL_FUNCTION, "", "", "", "", "", "", ""};
-    static const char ids[16][12] = {
-        "##Function1",
-        "Submit####1",
-        "##Function2",
-        "Submit####2",
-        "##Function3",
-        "Submit####3",
-        "##Function4",
-        "Submit####4",
-        "##Function5",
-        "Submit####5",
-        "##Function6",
-        "Submit####6",
-        "##Function7",
-        "Submit####7",
-        "##Function8",
-        "Submit####8"
+    static char inputStrings[8][256] = { INITIAL_FUNCTION, "", "", "", "", "", "", "" };
+    static const char ids[16][12] = { 
+        "##Function1", "Submit####1", "##Function2", "Submit####2",
+        "##Function3", "Submit####3", "##Function4", "Submit####4",
+        "##Function5", "Submit####5", "##Function6", "Submit####6",
+        "##Function7", "Submit####7", "##Function8", "Submit####8"
+    };
+    static int axes[4] = {
+        -INIT_NEG_X_AXIS_LENGTH, INIT_POS_X_AXIS_LENGTH, -INIT_NEG_Z_AXIS_LENGTH, INIT_POS_Z_AXIS_LENGTH
+    };
+    static int bounds[8][4] = {
+        { INIT_NEG_X_BOUND, INIT_POS_X_BOUND, INIT_NEG_Z_BOUND, INIT_POS_Z_BOUND },
+        { 0, 0, 0, 0 },
+        { 0, 0, 0, 0 },
+        { 0, 0, 0, 0 },
+        { 0, 0, 0, 0 },
+        { 0, 0, 0, 0 },
+        { 0, 0, 0, 0 },
+        { 0, 0, 0, 0 }
+    };
+    float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
+    halfSpace = (halfSpace < 0) ? 0 : halfSpace;
+
+    static auto domainAxes = [&](const char * str, int neg) {
+        ImGui::SetNextItemWidth(halfSpace);
+        ImGui::InputInt(("##intInput" + std::to_string(neg)).c_str(), &axes[neg], 0, 0, ImGuiInputTextFlags_None);
+        ImGui::SameLine();
+        ImGui::Text(str);
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::InputInt(("##intInput" + std::to_string(neg + 1)).c_str(), &axes[neg + 1], 0, 0, ImGuiInputTextFlags_None);
+    };
+
+    static auto domainFuncs = [&](const char * str, int func, int neg) {
+        ImGui::SetNextItemWidth(halfSpace);
+        ImGui::InputInt(("##intInput" + std::to_string(func) + std::to_string(neg)).c_str(), &bounds[func][neg], 0, 0, ImGuiInputTextFlags_None);
+        ImGui::SameLine();
+        ImGui::Text(str);
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::InputInt(("##intInput" + std::to_string(func) + std::to_string(neg + 1)).c_str(), &bounds[func][neg + 1], 0, 0, ImGuiInputTextFlags_None);
     };
 
     for (int i = 0; i < count; ++i) {
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText(ids[2*i], inputStrings[i], sizeof(inputStrings[i]));
-        if (ImGui::Button(ids[2*i + 1])) {
-            if (!functionUpdate(inputStrings[i])) {
+        ImGui::InputText(ids[2 * i], inputStrings[i], sizeof(inputStrings[i]));
+        domainFuncs("<= x <=", i, mine::NEG_X_BOUND);
+        domainFuncs("<= y <=", i, mine::NEG_Z_BOUND);
+        if (ImGui::Button(ids[2 * i + 1])) {
+            gPlot.updateBounds(bounds);
+            gCamera.setCenter(gPlot.bounds[i][mine::NEG_X_BOUND], gPlot.bounds[i][mine::POS_X_BOUND], gPlot.bounds[i][mine::NEG_Z_BOUND], gPlot.bounds[i][mine::POS_Z_BOUND]);
+            if (!functionUpdate(inputStrings[i], i)) {
                 strcpy(inputStrings[i], gComputePipeline.getFunction());
             }
             gSceneChange = true;
@@ -363,55 +393,36 @@ void updateGui() {
 
     if (count < 8 && ImGui::Button("+")) {
         strcpy(inputStrings[count], INITIAL_FUNCTION);
+        bounds[count][mine::NEG_X_BOUND] = INIT_NEG_X_BOUND;
+        bounds[count][mine::POS_X_BOUND] = INIT_POS_X_BOUND;
+        bounds[count][mine::NEG_Z_BOUND] = INIT_NEG_Z_BOUND;
+        bounds[count][mine::POS_Z_BOUND] = INIT_POS_Z_BOUND;
+        gPlot.addFunction();
+        vertexUpdate(count);
         count++;
+        gSceneChange = true;
     }
     if (count < 8 && count > 0) {
         ImGui::SameLine();
     }
     if (count > 0 && ImGui::Button("-")) {
         strcpy(inputStrings[count - 1], "");
+        bounds[count - 1][mine::NEG_X_BOUND] = 0;
+        bounds[count - 1][mine::POS_X_BOUND] = 0;
+        bounds[count - 1][mine::NEG_Z_BOUND] = 0;
+        bounds[count - 1][mine::POS_Z_BOUND] = 0;
+        gPlot.removeFunction();
+        vertexUpdate(-1);
         count--;
+        gSceneChange = true;
     }
 
-    static int values[8] = {
-        INIT_NEG_X_BOUND, INIT_POS_X_BOUND, INIT_NEG_Z_BOUND, INIT_POS_Z_BOUND, 
-        -INIT_NEG_X_AXIS_LENGTH, INIT_POS_X_AXIS_LENGTH, -INIT_NEG_Z_AXIS_LENGTH, INIT_POS_Z_AXIS_LENGTH
-    };
+    domainAxes("<= X <=", 0);
+    domainAxes("<= Y <=", 2);
 
-    float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
-    halfSpace = (halfSpace < 0) ? 0 : halfSpace;
-
-    static auto domain = [&](const char * str, int neg) {
-        ImGui::SetNextItemWidth(halfSpace);
-        ImGui::InputInt(("##intInput" + std::to_string(neg)).c_str(), &values[neg], 0, 0, ImGuiInputTextFlags_None);
-        ImGui::SameLine();
-        ImGui::Text(str);
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputInt(("##intInput" + std::to_string(neg + 1)).c_str(), &values[neg + 1], 0, 0, ImGuiInputTextFlags_None);
-    };
-
-    domain("<= x <=", mine::NEG_X_BOUND);
-    domain("<= y <=", mine::NEG_Z_BOUND);
-    domain("<= X <=", mine::NEG_X_AXIS);
-    domain("<= Y <=", mine::NEG_Z_AXIS);
-
-    for (int i = 4; i < 8; ++i) {
-        if (i % 2 == 0) {
-            if (values[i] > 0) {
-                values[i] = -values[i];
-            }
-        } else {
-            if (values[i] < 0) {
-                values[i] = -values[i];
-            }
-        }
-    }
-
-    if (ImGui::Button("Update Limits")) {
-        gPlot.updateLimits(values);
-        gCamera.setCenter(gPlot.bounds[0][mine::NEG_X_BOUND], gPlot.bounds[0][mine::POS_X_BOUND], gPlot.bounds[0][mine::NEG_Z_BOUND], gPlot.bounds[0][mine::POS_Z_BOUND]);
-        vertexUpdate();
+    if (ImGui::Button("Set Bounds")) {
+        gPlot.updateAxes(axes);
+        vertexUpdate(-1);
         gSceneChange = true;
     }
 
