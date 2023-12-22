@@ -1,4 +1,4 @@
-#include <mine/vertexHandler.hpp>
+#include <mine/plot.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -6,12 +6,12 @@
 #include <mine/enums.hpp>
 
 namespace mine {
-void vertexHandler::setData(int xPosBounds_, int zPosBounds_, int xNegBounds_, int zNegBounds_, 
+void plot::setInitials(int xPosBounds_, int zPosBounds_, int xNegBounds_, int zNegBounds_, 
 int yAxisLength_, int xPosAxisLength_, int zPosAxisLength_, int xNegAxisLength_, int zNegAxisLength_) {
-    xPosBounds = xPosBounds_;
-    zPosBounds = zPosBounds_;
-    xNegBounds = xNegBounds_;
-    zNegBounds = zNegBounds_;
+    bounds[0][POS_X_BOUNDS] = xPosBounds_;
+    bounds[0][POS_Z_BOUNDS] = zPosBounds_;
+    bounds[0][NEG_X_BOUNDS] = xNegBounds_;
+    bounds[0][NEG_Z_BOUNDS] = zNegBounds_;
 
     yAxisLength = yAxisLength_; 
     xPosAxisLength = xPosAxisLength_; 
@@ -22,7 +22,7 @@ int yAxisLength_, int xPosAxisLength_, int zPosAxisLength_, int xNegAxisLength_,
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
 }
 
-void vertexHandler::setVertices() {
+void plot::setVertices() {
     // x axis
     vertices.push_back({-(float)xNegAxisLength, -AXIS_WIDTH, 0.0f, 0.2f, 0.1f, 0.1f});
     vertices.push_back({-(float)xNegAxisLength, AXIS_WIDTH, 0.0f, 0.2f, 0.1f, 0.1f});
@@ -95,14 +95,14 @@ void vertexHandler::setVertices() {
     }
     
     // function
-    float xReference = (float)(xPosBounds - xNegBounds) / X_RECTS;
-    float zReference = (float)(zPosBounds - zNegBounds) / Z_RECTS;
+    float xReference = (float)(bounds[0][POS_X_BOUNDS] - bounds[0][NEG_X_BOUNDS]) / X_RECTS;
+    float zReference = (float)(bounds[0][POS_Z_BOUNDS] - bounds[0][NEG_Z_BOUNDS]) / Z_RECTS;
     for (unsigned int i = 0; i <= X_RECTS; ++i) {
         for (unsigned int j = 0; j <= Z_RECTS; ++j) {
             float xOffset = i * xReference;
             float zOffset = j * zReference;
-            float x = xNegBounds + xOffset;
-            float z = zNegBounds + zOffset;
+            float x = bounds[0][NEG_X_BOUNDS] + xOffset;
+            float z = bounds[0][NEG_Z_BOUNDS] + zOffset;
             float y = 0.0f;
             vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f});
         }
@@ -120,9 +120,9 @@ void vertexHandler::setVertices() {
 
     // function triangles
     for (std::vector<vertex>::size_type i = baseVerticeCount; i < vertices.size(); ++i) {
-        if (vertices[i].z == (float)zPosBounds) {
+        if (vertices[i].z == (float)bounds[0][POS_Z_BOUNDS]) {
             continue;
-        } else if (vertices[i].x == (float)xPosBounds) {
+        } else if (vertices[i].x == (float)bounds[0][POS_X_BOUNDS]) {
             continue;
         }
         indices.push_back(i);
@@ -134,14 +134,14 @@ void vertexHandler::setVertices() {
     }
 }
 
-void vertexHandler::updateVertices() {
+void plot::updateVertices() {
     vertices.clear();
     indices.clear();
 
     setVertices();
 }
 
-void vertexHandler::calcOrientation(int start, float angle, int offset, float scale, bool x, bool axes) {
+void plot::calcOrientation(int start, float angle, int offset, float scale, bool x, bool axes) {
     float _angle = M_PI / 2.0 - atan(angle);
     float firstDimension  = -scale * sin(_angle);
     float secondDimension = scale * cos(_angle);
@@ -184,7 +184,7 @@ void vertexHandler::calcOrientation(int start, float angle, int offset, float sc
     }
 }
 
-void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCamera) {
+void plot::rotateBaseVertices(float xCamera, float yCamera, float zCamera) {
     // x axis
     calcOrientation(0, yCamera / zCamera, 0, AXIS_WIDTH, true , true);
     // z axis
@@ -263,7 +263,7 @@ void vertexHandler::rotateBaseVertices(float xCamera, float yCamera, float zCame
     }
 }
 
-void vertexHandler::updateLimits(int (&values)[8]) {
+void plot::updateLimits(int (&values)[8]) {
     if (values[POS_X_AXIS] > 1000) {
         values[POS_X_AXIS] = 1000;
     }
@@ -288,26 +288,26 @@ void vertexHandler::updateLimits(int (&values)[8]) {
     } else if (values[POS_X_BOUNDS] < -xNegAxisLength) {
         values[POS_X_BOUNDS] = -xNegAxisLength;
     }
-    xPosBounds = values[POS_X_BOUNDS];
+    bounds[0][POS_X_BOUNDS] = values[POS_X_BOUNDS];
     if (values[NEG_X_BOUNDS] < -xNegAxisLength) {
         values[NEG_X_BOUNDS] = -xNegAxisLength;
-    } else if (values[NEG_X_BOUNDS] > xPosBounds) {
-        values[NEG_X_BOUNDS] = xPosBounds;
+    } else if (values[NEG_X_BOUNDS] > bounds[0][POS_X_BOUNDS]) {
+        values[NEG_X_BOUNDS] = bounds[0][POS_X_BOUNDS];
     }
-    xNegBounds = values[NEG_X_BOUNDS];
+    bounds[0][NEG_X_BOUNDS] = values[NEG_X_BOUNDS];
 
     if (values[POS_Z_BOUNDS] > zPosAxisLength) {
         values[POS_Z_BOUNDS] = zPosAxisLength;
     } else if (values[POS_Z_BOUNDS] < -zNegAxisLength) {
         values[POS_Z_BOUNDS] = -zNegAxisLength;
     }
-    zPosBounds = values[POS_Z_BOUNDS];
+    bounds[0][POS_Z_BOUNDS] = values[POS_Z_BOUNDS];
     if (values[NEG_Z_BOUNDS] < -zNegAxisLength) {
         values[NEG_Z_BOUNDS] = -zNegAxisLength;
-    } else if (values[NEG_Z_BOUNDS] > zPosBounds) {
-        values[NEG_Z_BOUNDS] = zPosBounds;
+    } else if (values[NEG_Z_BOUNDS] > bounds[0][POS_Z_BOUNDS]) {
+        values[NEG_Z_BOUNDS] = bounds[0][POS_Z_BOUNDS];
     }
-    zNegBounds = values[NEG_Z_BOUNDS];
+    bounds[0][NEG_Z_BOUNDS] = values[NEG_Z_BOUNDS];
 
     updateVertices();
 }
