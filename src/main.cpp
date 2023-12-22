@@ -13,7 +13,7 @@
 #include <mine/cameraHandler.hpp>
 #include <mine/enums.hpp>
 #include <mine/pipeline.hpp>
-#include <mine/vertexHandler.hpp>
+#include <mine/plot.hpp>
 
 #define INITIAL_FUNCTION "cos(x+y-sin(x*y))"
 
@@ -23,17 +23,6 @@ constexpr int INITIAL_SCREEN_HEIGHT = 720;
 constexpr float INITIAL_RADIUS = 13.0f;
 constexpr float INITIAL_THETA = 45.0f;
 constexpr float INITIAL_PHI = 65.0f;
-
-constexpr int INITIAL_POSX_BOUNDS = 6;
-constexpr int INITIAL_POSZ_BOUNDS = 6;
-constexpr int INITIAL_NEGX_BOUNDS = -6;
-constexpr int INITIAL_NEGZ_BOUNDS = -6;
-
-constexpr int INITIAL_Y_AXIS_LENGTH = 5;
-constexpr int INITIAL_POSX_AXIS_LENGTH = 6;
-constexpr int INITIAL_POSZ_AXIS_LENGTH = 6;
-constexpr int INITIAL_NEGX_AXIS_LENGTH = 6;
-constexpr int INITIAL_NEGZ_AXIS_LENGTH = 6;
 
 SDL_Window *gWindow = nullptr;
 
@@ -45,7 +34,7 @@ GLuint gIndexBufferObject = 0;
 
 mine::pipeline gGraphicsPipeline{};
 mine::pipeline gComputePipeline{};
-mine::vertexHandler gHandler{};
+mine::plot gPlot{};
 mine::cameraHandler gCamera{};
 
 bool gRunning = true;
@@ -113,7 +102,7 @@ void setup() {
 
     gCamera.setScreen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-    gCamera.setCenter(INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS);
+    gCamera.setCenter(INIT_NEG_X_BOUND, INIT_POS_X_BOUND, INIT_NEG_Z_BOUND, INIT_POS_Z_BOUND);
 
     if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
         gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
@@ -135,29 +124,29 @@ bool functionUpdate(const std::string& function) {
     GLuint inputBuffer;
     glGenBuffers(1, &inputBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gHandler.vertices.size() * sizeof(mine::vertex), gHandler.vertices.data(), GL_STATIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.vertices.size() * sizeof(mine::vertex), gPlot.vertices.data(), GL_STATIC_READ);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputBuffer);
 
     GLuint outputBuffer;
     glGenBuffers(1, &outputBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gHandler.vertices.size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.vertices.size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
 
     glUseProgram(gComputePipeline.getProgram());
-    glDispatchCompute(gHandler.vertices.size(), 1, 1);
+    glDispatchCompute(gPlot.vertices.size(), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glUseProgram(0);
 
     float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 
-    for (std::vector<mine::vertex>::size_type i = gHandler.baseVerticeCount; i < gHandler.vertices.size(); ++i) {
-        gHandler.vertices[i].x = pResults[i * 6];
-        gHandler.vertices[i].y = pResults[i * 6 + 1];
-        gHandler.vertices[i].z = pResults[i * 6 + 2];
-        gHandler.vertices[i].r = pResults[i * 6 + 3];
-        gHandler.vertices[i].g = pResults[i * 6 + 4];
-        gHandler.vertices[i].b = pResults[i * 6 + 5];
+    for (std::vector<mine::vertex>::size_type i = gPlot.baseVerticeCount; i < gPlot.vertices.size(); ++i) {
+        gPlot.vertices[i].x = pResults[i * 6];
+        gPlot.vertices[i].y = pResults[i * 6 + 1];
+        gPlot.vertices[i].z = pResults[i * 6 + 2];
+        gPlot.vertices[i].r = pResults[i * 6 + 3];
+        gPlot.vertices[i].g = pResults[i * 6 + 4];
+        gPlot.vertices[i].b = pResults[i * 6 + 5];
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -170,17 +159,13 @@ bool functionUpdate(const std::string& function) {
 }
 
 void vertexUpdate() {
-    gHandler.updateVertices();
+    gPlot.updateVertices();
 
     functionUpdate(gComputePipeline.getFunction());
 }
 
 void vertexSpecification() {
-    gHandler.setData(
-        INITIAL_POSX_BOUNDS, INITIAL_POSZ_BOUNDS, INITIAL_NEGX_BOUNDS, INITIAL_NEGZ_BOUNDS,
-        INITIAL_Y_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH, INITIAL_NEGX_AXIS_LENGTH, INITIAL_NEGZ_AXIS_LENGTH
-    );
-    gHandler.setVertices();
+    gPlot.setVertices();
 
     functionUpdate(INITIAL_FUNCTION);
 
@@ -191,8 +176,8 @@ void vertexSpecification() {
     glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
     glBufferData(
         GL_ARRAY_BUFFER,
-        gHandler.vertices.size() * sizeof(mine::vertex),
-        gHandler.vertices.data(),
+        gPlot.vertices.size() * sizeof(mine::vertex),
+        gPlot.vertices.data(),
         GL_DYNAMIC_DRAW
     );
 
@@ -200,8 +185,8 @@ void vertexSpecification() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
-        gHandler.indices.size() * sizeof(GLint),
-        gHandler.indices.data(),
+        gPlot.indices.size() * sizeof(GLint),
+        gPlot.indices.data(),
         GL_DYNAMIC_DRAW
     );
 
@@ -389,8 +374,8 @@ void updateGui() {
     }
 
     static int values[8] = {
-        INITIAL_NEGX_BOUNDS, INITIAL_POSX_BOUNDS, INITIAL_NEGZ_BOUNDS, INITIAL_POSZ_BOUNDS, 
-        -INITIAL_NEGX_AXIS_LENGTH, INITIAL_POSX_AXIS_LENGTH, -INITIAL_NEGZ_AXIS_LENGTH, INITIAL_POSZ_AXIS_LENGTH
+        INIT_NEG_X_BOUND, INIT_POS_X_BOUND, INIT_NEG_Z_BOUND, INIT_POS_Z_BOUND, 
+        -INIT_NEG_X_AXIS_LENGTH, INIT_POS_X_AXIS_LENGTH, -INIT_NEG_Z_AXIS_LENGTH, INIT_POS_Z_AXIS_LENGTH
     };
 
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
@@ -406,8 +391,8 @@ void updateGui() {
         ImGui::InputInt(("##intInput" + std::to_string(neg + 1)).c_str(), &values[neg + 1], 0, 0, ImGuiInputTextFlags_None);
     };
 
-    domain("<= x <=", mine::NEG_X_BOUNDS);
-    domain("<= y <=", mine::NEG_Z_BOUNDS);
+    domain("<= x <=", mine::NEG_X_BOUND);
+    domain("<= y <=", mine::NEG_Z_BOUND);
     domain("<= X <=", mine::NEG_X_AXIS);
     domain("<= Y <=", mine::NEG_Z_AXIS);
 
@@ -424,8 +409,8 @@ void updateGui() {
     }
 
     if (ImGui::Button("Update Limits")) {
-        gHandler.updateLimits(values);
-        gCamera.setCenter(gHandler.xNegBounds, gHandler.xPosBounds, gHandler.zNegBounds, gHandler.zPosBounds);
+        gPlot.updateLimits(values);
+        gCamera.setCenter(gPlot.bounds[0][mine::NEG_X_BOUND], gPlot.bounds[0][mine::POS_X_BOUND], gPlot.bounds[0][mine::NEG_Z_BOUND], gPlot.bounds[0][mine::POS_Z_BOUND]);
         vertexUpdate();
         gSceneChange = true;
     }
@@ -434,19 +419,19 @@ void updateGui() {
 }
 
 void predraw() {
-    gHandler.rotateBaseVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
+    gPlot.rotateBaseVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
 
     glBufferData(
         GL_ARRAY_BUFFER, 
-        gHandler.vertices.size() * sizeof(mine::vertex),
-        gHandler.vertices.data(), 
+        gPlot.vertices.size() * sizeof(mine::vertex),
+        gPlot.vertices.data(), 
         GL_DYNAMIC_DRAW
     );
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
-        gHandler.indices.size() * sizeof(GLint),
-        gHandler.indices.data(),
+        gPlot.indices.size() * sizeof(GLint),
+        gPlot.indices.data(),
         GL_DYNAMIC_DRAW
     );
 }
@@ -457,7 +442,7 @@ void draw() {
     glUseProgram(gGraphicsPipeline.getProgram());
     glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
 
-    glDrawElements(GL_TRIANGLES, gHandler.indices.size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, gPlot.indices.size(), GL_UNSIGNED_INT, nullptr);
 }
 
 void postdraw() {

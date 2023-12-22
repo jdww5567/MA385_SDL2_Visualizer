@@ -2,24 +2,17 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 #include <mine/enums.hpp>
 
 namespace mine {
-void plot::setInitials(int xPosBounds_, int zPosBounds_, int xNegBounds_, int zNegBounds_, 
-int yAxisLength_, int xPosAxisLength_, int zPosAxisLength_, int xNegAxisLength_, int zNegAxisLength_) {
-    bounds[0][POS_X_BOUNDS] = xPosBounds_;
-    bounds[0][POS_Z_BOUNDS] = zPosBounds_;
-    bounds[0][NEG_X_BOUNDS] = xNegBounds_;
-    bounds[0][NEG_Z_BOUNDS] = zNegBounds_;
-
-    yAxisLength = yAxisLength_; 
-    xPosAxisLength = xPosAxisLength_; 
-    zPosAxisLength = zPosAxisLength_;
-    xNegAxisLength = xNegAxisLength_;
-    zNegAxisLength = zNegAxisLength_;
-
-    baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
+plot::plot() {
+    bounds[0][NEG_X_BOUND] = INIT_NEG_X_BOUND;
+    bounds[0][NEG_Z_BOUND] = INIT_NEG_Z_BOUND;
+    bounds[0][POS_X_BOUND] = INIT_POS_X_BOUND;
+    bounds[0][POS_Z_BOUND] = INIT_POS_Z_BOUND;
+    functions.resize(1);
 }
 
 void plot::setVertices() {
@@ -95,18 +88,22 @@ void plot::setVertices() {
     }
     
     // function
-    float xReference = (float)(bounds[0][POS_X_BOUNDS] - bounds[0][NEG_X_BOUNDS]) / X_RECTS;
-    float zReference = (float)(bounds[0][POS_Z_BOUNDS] - bounds[0][NEG_Z_BOUNDS]) / Z_RECTS;
-    for (unsigned int i = 0; i <= X_RECTS; ++i) {
-        for (unsigned int j = 0; j <= Z_RECTS; ++j) {
-            float xOffset = i * xReference;
-            float zOffset = j * zReference;
-            float x = bounds[0][NEG_X_BOUNDS] + xOffset;
-            float z = bounds[0][NEG_Z_BOUNDS] + zOffset;
-            float y = 0.0f;
-            vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f});
+    for (size_t k = 0; k < functions.size(); ++k) {
+        float xReference = (float)(bounds[k][POS_X_BOUND] - bounds[k][NEG_X_BOUND]) / X_RECTS;
+        float zReference = (float)(bounds[k][POS_Z_BOUND] - bounds[k][NEG_Z_BOUND]) / Z_RECTS;
+        for (unsigned int i = 0, g = 0; i <= X_RECTS; ++i) {
+            for (unsigned int j = 0; j <= Z_RECTS; ++j, ++g) {
+                float xOffset = i * xReference;
+                float zOffset = j * zReference;
+                float x = bounds[k][NEG_X_BOUND] + xOffset;
+                float z = bounds[k][NEG_Z_BOUND] + zOffset;
+                float y = 0.0f;
+                vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f});
+                functions[k][g] = {x, y, z, 0.0f, 0.0f, 0.0f};
+            }
         }
     }
+
     
     // grid and axes rectangles
     for (int i = 0; i < baseVerticeCount; i += 4) {
@@ -119,18 +116,20 @@ void plot::setVertices() {
     }
 
     // function triangles
-    for (std::vector<vertex>::size_type i = baseVerticeCount; i < vertices.size(); ++i) {
-        if (vertices[i].z == (float)bounds[0][POS_Z_BOUNDS]) {
-            continue;
-        } else if (vertices[i].x == (float)bounds[0][POS_X_BOUNDS]) {
-            continue;
+    for (size_t k = 0; k < functions.size(); ++k) {
+        for (size_t i = baseVerticeCount + k * ((X_RECTS + 1) * (Z_RECTS + 1)); i < baseVerticeCount + (k + 1) * ((X_RECTS + 1) * (Z_RECTS + 1)); ++i) {
+            if (vertices[i].z == (float)bounds[k][POS_Z_BOUND]) {
+                continue;
+            } else if (vertices[i].x == (float)bounds[k][POS_X_BOUND]) {
+                continue;
+            }
+            indices.push_back(i);
+            indices.push_back(i + 1);
+            indices.push_back(i + 2 + Z_RECTS);
+            indices.push_back(i + 2 + Z_RECTS);
+            indices.push_back(i + 1 + Z_RECTS);
+            indices.push_back(i);
         }
-        indices.push_back(i);
-        indices.push_back(i + 1);
-        indices.push_back(i + 2 + Z_RECTS);
-        indices.push_back(i + 2 + Z_RECTS);
-        indices.push_back(i + 1 + Z_RECTS);
-        indices.push_back(i);
     }
 }
 
@@ -283,31 +282,31 @@ void plot::updateLimits(int (&values)[8]) {
     zPosAxisLength  = values[POS_Z_AXIS];
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
 
-    if (values[POS_X_BOUNDS] > xPosAxisLength) {
-        values[POS_X_BOUNDS] = xPosAxisLength;
-    } else if (values[POS_X_BOUNDS] < -xNegAxisLength) {
-        values[POS_X_BOUNDS] = -xNegAxisLength;
+    if (values[POS_X_BOUND] > xPosAxisLength) {
+        values[POS_X_BOUND] = xPosAxisLength;
+    } else if (values[POS_X_BOUND] < -xNegAxisLength) {
+        values[POS_X_BOUND] = -xNegAxisLength;
     }
-    bounds[0][POS_X_BOUNDS] = values[POS_X_BOUNDS];
-    if (values[NEG_X_BOUNDS] < -xNegAxisLength) {
-        values[NEG_X_BOUNDS] = -xNegAxisLength;
-    } else if (values[NEG_X_BOUNDS] > bounds[0][POS_X_BOUNDS]) {
-        values[NEG_X_BOUNDS] = bounds[0][POS_X_BOUNDS];
+    bounds[0][POS_X_BOUND] = values[POS_X_BOUND];
+    if (values[NEG_X_BOUND] < -xNegAxisLength) {
+        values[NEG_X_BOUND] = -xNegAxisLength;
+    } else if (values[NEG_X_BOUND] > bounds[0][POS_X_BOUND]) {
+        values[NEG_X_BOUND] = bounds[0][POS_X_BOUND];
     }
-    bounds[0][NEG_X_BOUNDS] = values[NEG_X_BOUNDS];
+    bounds[0][NEG_X_BOUND] = values[NEG_X_BOUND];
 
-    if (values[POS_Z_BOUNDS] > zPosAxisLength) {
-        values[POS_Z_BOUNDS] = zPosAxisLength;
-    } else if (values[POS_Z_BOUNDS] < -zNegAxisLength) {
-        values[POS_Z_BOUNDS] = -zNegAxisLength;
+    if (values[POS_Z_BOUND] > zPosAxisLength) {
+        values[POS_Z_BOUND] = zPosAxisLength;
+    } else if (values[POS_Z_BOUND] < -zNegAxisLength) {
+        values[POS_Z_BOUND] = -zNegAxisLength;
     }
-    bounds[0][POS_Z_BOUNDS] = values[POS_Z_BOUNDS];
-    if (values[NEG_Z_BOUNDS] < -zNegAxisLength) {
-        values[NEG_Z_BOUNDS] = -zNegAxisLength;
-    } else if (values[NEG_Z_BOUNDS] > bounds[0][POS_Z_BOUNDS]) {
-        values[NEG_Z_BOUNDS] = bounds[0][POS_Z_BOUNDS];
+    bounds[0][POS_Z_BOUND] = values[POS_Z_BOUND];
+    if (values[NEG_Z_BOUND] < -zNegAxisLength) {
+        values[NEG_Z_BOUND] = -zNegAxisLength;
+    } else if (values[NEG_Z_BOUND] > bounds[0][POS_Z_BOUND]) {
+        values[NEG_Z_BOUND] = bounds[0][POS_Z_BOUND];
     }
-    bounds[0][NEG_Z_BOUNDS] = values[NEG_Z_BOUNDS];
+    bounds[0][NEG_Z_BOUND] = values[NEG_Z_BOUND];
 
     updateVertices();
 }

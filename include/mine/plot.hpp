@@ -7,23 +7,21 @@
 #include <glad/glad.h>
 
 #include <mine/enums.hpp>
-#include <mine/function.hpp>
 
 namespace mine {
 class plot {
-    std::vector<function> functions{};
 public:
+    std::vector<std::array<vertex, (X_RECTS + 1) * (Z_RECTS + 1)>> functions{};
     std::array<std::array<int, 4>, 8> bounds{};
-    int yAxisLength{};
-    int xPosAxisLength{};
-    int zPosAxisLength{};
-    int xNegAxisLength{};
-    int zNegAxisLength{};
-    int baseVerticeCount{};
+    int yAxisLength = INIT_Y_AXIS_LENGTH;
+    int xPosAxisLength = INIT_POS_X_AXIS_LENGTH;
+    int zPosAxisLength = INIT_POS_Z_AXIS_LENGTH;
+    int xNegAxisLength = INIT_NEG_X_AXIS_LENGTH;
+    int zNegAxisLength = INIT_NEG_Z_AXIS_LENGTH;
+    int baseVerticeCount = INIT_BASE_VERTICE_COUNT;
 
-    void setInitials(int xPosBounds, int zPosBounds, int xNegBounds, int zNegBounds, 
-        int yAxisLength, int xPosAxisLength, int zPosAxisLength, int xNegAxisLength, 
-        int zNegAxisLength);
+    plot();
+
     void setVertices();
     void updateVertices();
     void rotateBaseVertices(float xCamera, float yCamera, float zCamera);
