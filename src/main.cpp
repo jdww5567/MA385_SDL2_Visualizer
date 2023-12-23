@@ -15,8 +15,6 @@
 #include <mine/pipeline.hpp>
 #include <mine/plot.hpp>
 
-#define INITIAL_FUNCTION "cos(x+y-sin(x*y))"
-
 constexpr int INITIAL_SCREEN_WIDTH = 960;
 constexpr int INITIAL_SCREEN_HEIGHT = 720;
 
@@ -55,6 +53,7 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
 
     gWindow = SDL_CreateWindow(
         "MA_385_Project",
@@ -102,7 +101,7 @@ void setup() {
 
     gCamera.setScreen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-    gCamera.setCenter(DEF_BOUNDS[0][mine::NEG_X_BOUND], DEF_BOUNDS[0][mine::POS_X_BOUND], DEF_BOUNDS[0][mine::NEG_Z_BOUND], DEF_BOUNDS[0][mine::POS_Z_BOUND]);
+    //gCamera.setCenter(DEF_BOUNDS[0][mine::NEG_X_BOUND], DEF_BOUNDS[0][mine::POS_X_BOUND], DEF_BOUNDS[0][mine::NEG_Z_BOUND], DEF_BOUNDS[0][mine::POS_Z_BOUND]);
 
     if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
         gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
@@ -134,6 +133,7 @@ bool functionUpdate(const std::string& function, int i) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
 
     glUseProgram(gComputePipeline.getProgram());
+    glUniform1f(glGetUniformLocation(gComputePipeline.getProgram(), "i"), i);
     glDispatchCompute(gPlot.functions[i].size(), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glUseProgram(0);
@@ -161,7 +161,7 @@ bool functionUpdate(const std::string& function, int i) {
 void vertexSpecification() {
     gPlot.setVertices();
 
-    functionUpdate(INITIAL_FUNCTION, 0);
+    functionUpdate(DEF_FUNCTIONS[0], 0);
 
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
@@ -325,7 +325,7 @@ void updateGui() {
     ImGui::Text("Functions");
 
     static int count = 1;
-    static char inputStrings[8][256] = { INITIAL_FUNCTION, "", "", "", "", "", "", "" };
+    static std::array<char[256], 8> inputStrings {DEF_FUNCTIONS};
     static const char ids[16][12] = {
         "##Function1", "Submit####1", "##Function2", "Submit####2",
         "##Function3", "Submit####3", "##Function4", "Submit####4",
@@ -375,7 +375,7 @@ void updateGui() {
         domainFuncs("<= y <=", i, mine::NEG_Z_BOUND);
         if (ImGui::Button(ids[2 * i + 1])) {
             gPlot.updateBounds(i, bounds[i]);
-            gCamera.setCenter(gPlot.bounds[i][mine::NEG_X_BOUND], gPlot.bounds[i][mine::POS_X_BOUND], gPlot.bounds[i][mine::NEG_Z_BOUND], gPlot.bounds[i][mine::POS_Z_BOUND]);
+            //gCamera.setCenter(gPlot.bounds[i][mine::NEG_X_BOUND], gPlot.bounds[i][mine::POS_X_BOUND], gPlot.bounds[i][mine::NEG_Z_BOUND], gPlot.bounds[i][mine::POS_Z_BOUND]);
             if (!functionUpdate(inputStrings[i], i)) {
                 strcpy(inputStrings[i], gComputePipeline.getFunction());
             }
@@ -384,14 +384,14 @@ void updateGui() {
     }
 
     if (count < 8 && ImGui::Button("+")) {
-        strcpy(inputStrings[count], INITIAL_FUNCTION);
+        strcpy(inputStrings[count], DEF_FUNCTIONS[count]);
         bounds[count][mine::NEG_X_BOUND] = DEF_BOUNDS[count][mine::NEG_X_BOUND];
         bounds[count][mine::POS_X_BOUND] = DEF_BOUNDS[count][mine::POS_X_BOUND];
         bounds[count][mine::NEG_Z_BOUND] = DEF_BOUNDS[count][mine::NEG_Z_BOUND];
         bounds[count][mine::POS_Z_BOUND] = DEF_BOUNDS[count][mine::POS_Z_BOUND];
         gPlot.addFunction();
         gPlot.updateBounds(count, bounds[count]);
-        functionUpdate(INITIAL_FUNCTION, count);
+        functionUpdate(DEF_FUNCTIONS[count], count);
         count++;
         gSceneChange = true;
     }

@@ -2,6 +2,7 @@
 #define MINE_ENUMS_HPP
 
 #include <array>
+#include <string_view>
 
 constexpr int X_RECTS = 144;
 constexpr int Z_RECTS = 144;
@@ -14,14 +15,14 @@ constexpr float DASH_WIDTH = 2.0f * AXIS_WIDTH;
 constexpr float GRID_WIDTH = AXIS_WIDTH / 2.0f;
 
 constexpr std::array<std::array<int, 4>, 8> DEF_BOUNDS{{
-    {-6,  6, -6,  6},
-    { 2,  4, -5,  6},
-    {-2,  5, -2,  5},
-    {-3,  1, -4,  3},
-    {-7,  6,  5,  8},
-    {-3,  3, -3,  3},
-    {-7, -4, -5, -2},
-    {-2,  2, -1,  6}
+    { -2,  2, -2, 2 },
+    { -2,  2, -2, 2 },
+    {  2,  6, -2, 2 },
+    { -6, -2, -2, 2 },
+    { -2,  2,  0, 6 },
+    { -2,  2, -6, 0 },
+    {  3,  6,  3, 6 },
+    { -6,  6, -6, 6 }
 }};
 
 constexpr int INIT_Y_AXIS_LENGTH = 5;
@@ -30,6 +31,17 @@ constexpr int INIT_POS_Z_AXIS_LENGTH = 6;
 constexpr int INIT_NEG_X_AXIS_LENGTH = 6;
 constexpr int INIT_NEG_Z_AXIS_LENGTH = 6;
 constexpr int INIT_BASE_VERTICE_COUNT = 12 + 8 * (INIT_Y_AXIS_LENGTH + INIT_POS_X_AXIS_LENGTH + INIT_POS_Z_AXIS_LENGTH + INIT_NEG_X_AXIS_LENGTH + INIT_NEG_Z_AXIS_LENGTH);
+
+constexpr std::array<char[256], 8> DEF_FUNCTIONS{{
+    "x*x - y*y",
+    "x*x + y*y + 1",
+    "x+y - 2",
+    "sin(x+y) + 3",
+    "-y",
+    "-y",
+    "exp(x-y)",
+    "3"
+}};
 
 namespace mine {
 enum index {

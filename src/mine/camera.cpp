@@ -129,7 +129,7 @@ void camera::updatePos() {
         fov,
         aspectRatio,
         0.01f,
-        100.0f
+        50.0f
     ) * view;
 }
 }
