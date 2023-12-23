@@ -21,6 +21,36 @@ void plot::addFunction() {
     bounds[functions.size()][POS_X_BOUND] = INIT_POS_X_BOUND;
     bounds[functions.size()][POS_Z_BOUND] = INIT_POS_Z_BOUND;
     functions.resize(functions.size() + 1);
+
+    size_t k = functions.size() - 1;
+
+    float xReference = (float)(bounds[k][POS_X_BOUND] - bounds[k][NEG_X_BOUND]) / X_RECTS;
+    float zReference = (float)(bounds[k][POS_Z_BOUND] - bounds[k][NEG_Z_BOUND]) / Z_RECTS;
+    for (unsigned int i = 0, g = 0; i <= X_RECTS; ++i) {
+        for (unsigned int j = 0; j <= Z_RECTS; ++j, ++g) {
+            float xOffset = i * xReference;
+            float zOffset = j * zReference;
+            float x = bounds[k][NEG_X_BOUND] + xOffset;
+            float z = bounds[k][NEG_Z_BOUND] + zOffset;
+            float y = 0.0f;
+            vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f});
+            functions[k][g] = {x, y, z, 0.0f, 0.0f, 0.0f};
+        }
+    }
+
+    for (size_t i = baseVerticeCount + k * ((X_RECTS + 1) * (Z_RECTS + 1)); i < baseVerticeCount + (k + 1) * ((X_RECTS + 1) * (Z_RECTS + 1)); ++i) {
+        if (vertices[i].z == (float)bounds[k][POS_Z_BOUND]) {
+            continue;
+        } else if (vertices[i].x == (float)bounds[k][POS_X_BOUND]) {
+            continue;
+        }
+        indices.push_back(i);
+        indices.push_back(i + 1);
+        indices.push_back(i + 2 + Z_RECTS);
+        indices.push_back(i + 2 + Z_RECTS);
+        indices.push_back(i + 1 + Z_RECTS);
+        indices.push_back(i);
+    }
 }
 
 void plot::removeFunction() {
@@ -29,6 +59,14 @@ void plot::removeFunction() {
     bounds[functions.size() - 1][POS_X_BOUND] = 0;
     bounds[functions.size() - 1][POS_Z_BOUND] = 0;
     functions.pop_back();
+
+    for (int i = 0; i < (X_RECTS + 1) * (Z_RECTS + 1); ++i) {
+        vertices.pop_back();
+    }
+
+    for (int i = 0; i < 6 * (X_RECTS * Z_RECTS); ++i) {
+        indices.pop_back();
+    }
 }
 
 void plot::setVertices() {
@@ -119,7 +157,6 @@ void plot::setVertices() {
             }
         }
     }
-
     
     // grid and axes rectangles
     for (int i = 0; i < baseVerticeCount; i += 4) {
@@ -289,43 +326,57 @@ void plot::updateAxes(int (&axes)[4]) {
     else if (axes[3] <     0) { axes[3] =     0; }
 
     xNegAxisLength = -axes[0];
-    xPosAxisLength  = axes[1];
+    xPosAxisLength =  axes[1];
     zNegAxisLength = -axes[2];
-    zPosAxisLength  = axes[3];
+    zPosAxisLength =  axes[3];
     baseVerticeCount = 12 + 8 * (yAxisLength + xPosAxisLength + zPosAxisLength + xNegAxisLength + zNegAxisLength);
+
+    for (size_t i = 0; i < functions.size(); ++i) {
+        updateBounds(i, bounds[i]);
+    }
 
     updateVertices();
 }
 
-void plot::updateBounds(int (&bounds_)[8][4]) {
-    for (std::vector<std::array<mine::vertex, (X_RECTS) * (Z_RECTS)> >::size_type i = 0; i < functions.size(); ++i) {
-        if (bounds_[i][POS_X_BOUND] > xPosAxisLength) {
-            bounds_[i][POS_X_BOUND] = xPosAxisLength;
-        } else if (bounds_[i][POS_X_BOUND] < -xNegAxisLength) {
-            bounds_[i][POS_X_BOUND] = -xNegAxisLength;
-        }
-        bounds[i][POS_X_BOUND] = bounds_[i][POS_X_BOUND];
-        if (bounds_[i][NEG_X_BOUND] < -xNegAxisLength) {
-            bounds_[i][NEG_X_BOUND] = -xNegAxisLength;
-        } else if (bounds_[i][NEG_X_BOUND] > bounds[i][POS_X_BOUND]) {
-            bounds_[i][NEG_X_BOUND] = bounds[i][POS_X_BOUND];
-        }
-        bounds[i][NEG_X_BOUND] = bounds_[i][NEG_X_BOUND];
-
-        if (bounds_[i][POS_Z_BOUND] > zPosAxisLength) {
-            bounds_[i][POS_Z_BOUND] = zPosAxisLength;
-        } else if (bounds_[i][POS_Z_BOUND] < -zNegAxisLength) {
-            bounds_[i][POS_Z_BOUND] = -zNegAxisLength;
-        }
-        bounds[i][POS_Z_BOUND] = bounds_[i][POS_Z_BOUND];
-        if (bounds_[i][NEG_Z_BOUND] < -zNegAxisLength) {
-            bounds_[i][NEG_Z_BOUND] = -zNegAxisLength;
-        } else if (bounds_[i][NEG_Z_BOUND] > bounds[i][POS_Z_BOUND]) {
-            bounds_[i][NEG_Z_BOUND] = bounds[i][POS_Z_BOUND];
-        }
-        bounds[i][NEG_Z_BOUND] = bounds_[i][NEG_Z_BOUND];
+void plot::updateBounds(int i, std::array<int, 4>& bounds_) {
+    if (bounds_[POS_X_BOUND] > xPosAxisLength) {
+        bounds_[POS_X_BOUND] = xPosAxisLength;
+    } else if (bounds_[POS_X_BOUND] < -xNegAxisLength) {
+        bounds_[POS_X_BOUND] = -xNegAxisLength;
     }
+    bounds[i][POS_X_BOUND] = bounds_[POS_X_BOUND];
+    if (bounds_[NEG_X_BOUND] < -xNegAxisLength) {
+        bounds_[NEG_X_BOUND] = -xNegAxisLength;
+    } else if (bounds_[NEG_X_BOUND] > bounds[i][POS_X_BOUND]) {
+        bounds_[NEG_X_BOUND] = bounds[i][POS_X_BOUND];
+    }
+    bounds[i][NEG_X_BOUND] = bounds_[NEG_X_BOUND];
 
-    updateVertices();
+    if (bounds_[POS_Z_BOUND] > zPosAxisLength) {
+        bounds_[POS_Z_BOUND] = zPosAxisLength;
+    } else if (bounds_[POS_Z_BOUND] < -zNegAxisLength) {
+        bounds_[POS_Z_BOUND] = -zNegAxisLength;
+    }
+    bounds[i][POS_Z_BOUND] = bounds_[POS_Z_BOUND];
+    if (bounds_[NEG_Z_BOUND] < -zNegAxisLength) {
+        bounds_[NEG_Z_BOUND] = -zNegAxisLength;
+    } else if (bounds_[NEG_Z_BOUND] > bounds[i][POS_Z_BOUND]) {
+        bounds_[NEG_Z_BOUND] = bounds[i][POS_Z_BOUND];
+    }
+    bounds[i][NEG_Z_BOUND] = bounds_[NEG_Z_BOUND];
+
+    float xReference = (float)(bounds[i][POS_X_BOUND] - bounds[i][NEG_X_BOUND]) / X_RECTS;
+    float zReference = (float)(bounds[i][POS_Z_BOUND] - bounds[i][NEG_Z_BOUND]) / Z_RECTS;
+    for (unsigned int j = 0, g = 0; j <= X_RECTS; ++j) {
+        for (unsigned int k = 0; k <= Z_RECTS; ++k, ++g) {
+            float xOffset = j * xReference;
+            float zOffset = k * zReference;
+            float x = bounds[i][NEG_X_BOUND] + xOffset;
+            float z = bounds[i][NEG_Z_BOUND] + zOffset;
+            float y = 0.0f;
+            vertices[i * (X_RECTS + 1) * (Z_RECTS + 1) + baseVerticeCount + g] = {x, y, z, 0.0f, 0.0f, 0.0f};
+            functions[i][g] = {x, y, z, 0.0f, 0.0f, 0.0f};
+        }
+    }
 }
 }

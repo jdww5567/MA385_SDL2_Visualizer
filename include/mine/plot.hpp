@@ -11,6 +11,8 @@
 namespace mine {
 class plot {
 public:
+    std::vector<vertex> vertices{};
+    std::vector<GLuint> indices{};
     std::vector<std::array<vertex, (X_RECTS + 1) * (Z_RECTS + 1)>> functions{};
     std::array<std::array<int, 4>, 8> bounds{};
     int yAxisLength = INIT_Y_AXIS_LENGTH;
@@ -28,12 +30,9 @@ public:
     void updateVertices();
     void rotateBaseVertices(float xCamera, float yCamera, float zCamera);
     void updateAxes(int (&axes)[4]);
-    void updateBounds(int (&bounds_)[8][4]);
+    void updateBounds(int i, std::array<int, 4>& bounds_);
 private:
     void calcOrientation(int start, float angle, int offset, float scale, bool x, bool axes);
-public:
-    std::vector<vertex> vertices{};
-    std::vector<GLuint> indices{};
 };
 }
 

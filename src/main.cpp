@@ -161,11 +161,6 @@ bool functionUpdate(const std::string& function, int i) {
     return true;
 }
 
-void vertexUpdate(int i) {
-    gPlot.updateVertices();
-    functionUpdate(gComputePipeline.getFunction(), i);
-}
-
 void vertexSpecification() {
     gPlot.setVertices();
 
@@ -343,7 +338,7 @@ void updateGui() {
     static int axes[4] = {
         -INIT_NEG_X_AXIS_LENGTH, INIT_POS_X_AXIS_LENGTH, -INIT_NEG_Z_AXIS_LENGTH, INIT_POS_Z_AXIS_LENGTH
     };
-    static int bounds[8][4] = {
+    static std::array<std::array<int, 4>, 8> bounds = {{
         { INIT_NEG_X_BOUND, INIT_POS_X_BOUND, INIT_NEG_Z_BOUND, INIT_POS_Z_BOUND },
         { 0, 0, 0, 0 },
         { 0, 0, 0, 0 },
@@ -352,7 +347,7 @@ void updateGui() {
         { 0, 0, 0, 0 },
         { 0, 0, 0, 0 },
         { 0, 0, 0, 0 }
-    };
+    }};
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
 
@@ -382,7 +377,7 @@ void updateGui() {
         domainFuncs("<= x <=", i, mine::NEG_X_BOUND);
         domainFuncs("<= y <=", i, mine::NEG_Z_BOUND);
         if (ImGui::Button(ids[2 * i + 1])) {
-            gPlot.updateBounds(bounds);
+            gPlot.updateBounds(i, bounds[i]);
             gCamera.setCenter(gPlot.bounds[i][mine::NEG_X_BOUND], gPlot.bounds[i][mine::POS_X_BOUND], gPlot.bounds[i][mine::NEG_Z_BOUND], gPlot.bounds[i][mine::POS_Z_BOUND]);
             if (!functionUpdate(inputStrings[i], i)) {
                 strcpy(inputStrings[i], gComputePipeline.getFunction());
@@ -398,7 +393,8 @@ void updateGui() {
         bounds[count][mine::NEG_Z_BOUND] = INIT_NEG_Z_BOUND;
         bounds[count][mine::POS_Z_BOUND] = INIT_POS_Z_BOUND;
         gPlot.addFunction();
-        vertexUpdate(count);
+        gPlot.updateBounds(count, bounds[count]);
+        functionUpdate(INITIAL_FUNCTION, count);
         count++;
         gSceneChange = true;
     }
@@ -412,7 +408,6 @@ void updateGui() {
         bounds[count - 1][mine::NEG_Z_BOUND] = 0;
         bounds[count - 1][mine::POS_Z_BOUND] = 0;
         gPlot.removeFunction();
-        vertexUpdate(-1);
         count--;
         gSceneChange = true;
     }
@@ -422,7 +417,12 @@ void updateGui() {
 
     if (ImGui::Button("Set Bounds")) {
         gPlot.updateAxes(axes);
-        vertexUpdate(-1);
+        for (int i = 0; i < count; ++i) {
+            functionUpdate(inputStrings[i], i);
+        }
+        for (int i = 0; i < count; ++i) {
+            bounds[i] = gPlot.bounds[i];
+        }
         gSceneChange = true;
     }
 
