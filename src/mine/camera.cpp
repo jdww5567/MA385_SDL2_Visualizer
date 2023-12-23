@@ -1,4 +1,4 @@
-#include <mine/cameraHandler.hpp>
+#include <mine/camera.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -6,7 +6,7 @@
 #include <glm/gtx/transform.hpp>
 
 namespace mine {
-cameraHandler::cameraHandler() {
+camera::camera() {
     radius = 0;
     theta = 0;
     phi = 0;
@@ -19,7 +19,7 @@ cameraHandler::cameraHandler() {
     view = glm::highp_mat4();
 }
 
-void cameraHandler::setScreen(float screenWidth_, float screenHeight_) {
+void camera::setScreen(float screenWidth_, float screenHeight_) {
     screenWidth = screenWidth_;
     screenHeight = screenHeight_;
     aspectRatio = screenWidth / screenHeight;
@@ -32,7 +32,7 @@ void cameraHandler::setScreen(float screenWidth_, float screenHeight_) {
     updatePos();
 }
 
-void cameraHandler::setData(float radius_, float theta_, float phi_) {
+void camera::setData(float radius_, float theta_, float phi_) {
     theta = theta_;
 
     if (radius_ < 0.1f) {
@@ -52,7 +52,7 @@ void cameraHandler::setData(float radius_, float theta_, float phi_) {
     updatePos();
 }
 
-void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
+void camera::setCenter(float xNB, float xPB, float zNB, float zPB) {
     if (xNB - xPB == 0 || zNB - zPB == 0) {
         center = glm::vec3{0, 0, 0};
     } else {
@@ -63,7 +63,7 @@ void cameraHandler::setCenter(float xNB, float xPB, float zNB, float zPB) {
     updatePos();
 }
 
-void cameraHandler::zoom(bool in, bool out) {
+void camera::zoom(bool in, bool out) {
     if (in) {
         radius -= 0.1f * radius;
         if (radius < 0.1f) {
@@ -79,7 +79,7 @@ void cameraHandler::zoom(bool in, bool out) {
     updatePos();
 }
 
-void cameraHandler::updateAngles(float theta_, float phi_) {
+void camera::updateAngles(float theta_, float phi_) {
     theta += theta_;
     phi += phi_;
 
@@ -98,7 +98,7 @@ void cameraHandler::updateAngles(float theta_, float phi_) {
     updatePos();
 }
 
-void cameraHandler::updatePos() {
+void camera::updatePos() {
     pos = glm::vec3(
         radius * sin(glm::radians(phi)) * cos(glm::radians(theta)) + center.x,
         radius * cos(glm::radians(phi)) + center.y,

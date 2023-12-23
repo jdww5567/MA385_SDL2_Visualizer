@@ -10,7 +10,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 
-#include <mine/cameraHandler.hpp>
+#include <mine/camera.hpp>
 #include <mine/enums.hpp>
 #include <mine/pipeline.hpp>
 #include <mine/plot.hpp>
@@ -35,7 +35,7 @@ GLuint gIndexBufferObject = 0;
 mine::pipeline gGraphicsPipeline{};
 mine::pipeline gComputePipeline{};
 mine::plot gPlot{};
-mine::cameraHandler gCamera{};
+mine::camera gCamera{};
 
 bool gRunning = true;
 bool gSceneChange = true;
@@ -326,7 +326,7 @@ void updateGui() {
 
     static int count = 1;
     static char inputStrings[8][256] = { INITIAL_FUNCTION, "", "", "", "", "", "", "" };
-    static const char ids[16][12] = { 
+    static const char ids[16][12] = {
         "##Function1", "Submit####1", "##Function2", "Submit####2",
         "##Function3", "Submit####3", "##Function4", "Submit####4",
         "##Function5", "Submit####5", "##Function6", "Submit####6",

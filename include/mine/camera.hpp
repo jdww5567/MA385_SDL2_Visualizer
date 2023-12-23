@@ -1,10 +1,10 @@
-#ifndef MINE_CAMERAHANDLER_HPP
-#define MINE_CAMERAHANDLER_HPP
+#ifndef MINE_CAMERA_HPP
+#define MINE_CAMERA_HPP
 
 #include <glm/glm.hpp>
 
 namespace mine {
-class cameraHandler {
+class camera {
     float radius;
 public:
     float screenWidth;
@@ -17,7 +17,7 @@ public:
     glm::vec3 center;
     glm::highp_mat4 view;
 
-    cameraHandler();
+    camera();
     void setScreen(float screenWidth_, float screenHeight_);
     void setData(float radius_, float theta_, float phi_);
     void setCenter(float xNB, float xPB, float zNB, float zPB);
