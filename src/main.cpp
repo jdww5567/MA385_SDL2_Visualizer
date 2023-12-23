@@ -102,7 +102,7 @@ void setup() {
 
     gCamera.setScreen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-    gCamera.setCenter(INIT_NEG_X_BOUND, INIT_POS_X_BOUND, INIT_NEG_Z_BOUND, INIT_POS_Z_BOUND);
+    gCamera.setCenter(DEF_BOUNDS[0][mine::NEG_X_BOUND], DEF_BOUNDS[0][mine::POS_X_BOUND], DEF_BOUNDS[0][mine::NEG_Z_BOUND], DEF_BOUNDS[0][mine::POS_Z_BOUND]);
 
     if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
         gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
@@ -110,9 +110,6 @@ void setup() {
 }
 
 bool functionUpdate(const std::string& function, int i) {
-    if (i == -1) {
-        return false;
-    }
     mine::pipeline tempPipeline;
     tempPipeline.setProgram("./shaders/compute.glsl", function);
 
@@ -338,15 +335,15 @@ void updateGui() {
     static int axes[4] = {
         -INIT_NEG_X_AXIS_LENGTH, INIT_POS_X_AXIS_LENGTH, -INIT_NEG_Z_AXIS_LENGTH, INIT_POS_Z_AXIS_LENGTH
     };
-    static std::array<std::array<int, 4>, 8> bounds = {{
-        { INIT_NEG_X_BOUND, INIT_POS_X_BOUND, INIT_NEG_Z_BOUND, INIT_POS_Z_BOUND },
-        { 0, 0, 0, 0 },
-        { 0, 0, 0, 0 },
-        { 0, 0, 0, 0 },
-        { 0, 0, 0, 0 },
-        { 0, 0, 0, 0 },
-        { 0, 0, 0, 0 },
-        { 0, 0, 0, 0 }
+    static std::array<std::array<int, 4>, 8> bounds{{
+        DEF_BOUNDS[0],
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0}
     }};
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
@@ -388,10 +385,10 @@ void updateGui() {
 
     if (count < 8 && ImGui::Button("+")) {
         strcpy(inputStrings[count], INITIAL_FUNCTION);
-        bounds[count][mine::NEG_X_BOUND] = INIT_NEG_X_BOUND;
-        bounds[count][mine::POS_X_BOUND] = INIT_POS_X_BOUND;
-        bounds[count][mine::NEG_Z_BOUND] = INIT_NEG_Z_BOUND;
-        bounds[count][mine::POS_Z_BOUND] = INIT_POS_Z_BOUND;
+        bounds[count][mine::NEG_X_BOUND] = DEF_BOUNDS[count][mine::NEG_X_BOUND];
+        bounds[count][mine::POS_X_BOUND] = DEF_BOUNDS[count][mine::POS_X_BOUND];
+        bounds[count][mine::NEG_Z_BOUND] = DEF_BOUNDS[count][mine::NEG_Z_BOUND];
+        bounds[count][mine::POS_Z_BOUND] = DEF_BOUNDS[count][mine::POS_Z_BOUND];
         gPlot.addFunction();
         gPlot.updateBounds(count, bounds[count]);
         functionUpdate(INITIAL_FUNCTION, count);

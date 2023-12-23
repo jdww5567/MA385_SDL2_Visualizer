@@ -8,18 +8,18 @@
 
 namespace mine {
 plot::plot() {
-    bounds[0][NEG_X_BOUND] = INIT_NEG_X_BOUND;
-    bounds[0][NEG_Z_BOUND] = INIT_NEG_Z_BOUND;
-    bounds[0][POS_X_BOUND] = INIT_POS_X_BOUND;
-    bounds[0][POS_Z_BOUND] = INIT_POS_Z_BOUND;
+    bounds[0][NEG_X_BOUND] = DEF_BOUNDS[0][NEG_X_BOUND];
+    bounds[0][POS_X_BOUND] = DEF_BOUNDS[0][POS_X_BOUND];
+    bounds[0][NEG_Z_BOUND] = DEF_BOUNDS[0][NEG_Z_BOUND];
+    bounds[0][POS_Z_BOUND] = DEF_BOUNDS[0][POS_Z_BOUND];
     functions.resize(1);
 }
 
 void plot::addFunction() {
-    bounds[functions.size()][NEG_X_BOUND] = INIT_NEG_X_BOUND;
-    bounds[functions.size()][NEG_Z_BOUND] = INIT_NEG_Z_BOUND;
-    bounds[functions.size()][POS_X_BOUND] = INIT_POS_X_BOUND;
-    bounds[functions.size()][POS_Z_BOUND] = INIT_POS_Z_BOUND;
+    bounds[functions.size()][NEG_X_BOUND] = DEF_BOUNDS[functions.size()][NEG_X_BOUND];
+    bounds[functions.size()][POS_X_BOUND] = DEF_BOUNDS[functions.size()][POS_X_BOUND];
+    bounds[functions.size()][NEG_Z_BOUND] = DEF_BOUNDS[functions.size()][NEG_Z_BOUND];
+    bounds[functions.size()][POS_Z_BOUND] = DEF_BOUNDS[functions.size()][POS_Z_BOUND];
     functions.resize(functions.size() + 1);
 
     size_t k = functions.size() - 1;
