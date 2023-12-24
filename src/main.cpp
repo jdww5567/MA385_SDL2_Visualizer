@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include <glad/glad.h>
@@ -37,7 +36,7 @@ mine::camera gCamera{};
 
 bool gRunning = true;
 bool gSceneChange = true;
-bool gGuiChange = false;
+bool gScreenChange = false;
 
 double gRefreshTime = 0;
 
@@ -53,7 +52,7 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     gWindow = SDL_CreateWindow(
         "MA_385_Project",
@@ -81,8 +80,8 @@ void setup() {
 
     std::cout << "Vender: " << glGetString(GL_VENDOR) << std::endl;
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "Version: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "Shading Language Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
@@ -99,9 +98,9 @@ void setup() {
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 
-    gCamera.setScreen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
-    gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-    //gCamera.setCenter(DEF_BOUNDS[0][mine::NEG_X_BOUND], DEF_BOUNDS[0][mine::POS_X_BOUND], DEF_BOUNDS[0][mine::NEG_Z_BOUND], DEF_BOUNDS[0][mine::POS_Z_BOUND]);
+    gCamera.set_screen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
+    gCamera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
+    gCamera.set_center(mine::DEF_BOUNDS[0]);
 
     if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
         gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
@@ -110,13 +109,13 @@ void setup() {
 
 bool functionUpdate(const std::string& function, int i) {
     mine::pipeline tempPipeline;
-    tempPipeline.setProgram("./shaders/compute.glsl", function);
+    tempPipeline.set_program("./shaders/compute.glsl", function);
 
-    if (tempPipeline.getProgram() != 0) {
-        glDeleteProgram(tempPipeline.getProgram());
-        gComputePipeline.setProgram("./shaders/compute.glsl", function);
+    if (tempPipeline.get_program() != 0) {
+        glDeleteProgram(tempPipeline.get_program());
+        gComputePipeline.set_program("./shaders/compute.glsl", function);
     } else {
-        glDeleteProgram(tempPipeline.getProgram());
+        glDeleteProgram(tempPipeline.get_program());
         return false;
     }
 
@@ -132,21 +131,21 @@ bool functionUpdate(const std::string& function, int i) {
     glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.functions[i].size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
 
-    glUseProgram(gComputePipeline.getProgram());
-    glUniform1f(glGetUniformLocation(gComputePipeline.getProgram(), "i"), i);
+    glUseProgram(gComputePipeline.get_program());
+    glUniform1f(glGetUniformLocation(gComputePipeline.get_program(), "i"), i);
     glDispatchCompute(gPlot.functions[i].size(), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glUseProgram(0);
 
     float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 
-    for (std::vector<mine::vertex>::size_type j = 0; j < (X_RECTS + 1) * (Z_RECTS + 1); ++j) {
-        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].x = pResults[j * 6];
-        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].y = pResults[j * 6 + 1];
-        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].z = pResults[j * 6 + 2];
-        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].r = pResults[j * 6 + 3];
-        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].g = pResults[j * 6 + 4];
-        gPlot.vertices[gPlot.baseVerticeCount + i * ((X_RECTS + 1) * (Z_RECTS + 1)) + j].b = pResults[j * 6 + 5];
+    for (std::vector<mine::vertex>::size_type j = 0; j < (mine::X_RECTS + 1) * (mine::Z_RECTS + 1); ++j) {
+        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].x = pResults[j * 6];
+        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].y = pResults[j * 6 + 1];
+        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].z = pResults[j * 6 + 2];
+        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].r = pResults[j * 6 + 3];
+        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].g = pResults[j * 6 + 4];
+        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].b = pResults[j * 6 + 5];
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -159,9 +158,9 @@ bool functionUpdate(const std::string& function, int i) {
 }
 
 void vertexSpecification() {
-    gPlot.setVertices();
+    gPlot.set_vertices();
 
-    functionUpdate(DEF_FUNCTIONS[0], 0);
+    functionUpdate(mine::DEF_FUNCTIONS[0], 0);
 
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
@@ -179,7 +178,7 @@ void vertexSpecification() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
-        gPlot.indices.size() * sizeof(GLint),
+        gPlot.indices.size() * sizeof(GLuint),
         gPlot.indices.data(),
         GL_DYNAMIC_DRAW
     );
@@ -206,7 +205,7 @@ void vertexSpecification() {
 }
 
 void createGraphicsPipeline() {
-    gGraphicsPipeline.setProgram("./shaders/vertex.glsl", "./shaders/fragment.glsl", "uViewMatrix");
+    gGraphicsPipeline.set_program("./shaders/vertex.glsl", "./shaders/fragment.glsl", "uViewMatrix");
 }
 
 void input() {
@@ -255,7 +254,7 @@ void input() {
                 break;
             case SDL_MOUSEMOTION:
                 if (leftDown) {
-                    gCamera.updateAngles(
+                    gCamera.update_angles(
                         (e.button.x - mouseX) / widthSpeed, 
                         (mouseY - e.button.y) / heightSpeed
                     );
@@ -270,7 +269,7 @@ void input() {
                 }
                 switch (e.key.keysym.sym) {
                     case SDLK_x:
-                        gCamera.setData(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
+                        gCamera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
                         gSceneChange = true;
                         break;
                     default:
@@ -280,14 +279,14 @@ void input() {
             case SDL_WINDOWEVENT:
                 switch (e.window.event) {
                     case SDL_WINDOWEVENT_RESIZED:
-                        gCamera.setScreen(e.window.data1, e.window.data2);
-                        glViewport(0, 0, gCamera.screenWidth, gCamera.screenHeight);
-                        widthSpeed = 2.0f * expf((gCamera.screenWidth - INITIAL_SCREEN_WIDTH) / 1000.0f);
-                        heightSpeed = 2.0f * expf((gCamera.screenHeight - INITIAL_SCREEN_HEIGHT) / 1000.0f);
+                        gCamera.set_screen(e.window.data1, e.window.data2);
+                        glViewport(0, 0, gCamera.screen_width, gCamera.screen_height);
+                        widthSpeed = 2.0f * expf((gCamera.screen_width - INITIAL_SCREEN_WIDTH) / 1000.0f);
+                        heightSpeed = 2.0f * expf((gCamera.screen_height - INITIAL_SCREEN_HEIGHT) / 1000.0f);
                         if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
                             gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
                         }
-                        gSceneChange = true;
+                        gScreenChange = true;
                         break;
                     case SDL_WINDOWEVENT_MOVED:
                         if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
@@ -319,13 +318,13 @@ void updateGui() {
     ) {
         framePosition = ImGui::GetWindowPos();
         frameSize = ImGui::GetWindowSize();
-        gGuiChange = true;
+        gScreenChange = true;
     }
 
     ImGui::Text("Functions");
 
     static int count = 1;
-    static std::array<char[256], 8> inputStrings {DEF_FUNCTIONS};
+    static std::array<char[256], 8> inputStrings {mine::DEF_FUNCTIONS};
     static const char ids[16][12] = {
         "##Function1", "Submit####1", "##Function2", "Submit####2",
         "##Function3", "Submit####3", "##Function4", "Submit####4",
@@ -333,10 +332,10 @@ void updateGui() {
         "##Function7", "Submit####7", "##Function8", "Submit####8"
     };
     static int axes[4] = {
-        -INIT_NEG_X_AXIS_LENGTH, INIT_POS_X_AXIS_LENGTH, -INIT_NEG_Z_AXIS_LENGTH, INIT_POS_Z_AXIS_LENGTH
+        -mine::INIT_NEG_X_AXIS_LENGTH, mine::INIT_POS_X_AXIS_LENGTH, -mine::INIT_NEG_Z_AXIS_LENGTH, mine::INIT_POS_Z_AXIS_LENGTH
     };
     static std::array<std::array<int, 4>, 8> bounds{{
-        DEF_BOUNDS[0],
+        mine::DEF_BOUNDS[0],
         {0, 0, 0, 0},
         {0, 0, 0, 0},
         {0, 0, 0, 0},
@@ -353,7 +352,7 @@ void updateGui() {
         ImGui::InputInt(("##intInput" + std::to_string(neg)).c_str(), &axes[neg], 0, 0, ImGuiInputTextFlags_None);
         ImGui::SameLine();
         ImGui::Text(str);
-        ImGui::SameLine();
+        ImGui::SameLine(); 
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         ImGui::InputInt(("##intInput" + std::to_string(neg + 1)).c_str(), &axes[neg + 1], 0, 0, ImGuiInputTextFlags_None);
     };
@@ -374,25 +373,32 @@ void updateGui() {
         domainFuncs("<= x <=", i, mine::NEG_X_BOUND);
         domainFuncs("<= y <=", i, mine::NEG_Z_BOUND);
         if (ImGui::Button(ids[2 * i + 1])) {
-            gPlot.updateBounds(i, bounds[i]);
-            //gCamera.setCenter(gPlot.bounds[i][mine::NEG_X_BOUND], gPlot.bounds[i][mine::POS_X_BOUND], gPlot.bounds[i][mine::NEG_Z_BOUND], gPlot.bounds[i][mine::POS_Z_BOUND]);
+            gPlot.update_bounds(i, bounds[i]);
+            gCamera.set_center(gPlot.bounds[i]);
             if (!functionUpdate(inputStrings[i], i)) {
-                strcpy(inputStrings[i], gComputePipeline.getFunction());
+                strcpy(inputStrings[i], gComputePipeline.get_function());
+                functionUpdate(inputStrings[i], i);
             }
             gSceneChange = true;
         }
     }
 
     if (count < 8 && ImGui::Button("+")) {
-        strcpy(inputStrings[count], DEF_FUNCTIONS[count]);
-        bounds[count][mine::NEG_X_BOUND] = DEF_BOUNDS[count][mine::NEG_X_BOUND];
-        bounds[count][mine::POS_X_BOUND] = DEF_BOUNDS[count][mine::POS_X_BOUND];
-        bounds[count][mine::NEG_Z_BOUND] = DEF_BOUNDS[count][mine::NEG_Z_BOUND];
-        bounds[count][mine::POS_Z_BOUND] = DEF_BOUNDS[count][mine::POS_Z_BOUND];
-        gPlot.addFunction();
-        gPlot.updateBounds(count, bounds[count]);
-        functionUpdate(DEF_FUNCTIONS[count], count);
+        strcpy(inputStrings[count], mine::DEF_FUNCTIONS[count]);
+        bounds[count][mine::NEG_X_BOUND] = mine::DEF_BOUNDS[count][mine::NEG_X_BOUND];
+        bounds[count][mine::POS_X_BOUND] = mine::DEF_BOUNDS[count][mine::POS_X_BOUND];
+        bounds[count][mine::NEG_Z_BOUND] = mine::DEF_BOUNDS[count][mine::NEG_Z_BOUND];
+        bounds[count][mine::POS_Z_BOUND] = mine::DEF_BOUNDS[count][mine::POS_Z_BOUND];
+        gPlot.add_function();
+        gPlot.update_bounds(count, bounds[count]);
+        functionUpdate(mine::DEF_FUNCTIONS[count], count);
         count++;
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            gPlot.indices.size() * sizeof(GLuint),
+            gPlot.indices.data(),
+            GL_DYNAMIC_DRAW
+        );
         gSceneChange = true;
     }
     if (count < 8 && count > 0) {
@@ -404,8 +410,14 @@ void updateGui() {
         bounds[count - 1][mine::POS_X_BOUND] = 0;
         bounds[count - 1][mine::NEG_Z_BOUND] = 0;
         bounds[count - 1][mine::POS_Z_BOUND] = 0;
-        gPlot.removeFunction();
+        gPlot.remove_function();
         count--;
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            gPlot.indices.size() * sizeof(GLuint),
+            gPlot.indices.data(),
+            GL_DYNAMIC_DRAW
+        );
         gSceneChange = true;
     }
 
@@ -413,13 +425,19 @@ void updateGui() {
     domainAxes("<= Y <=", 2);
 
     if (ImGui::Button("Set Bounds")) {
-        gPlot.updateAxes(axes);
+        gPlot.update_axes(axes);
         for (int i = 0; i < count; ++i) {
             functionUpdate(inputStrings[i], i);
         }
         for (int i = 0; i < count; ++i) {
             bounds[i] = gPlot.bounds[i];
         }
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            gPlot.indices.size() * sizeof(GLuint),
+            gPlot.indices.data(),
+            GL_DYNAMIC_DRAW
+        );
         gSceneChange = true;
     }
 
@@ -427,7 +445,7 @@ void updateGui() {
 }
 
 void predraw() {
-    gPlot.rotateBaseVertices(gCamera.pos.x, gCamera.pos.y, gCamera.pos.z);
+    gPlot.rotate_base_vertices(gCamera.position.x, gCamera.position.y, gCamera.position.z);
 
     glBufferData(
         GL_ARRAY_BUFFER, 
@@ -435,20 +453,13 @@ void predraw() {
         gPlot.vertices.data(), 
         GL_DYNAMIC_DRAW
     );
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        gPlot.indices.size() * sizeof(GLint),
-        gPlot.indices.data(),
-        GL_DYNAMIC_DRAW
-    );
 }
 
 void draw() {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(gGraphicsPipeline.getProgram());
-    glUniformMatrix4fv(gGraphicsPipeline.getViewMatrixLoc(), 1, GL_FALSE, &gCamera.view[0][0]);
+    glUseProgram(gGraphicsPipeline.get_program());
+    glUniformMatrix4fv(gGraphicsPipeline.get_view_matrix_location(), 1, GL_FALSE, &gCamera.view[0][0]);
 
     glDrawElements(GL_TRIANGLES, gPlot.indices.size(), GL_UNSIGNED_INT, nullptr);
 }
@@ -475,11 +486,11 @@ void loop() {
                 draw();
                 postdraw();
                 gSceneChange = false;
-                gGuiChange = false;
-            } else if (gGuiChange) {
+                gScreenChange = false;
+            } else if (gScreenChange) {
                 draw();
                 postdraw();
-                gGuiChange = false;
+                gScreenChange = false;
             }
 
             ImGui::Render();
@@ -516,12 +527,15 @@ void cleanup() {
 
     SDL_DestroyWindow(gWindow);
 
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
     glDeleteBuffers(1, &gVertexBufferObject);
     glDeleteBuffers(1, &gIndexBufferObject);
     glDeleteVertexArrays(1, &gVertexArrayObject);
 
-    glDeleteProgram(gGraphicsPipeline.getProgram());
-    glDeleteProgram(gComputePipeline.getProgram());
+    glDeleteProgram(gGraphicsPipeline.get_program());
+    glDeleteProgram(gComputePipeline.get_program());
 
     SDL_Quit();
 }

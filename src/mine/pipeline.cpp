@@ -6,11 +6,11 @@
 namespace mine {
 pipeline::pipeline() {
     program = 0;
-    viewMatrixLoc = 0;
+    view_matrix_location = 0;
     function = "";
 }
 
-std::string pipeline::loadShader(const std::string& srcLoc) {
+std::string pipeline::load_shader(const std::string& srcLoc) {
     std::string src  = "";
     std::string line = "";
 
@@ -27,7 +27,7 @@ std::string pipeline::loadShader(const std::string& srcLoc) {
     return src;
 }
 
-std::string pipeline::loadShader(const std::string& srcLoc, const std::string& func) {
+std::string pipeline::load_shader(const std::string& srcLoc, const std::string& func) {
     std::string src  = "";
     std::string line = "";
 
@@ -47,11 +47,11 @@ std::string pipeline::loadShader(const std::string& srcLoc, const std::string& f
     return src;
 }
 
-GLuint pipeline::createProgram(const std::string& vertexSrc, const std::string& fragmentSrc) {
+GLuint pipeline::create_program(const std::string& vertexSrc, const std::string& fragmentSrc) {
     GLuint programObject = glCreateProgram();
 
-    GLuint vertexShader   = compileShader(GL_VERTEX_SHADER, vertexSrc);
-    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSrc);
+    GLuint vertexShader   = compile_shader(GL_VERTEX_SHADER, vertexSrc);
+    GLuint fragmentShader = compile_shader(GL_FRAGMENT_SHADER, fragmentSrc);
 
     glAttachShader(programObject, vertexShader);
     glAttachShader(programObject, fragmentShader);
@@ -66,10 +66,10 @@ GLuint pipeline::createProgram(const std::string& vertexSrc, const std::string& 
     return programObject;
 }
 
-GLuint pipeline::createProgram(const std::string& computeSrc) {
+GLuint pipeline::create_program(const std::string& computeSrc) {
     GLuint programObject = glCreateProgram();
 
-    GLuint computeShader = compileShader(GL_COMPUTE_SHADER, computeSrc);
+    GLuint computeShader = compile_shader(GL_COMPUTE_SHADER, computeSrc);
 
     if (computeShader == 0) {
         return 0;
@@ -85,7 +85,7 @@ GLuint pipeline::createProgram(const std::string& computeSrc) {
     return programObject;
 }
 
-GLuint pipeline::compileShader(GLuint type, const std::string& source) {
+GLuint pipeline::compile_shader(GLuint type, const std::string& source) {
     GLuint shaderObject = glCreateShader(type); 
 
     const char* src = source.c_str();
@@ -130,33 +130,33 @@ GLuint pipeline::compileShader(GLuint type, const std::string& source) {
     return shaderObject;
 }
 
-GLint pipeline::getProgram() {
+GLint pipeline::get_program() {
     return program;
 }
 
-GLint pipeline::getViewMatrixLoc() {
-    return viewMatrixLoc;
+GLint pipeline::get_view_matrix_location() {
+    return view_matrix_location;
 }
 
-const char* pipeline::getFunction() {
+const char* pipeline::get_function() {
     return function.c_str();
 }
 
-void pipeline::setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
-    program = createProgram(loadShader(vertexSrcLoc), loadShader(fragmentSrcLoc));
-    viewMatrixLoc = glGetUniformLocation(program, viewMatrixName.c_str());
-    if (viewMatrixLoc < 0) {
+void pipeline::set_program(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
+    program = create_program(load_shader(vertexSrcLoc), load_shader(fragmentSrcLoc));
+    view_matrix_location = glGetUniformLocation(program, viewMatrixName.c_str());
+    if (view_matrix_location < 0) {
         std::cout << "Error: " << viewMatrixName << " not found in GPU memory" << std::endl;
         exit(2);
     }
 }
 
-void pipeline::setProgram(const std::string& computeSrcLoc, const std::string& function_) {
+void pipeline::set_program(const std::string& computeSrcLoc, const std::string& function_) {
     if (program != 0) {
         glDeleteProgram(program);
     }
-    program = createProgram(loadShader(computeSrcLoc, function_));
+    program = create_program(load_shader(computeSrcLoc, function_));
     function = function_;
-    viewMatrixLoc = -1;
+    view_matrix_location = -1;
 }
 }

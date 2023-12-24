@@ -10,24 +10,24 @@ namespace mine {
 class pipeline 
 {
 	GLint program;
-	GLint viewMatrixLoc;
+	GLint view_matrix_location;
 	std::string function;
 public:
 	pipeline();
 	
-	GLint getProgram();
-	GLint getViewMatrixLoc();
-	const char* getFunction();
+	GLint get_program();
+	GLint get_view_matrix_location();
+	const char* get_function();
 
-	void setProgram(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName);
-	void setProgram(const std::string& computeSrcLoc, const std::string& function_);
+	void set_program(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName);
+	void set_program(const std::string& computeSrcLoc, const std::string& function_);
 private:
-	std::string loadShader(const std::string& srcLoc);
-	std::string loadShader(const std::string& srcLoc, const std::string& func);
+	std::string load_shader(const std::string& srcLoc);
+	std::string load_shader(const std::string& srcLoc, const std::string& func);
 
-	GLuint createProgram(const std::string& vertexSrc, const std::string& fragmentSrc);
-	GLuint createProgram(const std::string& computeSrc);
-	GLuint compileShader(GLuint type, const std::string& src);
+	GLuint create_program(const std::string& vertexSrc, const std::string& fragmentSrc);
+	GLuint create_program(const std::string& computeSrc);
+	GLuint compile_shader(GLuint type, const std::string& src);
 };
 }
 

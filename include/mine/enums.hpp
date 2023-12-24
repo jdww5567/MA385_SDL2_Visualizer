@@ -2,8 +2,10 @@
 #define MINE_ENUMS_HPP
 
 #include <array>
-#include <string_view>
 
+#include <glad/glad.h>
+
+namespace mine {
 constexpr int X_RECTS = 144;
 constexpr int Z_RECTS = 144;
 constexpr float AXIS_RED = 1.0f;
@@ -43,7 +45,6 @@ constexpr std::array<char[256], 8> DEF_FUNCTIONS{{
     "3"
 }};
 
-namespace mine {
 enum index {
     NEG_X_BOUND,
     POS_X_BOUND,

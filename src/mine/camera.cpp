@@ -1,66 +1,58 @@
 #include <mine/camera.hpp>
 
 #include <cmath>
-#include <iostream>
 
 #include <glm/gtx/transform.hpp>
 
+#include <mine/enums.hpp>
+
 namespace mine {
-camera::camera() {
-    radius = 0;
-    theta = 0;
-    phi = 0;
-    screenWidth = 0;
-    screenHeight = 0;
-    aspectRatio = 0;
-    fov = glm::radians(60.0f);
-    pos = glm::vec3();
-    center = glm::vec3();
-    view = glm::highp_mat4();
+camera::camera() : 
+    radius{}, theta{}, phi{}, screen_width{}, screen_height{}, aspect_ratio{}, 
+    fov{glm::radians(60.0f)}, position{}, center{}, view{} 
+{}
+
+void camera::set_screen(float screen_width, float screen_height) {
+    this->screen_width = screen_width;
+    this->screen_height = screen_height;
+    aspect_ratio = this->screen_width / this->screen_height;
+
+    if (aspect_ratio < 1) {
+        fov = glm::atan(glm::tan(fov / 2.0f) / aspect_ratio) * 2.0f;
+    } else {
+        fov = glm::radians(60.0f);
+    }
+
+    update_position();
 }
 
-void camera::setScreen(float screenWidth_, float screenHeight_) {
-    screenWidth = screenWidth_;
-    screenHeight = screenHeight_;
-    aspectRatio = screenWidth / screenHeight;
+void camera::set_data(float radius, float theta, float phi) {
+    this->theta = theta;
 
-    fov = glm::radians(60.0f);
-    if (aspectRatio < 1) {
-        fov = glm::atan(glm::tan(fov / 2.0f) / aspectRatio) * 2.0f;
+    if (radius < 0.1f) {
+        this->radius = 0.1f;
+    } else if (radius > 10000.0f) {
+        this->radius = 10000.0f;
+    } else {
+        this->radius = radius;
     }
 
-    updatePos();
+    if (phi < 2.0f) {
+        this->phi = 2.0f;
+    } else if (phi > 178.0f) {
+        this->phi = 178.0f;
+    } else {
+        this->phi = phi;
+    }
+
+    update_position();
 }
 
-void camera::setData(float radius_, float theta_, float phi_) {
-    theta = theta_;
+void camera::set_center(const std::array<int, 4>& bounds) {
+    center.x = (bounds[NEG_X_BOUND] + bounds[POS_X_BOUND]) / 2.0f;
+    center.z = (bounds[NEG_Z_BOUND] + bounds[POS_Z_BOUND]) / 2.0f;
 
-    if (radius_ < 0.1f) {
-        radius = 0.1f;
-    } else {
-        radius = radius_;
-    }
-
-    if (phi_ < 2.0f) {
-        phi = 2.0f;
-    } else if (phi_ > 178.0f) {
-        phi = 178.0f;
-    } else {
-        phi = phi_;
-    }
-
-    updatePos();
-}
-
-void camera::setCenter(float xNB, float xPB, float zNB, float zPB) {
-    if (xNB - xPB == 0 || zNB - zPB == 0) {
-        center = glm::vec3{0, 0, 0};
-    } else {
-        center.x = (xNB + xPB) / 2.0;
-        center.z = (zNB + zPB) / 2.0;
-    }
-
-    updatePos();
+    update_position();
 }
 
 void camera::zoom(bool in, bool out) {
@@ -76,58 +68,58 @@ void camera::zoom(bool in, bool out) {
         }
     }
 
-    updatePos();
+    update_position();
 }
 
-void camera::updateAngles(float theta_, float phi_) {
-    theta += theta_;
-    phi += phi_;
+void camera::update_angles(float theta, float phi) {
+    this->theta += theta;
+    this->phi += phi;
 
-    if (theta > 360.0f) {
-        theta = theta - 360.0f;
-    } else if (theta < -360.0f) {
-        theta = theta + 360.0f;
+    if (this->theta > 360.0f) {
+        this->theta = this->theta - 360.0f;
+    } else if (this->theta < -360.0f) {
+        this->theta = this->theta + 360.0f;
     }
 
-    if (phi < 2.0f) {
-        phi = 2.0f;
+    if (this->phi < 2.0f) {
+        this->phi = 2.0f;
     } else if (phi > 178.0f) {
-        phi = 178.0f;
+        this->phi = 178.0f;
     }
 
-    updatePos();
+    update_position();
 }
 
-void camera::updatePos() {
-    pos = glm::vec3(
+void camera::update_position() {
+    position = glm::vec3(
         radius * sin(glm::radians(phi)) * cos(glm::radians(theta)) + center.x,
         radius * cos(glm::radians(phi)) + center.y,
         radius * sin(glm::radians(phi)) * sin(glm::radians(theta)) + center.z
     );
 
-    glm::vec3 cameraUp = glm::vec3();
+    glm::vec3 camera_up{};
 
-    if (pos.y > center.y) {
-        cameraUp = glm::normalize(glm::vec3(
-            -(pos.x - center.x),
-            (glm::pow(pos.x - center.x, 2) + glm::pow(pos.z - center.z, 2)) / (pos.y - center.y),
-            -(pos.z - center.z)
+    if (position.y > center.y) {
+        camera_up = glm::normalize(glm::vec3(
+            -(position.x - center.x),
+            (glm::pow(position.x - center.x, 2) + glm::pow(position.z - center.z, 2)) / (position.y - center.y),
+            -(position.z - center.z)
         ));
-    } else if (pos.y < center.y) {
-        cameraUp = glm::normalize(glm::vec3(
-            pos.x - center.x,
-            -(glm::pow(pos.x - center.x, 2) + glm::pow(pos.z - center.z, 2)) / (pos.y - center.y),
-            pos.z - center.z
+    } else if (position.y < center.y) {
+        camera_up = glm::normalize(glm::vec3(
+            position.x - center.x,
+            -(glm::pow(position.x - center.x, 2) + glm::pow(position.z - center.z, 2)) / (position.y - center.y),
+            position.z - center.z
         ));
     } else {
-        cameraUp = glm::vec3(0, 1, 0);
+        camera_up = glm::vec3(0, 1, 0);
     }
 
-    view = glm::lookAt(pos, center, cameraUp);
+    view = glm::lookAt(position, center, camera_up);
     
     view = glm::perspective(
         fov,
-        aspectRatio,
+        aspect_ratio,
         0.01f,
         50.0f
     ) * view;
