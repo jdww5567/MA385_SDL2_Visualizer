@@ -16,15 +16,15 @@ void plot::add_function() {
     
     size_t k = functions.size() - 1;
 
-    float xReference = (float)(bounds[k][POS_X_BOUND] - bounds[k][NEG_X_BOUND]) / X_RECTS;
-    float zReference = (float)(bounds[k][POS_Z_BOUND] - bounds[k][NEG_Z_BOUND]) / Z_RECTS;
+    float x_ref = (float)(bounds[k][POS_X_BOUND] - bounds[k][NEG_X_BOUND]) / X_RECTS;
+    float z_ref = (float)(bounds[k][POS_Z_BOUND] - bounds[k][NEG_Z_BOUND]) / Z_RECTS;
     
     for (unsigned int i = 0, g = 0; i <= X_RECTS; ++i) {
         for (unsigned int j = 0; j <= Z_RECTS; ++j, ++g) {
-            float xOffset = i * xReference;
-            float zOffset = j * zReference;
-            float x = bounds[k][NEG_X_BOUND] + xOffset;
-            float z = bounds[k][NEG_Z_BOUND] + zOffset;
+            float x_offset = i * x_ref;
+            float z_offset = j * z_ref;
+            float x = bounds[k][NEG_X_BOUND] + x_offset;
+            float z = bounds[k][NEG_Z_BOUND] + z_offset;
             float y = 0.0f;
             vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f});
             functions[k][g] = {x, y, z, 0.0f, 0.0f, 0.0f};
@@ -136,14 +136,14 @@ void plot::set_vertices() {
     
     // function
     for (size_t k = 0; k < functions.size(); ++k) {
-        float xReference = (float)(bounds[k][POS_X_BOUND] - bounds[k][NEG_X_BOUND]) / X_RECTS;
-        float zReference = (float)(bounds[k][POS_Z_BOUND] - bounds[k][NEG_Z_BOUND]) / Z_RECTS;
+        float x_ref = (float)(bounds[k][POS_X_BOUND] - bounds[k][NEG_X_BOUND]) / X_RECTS;
+        float z_ref = (float)(bounds[k][POS_Z_BOUND] - bounds[k][NEG_Z_BOUND]) / Z_RECTS;
         for (unsigned int i = 0, g = 0; i <= X_RECTS; ++i) {
             for (unsigned int j = 0; j <= Z_RECTS; ++j, ++g) {
-                float xOffset = i * xReference;
-                float zOffset = j * zReference;
-                float x = bounds[k][NEG_X_BOUND] + xOffset;
-                float z = bounds[k][NEG_Z_BOUND] + zOffset;
+                float x_offset = i * x_ref;
+                float z_offset = j * z_ref;
+                float x = bounds[k][NEG_X_BOUND] + x_offset;
+                float z = bounds[k][NEG_Z_BOUND] + z_offset;
                 float y = 0.0f;
                 vertices.push_back({x, y, z, 0.0f, 0.0f, 0.0f});
                 functions[k][g] = {x, y, z, 0.0f, 0.0f, 0.0f};
@@ -187,45 +187,45 @@ void plot::update_vertices() {
 }
 
 void plot::calc_orientation(int start, float angle, int offset, float scale, bool x, bool axes) {
-    float _angle = M_PI / 2.0 - atan(angle);
-    float firstDimension  = -scale * sin(_angle);
-    float secondDimension = scale * cos(_angle);
+    float angle_ = M_PI / 2.0 - atan(angle);
+    float first_dimension  = -scale * sin(angle_);
+    float second_dimension = scale * cos(angle_);
     if (x && !axes) {
-        vertices[start].x  = firstDimension + offset;
-        vertices[start].y  = secondDimension;
-        vertices[start + 1].x = -firstDimension + offset;
-        vertices[start + 1].y = -secondDimension;
-        vertices[start + 2].x = firstDimension + offset;
-        vertices[start + 2].y = secondDimension;
-        vertices[start + 3].x = -firstDimension + offset;
-        vertices[start + 3].y = -secondDimension;
+        vertices[start].x  = first_dimension + offset;
+        vertices[start].y  = second_dimension;
+        vertices[start + 1].x = -first_dimension + offset;
+        vertices[start + 1].y = -second_dimension;
+        vertices[start + 2].x = first_dimension + offset;
+        vertices[start + 2].y = second_dimension;
+        vertices[start + 3].x = -first_dimension + offset;
+        vertices[start + 3].y = -second_dimension;
     } else if (!x && !axes) {
-        vertices[start].y  = firstDimension;
-        vertices[start].z  = secondDimension + offset;
-        vertices[start + 1].y = -firstDimension;
-        vertices[start + 1].z = -secondDimension + offset;
-        vertices[start + 2].y = firstDimension;
-        vertices[start + 2].z = secondDimension + offset;
-        vertices[start + 3].y = -firstDimension;
-        vertices[start + 3].z = -secondDimension + offset;
+        vertices[start].y  = first_dimension;
+        vertices[start].z  = second_dimension + offset;
+        vertices[start + 1].y = -first_dimension;
+        vertices[start + 1].z = -second_dimension + offset;
+        vertices[start + 2].y = first_dimension;
+        vertices[start + 2].z = second_dimension + offset;
+        vertices[start + 3].y = -first_dimension;
+        vertices[start + 3].z = -second_dimension + offset;
     } else if (x && axes) {
-        vertices[start].y  = firstDimension + offset;
-        vertices[start].z  = secondDimension;
-        vertices[start + 1].y = -firstDimension + offset;
-        vertices[start + 1].z = -secondDimension;
-        vertices[start + 2].y = firstDimension + offset;
-        vertices[start + 2].z = secondDimension;
-        vertices[start + 3].y = -firstDimension + offset;
-        vertices[start + 3].z = -secondDimension;
+        vertices[start].y  = first_dimension + offset;
+        vertices[start].z  = second_dimension;
+        vertices[start + 1].y = -first_dimension + offset;
+        vertices[start + 1].z = -second_dimension;
+        vertices[start + 2].y = first_dimension + offset;
+        vertices[start + 2].z = second_dimension;
+        vertices[start + 3].y = -first_dimension + offset;
+        vertices[start + 3].z = -second_dimension;
     } else {
-        vertices[start].x  = firstDimension;
-        vertices[start].y  = secondDimension + offset;
-        vertices[start + 1].x = -firstDimension;
-        vertices[start + 1].y = -secondDimension + offset;
-        vertices[start + 2].x = firstDimension;
-        vertices[start + 2].y = secondDimension + offset;
-        vertices[start + 3].x = -firstDimension;
-        vertices[start + 3].y = -secondDimension + offset;
+        vertices[start].x  = first_dimension;
+        vertices[start].y  = second_dimension + offset;
+        vertices[start + 1].x = -first_dimension;
+        vertices[start + 1].y = -second_dimension + offset;
+        vertices[start + 2].x = first_dimension;
+        vertices[start + 2].y = second_dimension + offset;
+        vertices[start + 3].x = -first_dimension;
+        vertices[start + 3].y = -second_dimension + offset;
     }
 }
 
@@ -235,17 +235,17 @@ void plot::rotate_base_vertices(float camera_x, float camera_y, float camera_z) 
     // z axis
     calc_orientation(4, camera_x / camera_y, 0, AXIS_WIDTH, false, true);
     // y axis
-    float yAngle = M_PI / 2.0 - atan(camera_z / camera_x);
-    float yZ = -AXIS_WIDTH * sin(yAngle);
-    float yX = AXIS_WIDTH * cos(yAngle);
-    vertices[8].x = yX;
-    vertices[8].z = yZ;
-    vertices[9].x = -yX;
-    vertices[9].z = -yZ;
-    vertices[10].x = yX;
-    vertices[10].z = yZ;
-    vertices[11].x = -yX;
-    vertices[11].z = -yZ;
+    float y_angle = M_PI / 2.0 - atan(camera_z / camera_x);
+    float y_z_offset = -AXIS_WIDTH * sin(y_angle);
+    float y_x_offset = AXIS_WIDTH * cos(y_angle);
+    vertices[8].x = y_x_offset;
+    vertices[8].z = y_z_offset;
+    vertices[9].x = -y_x_offset;
+    vertices[9].z = -y_z_offset;
+    vertices[10].x = y_x_offset;
+    vertices[10].z = y_z_offset;
+    vertices[11].x = -y_x_offset;
+    vertices[11].z = -y_z_offset;
     // -x dashes
     int position = 12;
     for (int i = position; i < position - 4 * axes[NEG_X_AXIS]; i += 4) {
@@ -358,14 +358,14 @@ void plot::update_bounds(int i, std::array<int, 4>& bounds) {
     }
     this->bounds[i][NEG_Z_BOUND] = bounds[NEG_Z_BOUND];
 
-    float xReference = (float)(this->bounds[i][POS_X_BOUND] - this->bounds[i][NEG_X_BOUND]) / X_RECTS;
-    float zReference = (float)(this->bounds[i][POS_Z_BOUND] - this->bounds[i][NEG_Z_BOUND]) / Z_RECTS;
+    float x_ref = (float)(this->bounds[i][POS_X_BOUND] - this->bounds[i][NEG_X_BOUND]) / X_RECTS;
+    float z_ref = (float)(this->bounds[i][POS_Z_BOUND] - this->bounds[i][NEG_Z_BOUND]) / Z_RECTS;
     for (unsigned int j = 0, g = 0; j <= X_RECTS; ++j) {
         for (unsigned int k = 0; k <= Z_RECTS; ++k, ++g) {
-            float xOffset = j * xReference;
-            float zOffset = k * zReference;
-            float x = this->bounds[i][NEG_X_BOUND] + xOffset;
-            float z = this->bounds[i][NEG_Z_BOUND] + zOffset;
+            float x_offset = j * x_ref;
+            float z_offset = k * z_ref;
+            float x = this->bounds[i][NEG_X_BOUND] + x_offset;
+            float z = this->bounds[i][NEG_Z_BOUND] + z_offset;
             float y = 0.0f;
             vertices[i * (X_RECTS + 1) * (Z_RECTS + 1) + base_vertice_count + g] = {x, y, z, 0.0f, 0.0f, 0.0f};
             functions[i][g] = {x, y, z, 0.0f, 0.0f, 0.0f};
