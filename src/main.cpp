@@ -21,24 +21,24 @@ constexpr float INITIAL_RADIUS = 13.0f;
 constexpr float INITIAL_THETA = 45.0f;
 constexpr float INITIAL_PHI = 65.0f;
 
-SDL_Window *gWindow = nullptr;
+SDL_Window *g_window = nullptr;
 
-SDL_DisplayMode gDisplayMode{};
+SDL_DisplayMode g_display_mode{};
 
-GLuint gVertexArrayObject = 0;
-GLuint gVertexBufferObject = 0;
-GLuint gIndexBufferObject = 0;
+GLuint g_VAO = 0;
+GLuint g_VBO = 0;
+GLuint g_IBO = 0;
 
-mine::graphics_pipeline gGraphicsPipeline{};
-mine::compute_pipeline gComputePipeline{};
-mine::plot gPlot{};
-mine::camera gCamera{};
+mine::graphics_pipeline g_graphics_pipeline{};
+mine::compute_pipeline g_compute_pipeline{};
+mine::plot g_plot{};
+mine::camera g_camera{};
 
-bool gRunning = true;
-bool gSceneChange = true;
-bool gScreenChange = false;
+bool g_running = true;
+bool g_scene_change = true;
+bool g_screen_change = false;
 
-double gRefreshTime = 0;
+double g_refresh_time = 0;
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -54,7 +54,7 @@ void setup() {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    gWindow = SDL_CreateWindow(
+    g_window = SDL_CreateWindow(
         "MA_385_Project",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
@@ -62,12 +62,12 @@ void setup() {
         INITIAL_SCREEN_HEIGHT,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
-    if (!gWindow) {
+    if (!g_window) {
         std::cerr << "Error: Failed to create window\nSDL Error: " << SDL_GetError() << std::endl;
         exit(1);
     }
 
-    SDL_GLContext glContext = SDL_GL_CreateContext(gWindow);
+    SDL_GLContext glContext = SDL_GL_CreateContext(g_window);
     if (!glContext) {
         std::cerr << "Error: Failed to create OpenGL context\nSDL Error: " << SDL_GetError() << std::endl;
         exit(1);
@@ -93,93 +93,95 @@ void setup() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    ImGui_ImplSDL2_InitForOpenGL(gWindow, glContext);
+    ImGui_ImplSDL2_InitForOpenGL(g_window, glContext);
     ImGui_ImplOpenGL3_Init("#version 460 core\n");
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 
-    gCamera.set_screen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
-    gCamera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-    gCamera.set_center(mine::INITIAL_BOUNDS[0]);
+    g_camera.set_screen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
+    g_camera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
+    g_camera.set_center(mine::INITIAL_BOUNDS[0]);
 
-    if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
-        gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
+    g_graphics_pipeline.set_program("./shaders/vertex.glsl", "./shaders/fragment.glsl", "uViewMatrix");
+
+    if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(g_window), &g_display_mode)) {
+        g_refresh_time = 1.0 / g_display_mode.refresh_rate;
     }
 }
 
-bool functionUpdate(const std::string& function, int i) {
-    mine::compute_pipeline tempPipeline;
-    tempPipeline.set_program("./shaders/compute.glsl", function);
+bool update_function(const std::string& function, int i) {
+    mine::compute_pipeline temp_pipeline;
+    temp_pipeline.set_program("./shaders/compute.glsl", function);
 
-    if (tempPipeline.get_program() != 0) {
-        glDeleteProgram(tempPipeline.get_program());
-        gComputePipeline.set_program("./shaders/compute.glsl", function);
+    if (temp_pipeline.get_program() != 0) {
+        glDeleteProgram(temp_pipeline.get_program());
+        g_compute_pipeline.set_program("./shaders/compute.glsl", function);
     } else {
-        glDeleteProgram(tempPipeline.get_program());
+        glDeleteProgram(temp_pipeline.get_program());
         return false;
     }
 
-    GLuint inputBuffer;
-    glGenBuffers(1, &inputBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.functions[i].size() * sizeof(mine::vertex), gPlot.functions[i].data(), GL_STATIC_READ);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputBuffer);
+    GLuint input_buffer;
+    glGenBuffers(1, &input_buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, input_buffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, g_plot.functions[i].size() * sizeof(mine::vertex), g_plot.functions[i].data(), GL_STATIC_READ);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, input_buffer);
 
-    GLuint outputBuffer;
-    glGenBuffers(1, &outputBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gPlot.functions[i].size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputBuffer);
+    GLuint output_buffer;
+    glGenBuffers(1, &output_buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_buffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, g_plot.functions[i].size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, output_buffer);
 
-    glUseProgram(gComputePipeline.get_program());
-    glUniform1f(glGetUniformLocation(gComputePipeline.get_program(), "i"), i);
-    glDispatchCompute(gPlot.functions[i].size(), 1, 1);
+    glUseProgram(g_compute_pipeline.get_program());
+    glUniform1f(glGetUniformLocation(g_compute_pipeline.get_program(), "i"), i);
+    glDispatchCompute(g_plot.functions[i].size(), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glUseProgram(0);
 
-    float* pResults = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+    float* results = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 
     for (std::vector<mine::vertex>::size_type j = 0; j < (mine::X_RECTS + 1) * (mine::Z_RECTS + 1); ++j) {
-        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].x = pResults[j * 6];
-        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].y = pResults[j * 6 + 1];
-        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].z = pResults[j * 6 + 2];
-        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].r = pResults[j * 6 + 3];
-        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].g = pResults[j * 6 + 4];
-        gPlot.vertices[gPlot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].b = pResults[j * 6 + 5];
+        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].x = results[j * 6];
+        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].y = results[j * 6 + 1];
+        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].z = results[j * 6 + 2];
+        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].r = results[j * 6 + 3];
+        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].g = results[j * 6 + 4];
+        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].b = results[j * 6 + 5];
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-    glDeleteBuffers(1, &inputBuffer);
-    glDeleteBuffers(1, &outputBuffer);
+    glDeleteBuffers(1, &input_buffer);
+    glDeleteBuffers(1, &output_buffer);
 
     return true;
 }
 
-void vertexSpecification() {
-    gPlot.set_vertices();
+void vertex_specification() {
+    g_plot.set_vertices();
 
-    functionUpdate(mine::INITIAL_FUNCTIONS[0], 0);
+    update_function(mine::INITIAL_FUNCTIONS[0], 0);
 
-    glGenVertexArrays(1, &gVertexArrayObject);
-    glBindVertexArray(gVertexArrayObject);
+    glGenVertexArrays(1, &g_VAO);
+    glBindVertexArray(g_VAO);
 
-    glGenBuffers(1, &gVertexBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, gVertexBufferObject);
+    glGenBuffers(1, &g_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, g_VBO);
     glBufferData(
         GL_ARRAY_BUFFER,
-        gPlot.vertices.size() * sizeof(mine::vertex),
-        gPlot.vertices.data(),
+        g_plot.vertices.size() * sizeof(mine::vertex),
+        g_plot.vertices.data(),
         GL_DYNAMIC_DRAW
     );
 
-    glGenBuffers(1, &gIndexBufferObject);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gIndexBufferObject);
+    glGenBuffers(1, &g_IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_IBO);
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
-        gPlot.indices.size() * sizeof(GLuint),
-        gPlot.indices.data(),
+        g_plot.indices.size() * sizeof(GLuint),
+        g_plot.indices.data(),
         GL_DYNAMIC_DRAW
     );
 
@@ -204,93 +206,89 @@ void vertexSpecification() {
     );
 }
 
-void createGraphicsPipeline() {
-    gGraphicsPipeline.set_program("./shaders/vertex.glsl", "./shaders/fragment.glsl", "uViewMatrix");
-}
-
 void input() {
-    static float mouseX = 0.0f;
-    static float mouseY = 0.0f;
-    static bool leftDown = false;
-    static float widthSpeed = 2.0f;
-    static float heightSpeed = 2.0f;
+    static float mouse_x = 0.0f;
+    static float mouse_y = 0.0f;
+    static bool left_down = false;
+    static float width_speed = 2.0f;
+    static float height_speed = 2.0f;
     
-    SDL_Event e;
-    while (SDL_PollEvent(&e)) {
-        ImGui_ImplSDL2_ProcessEvent(&e);
-        switch (e.type) {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        switch (event.type) {
             case SDL_QUIT:
-                gRunning = false;
+                g_running = false;
                 break;
             case SDL_MOUSEWHEEL:
                 if (ImGui::GetIO().WantCaptureMouse) {
                     break;
                 }
-                gCamera.zoom(e.wheel.y > 0, e.wheel.y < 0);
-                gSceneChange = true;
+                g_camera.zoom(event.wheel.y > 0, event.wheel.y < 0);
+                g_scene_change = true;
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (ImGui::GetIO().WantCaptureMouse) {
                     break;
                 }
-                switch (e.button.button) {
+                switch (event.button.button) {
                     case SDL_BUTTON_LEFT:
-                        mouseX = e.button.x;
-                        mouseY = e.button.y;
-                        leftDown = true;
+                        mouse_x = event.button.x;
+                        mouse_y = event.button.y;
+                        left_down = true;
                         break;
                     default:
                         break;
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
-                switch (e.button.button) {
+                switch (event.button.button) {
                     case SDL_BUTTON_LEFT:
-                        leftDown = false;
+                        left_down = false;
                         break;
                     default:
                         break;
                 }
                 break;
             case SDL_MOUSEMOTION:
-                if (leftDown) {
-                    gCamera.update_angles(
-                        (e.button.x - mouseX) / widthSpeed, 
-                        (mouseY - e.button.y) / heightSpeed
+                if (left_down) {
+                    g_camera.update_angles(
+                        (event.button.x - mouse_x) / width_speed, 
+                        (mouse_y - event.button.y) / height_speed
                     );
-                    mouseX = e.button.x;
-                    mouseY = e.button.y;
-                    gSceneChange = true;
+                    mouse_x = event.button.x;
+                    mouse_y = event.button.y;
+                    g_scene_change = true;
                 }
                 break;
             case SDL_KEYDOWN:
                 if (ImGui::GetIO().WantCaptureKeyboard) {
                     break;
                 }
-                switch (e.key.keysym.sym) {
+                switch (event.key.keysym.sym) {
                     case SDLK_x:
-                        gCamera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-                        gSceneChange = true;
+                        g_camera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
+                        g_scene_change = true;
                         break;
                     default:
                         break;
                 }
                 break;
             case SDL_WINDOWEVENT:
-                switch (e.window.event) {
+                switch (event.window.event) {
                     case SDL_WINDOWEVENT_RESIZED:
-                        gCamera.set_screen(e.window.data1, e.window.data2);
-                        glViewport(0, 0, gCamera.screen_width, gCamera.screen_height);
-                        widthSpeed = 2.0f * expf((gCamera.screen_width - INITIAL_SCREEN_WIDTH) / 1000.0f);
-                        heightSpeed = 2.0f * expf((gCamera.screen_height - INITIAL_SCREEN_HEIGHT) / 1000.0f);
-                        if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
-                            gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
+                        g_camera.set_screen(event.window.data1, event.window.data2);
+                        glViewport(0, 0, g_camera.screen_width, g_camera.screen_height);
+                        width_speed = 2.0f * expf((g_camera.screen_width - INITIAL_SCREEN_WIDTH) / 1000.0f);
+                        height_speed = 2.0f * expf((g_camera.screen_height - INITIAL_SCREEN_HEIGHT) / 1000.0f);
+                        if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(g_window), &g_display_mode)) {
+                            g_refresh_time = 1.0 / g_display_mode.refresh_rate;
                         }
-                        gScreenChange = true;
+                        g_screen_change = true;
                         break;
                     case SDL_WINDOWEVENT_MOVED:
-                        if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
-                            gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
+                        if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(g_window), &g_display_mode)) {
+                            g_refresh_time = 1.0 / g_display_mode.refresh_rate;
                         }
                         break;
                     default:
@@ -302,39 +300,39 @@ void input() {
     }
 }
 
-void updateGui() {
+void update_GUI() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
     ImGui::Begin("Edit Scene");
 
-    static ImVec2 frameSize = {-1, -1};
-    static ImVec2 framePosition = {-1, -1};
+    static ImVec2 frame_size = {-1, -1};
+    static ImVec2 frame_position = {-1, -1};
 
     if (
-        framePosition.x != ImGui::GetWindowPos().x || framePosition.y != ImGui::GetWindowPos().y || 
-        frameSize.x != ImGui::GetWindowSize().x || frameSize.y != ImGui::GetWindowSize().y
+        frame_position.x != ImGui::GetWindowPos().x || frame_position.y != ImGui::GetWindowPos().y || 
+        frame_size.x != ImGui::GetWindowSize().x || frame_size.y != ImGui::GetWindowSize().y
     ) {
-        framePosition = ImGui::GetWindowPos();
-        frameSize = ImGui::GetWindowSize();
-        gScreenChange = true;
+        frame_position = ImGui::GetWindowPos();
+        frame_size = ImGui::GetWindowSize();
+        g_screen_change = true;
     }
 
     ImGui::Text("Functions");
 
     static int count = 1;
-    static std::array<char[256], 8> inputStrings {mine::INITIAL_FUNCTIONS};
+    static std::array<char[256], 8> input_strings {mine::INITIAL_FUNCTIONS};
 
     static std::array<int, 4> axes{{
         mine::INITIAL_AXES[mine::NEG_X_AXIS], mine::INITIAL_AXES[mine::POS_X_AXIS], mine::INITIAL_AXES[mine::NEG_Z_AXIS], mine::INITIAL_AXES[mine::POS_Z_AXIS]
     }};
     static std::array<std::array<int, 4>, 8> bounds{mine::INITIAL_BOUNDS};
-    float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
-    halfSpace = (halfSpace < 0) ? 0 : halfSpace;
+    float half_space = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
+    half_space = (half_space < 0) ? 0 : half_space;
 
-    static auto domainAxes = [&](const char * str, int neg) {
-        ImGui::SetNextItemWidth(halfSpace);
+    static auto domain_axes = [&](const char * str, int neg) {
+        ImGui::SetNextItemWidth(half_space);
         ImGui::InputInt(("##intInput" + std::to_string(neg)).c_str(), &axes[neg], 0, 0, ImGuiInputTextFlags_None);
         ImGui::SameLine();
         ImGui::Text(str);
@@ -343,8 +341,8 @@ void updateGui() {
         ImGui::InputInt(("##intInput" + std::to_string(neg + 1)).c_str(), &axes[neg + 1], 0, 0, ImGuiInputTextFlags_None);
     };
 
-    static auto domainFuncs = [&](const char * str, int func, int neg) {
-        ImGui::SetNextItemWidth(halfSpace);
+    static auto domain_functions = [&](const char * str, int func, int neg) {
+        ImGui::SetNextItemWidth(half_space);
         ImGui::InputInt(("##intInput" + std::to_string(func) + std::to_string(neg)).c_str(), &bounds[func][neg], 0, 0, ImGuiInputTextFlags_None);
         ImGui::SameLine();
         ImGui::Text(str);
@@ -355,78 +353,78 @@ void updateGui() {
 
     for (int i = 0; i < count; ++i) {
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText(mine::ids[2 * i], inputStrings[i], sizeof(inputStrings[i]));
-        domainFuncs("<= x <=", i, mine::NEG_X_BOUND);
-        domainFuncs("<= y <=", i, mine::NEG_Z_BOUND);
+        ImGui::InputText(mine::ids[2 * i], input_strings[i], sizeof(input_strings[i]));
+        domain_functions("<= x <=", i, mine::NEG_X_BOUND);
+        domain_functions("<= y <=", i, mine::NEG_Z_BOUND);
         if (ImGui::Button(mine::ids[2 * i + 1])) {
-            gPlot.update_bounds(i, bounds[i]);
-            gCamera.set_center(gPlot.bounds[i]);
-            if (!functionUpdate(inputStrings[i], i)) {
-                strcpy(inputStrings[i], gComputePipeline.get_function());
-                functionUpdate(inputStrings[i], i);
+            g_plot.update_bounds(i, bounds[i]);
+            g_camera.set_center(g_plot.bounds[i]);
+            if (!update_function(input_strings[i], i)) {
+                strcpy(input_strings[i], g_compute_pipeline.get_function());
+                update_function(input_strings[i], i);
             }
-            gSceneChange = true;
+            g_scene_change = true;
         }
     }
 
     if (count < 8 && ImGui::Button("+")) {
-        gPlot.add_function();
-        gPlot.update_bounds(count, bounds[count]);
-        functionUpdate(inputStrings[count], count);
+        g_plot.add_function();
+        g_plot.update_bounds(count, bounds[count]);
+        update_function(input_strings[count], count);
         count++;
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
-            gPlot.indices.size() * sizeof(GLuint),
-            gPlot.indices.data(),
+            g_plot.indices.size() * sizeof(GLuint),
+            g_plot.indices.data(),
             GL_DYNAMIC_DRAW
         );
-        gSceneChange = true;
+        g_scene_change = true;
     }
     if (count < 8 && count > 0) {
         ImGui::SameLine();
     }
     if (count > 0 && ImGui::Button("-")) {
-        gPlot.remove_function();
+        g_plot.remove_function();
         count--;
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
-            gPlot.indices.size() * sizeof(GLuint),
-            gPlot.indices.data(),
+            g_plot.indices.size() * sizeof(GLuint),
+            g_plot.indices.data(),
             GL_DYNAMIC_DRAW
         );
-        gSceneChange = true;
+        g_scene_change = true;
     }
 
-    domainAxes("<= X <=", 0);
-    domainAxes("<= Y <=", 2);
+    domain_axes("<= X <=", 0);
+    domain_axes("<= Y <=", 2);
 
     if (ImGui::Button("Set Bounds")) {
-        gPlot.update_axes(axes);
+        g_plot.update_axes(axes);
         for (int i = 0; i < count; ++i) {
-            functionUpdate(inputStrings[i], i);
+            update_function(input_strings[i], i);
         }
         for (int i = 0; i < count; ++i) {
-            bounds[i] = gPlot.bounds[i];
+            bounds[i] = g_plot.bounds[i];
         }
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
-            gPlot.indices.size() * sizeof(GLuint),
-            gPlot.indices.data(),
+            g_plot.indices.size() * sizeof(GLuint),
+            g_plot.indices.data(),
             GL_DYNAMIC_DRAW
         );
-        gSceneChange = true;
+        g_scene_change = true;
     }
 
     ImGui::End();
 }
 
 void predraw() {
-    gPlot.rotate_base_vertices(gCamera.position.x, gCamera.position.y, gCamera.position.z);
+    g_plot.rotate_base_vertices(g_camera.position.x, g_camera.position.y, g_camera.position.z);
 
     glBufferData(
         GL_ARRAY_BUFFER, 
-        gPlot.vertices.size() * sizeof(mine::vertex),
-        gPlot.vertices.data(), 
+        g_plot.vertices.size() * sizeof(mine::vertex),
+        g_plot.vertices.data(), 
         GL_DYNAMIC_DRAW
     );
 }
@@ -434,10 +432,10 @@ void predraw() {
 void draw() {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(gGraphicsPipeline.get_program());
-    glUniformMatrix4fv(gGraphicsPipeline.get_view_matrix_location(), 1, GL_FALSE, &gCamera.view[0][0]);
+    glUseProgram(g_graphics_pipeline.get_program());
+    glUniformMatrix4fv(g_graphics_pipeline.get_view_matrix_location(), 1, GL_FALSE, &g_camera.view[0][0]);
 
-    glDrawElements(GL_TRIANGLES, gPlot.indices.size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, g_plot.indices.size(), GL_UNSIGNED_INT, nullptr);
 }
 
 void postdraw() {
@@ -445,54 +443,54 @@ void postdraw() {
 }
 
 void loop() {
-    Uint64 prevCounter = SDL_GetPerformanceCounter();
-    Uint64 currCounter = 0;
-    double elapsedTime = 0.0;
-    double frameElapsedTime = 0.0;
-    int frameCount = 0;
-    int fps = 0;
+    Uint64 prev_counter = SDL_GetPerformanceCounter();
+    Uint64 curr_counter = 0;
+    double elapsed_time = 0.0;
+    double frame_elapsed_time = 0.0;
+    int frame_count = 0;
+    int FPS = 0;
 
-    while (gRunning) {
+    while (g_running) {
         input();
-        if (frameElapsedTime >= gRefreshTime) {
-            updateGui();
+        if (frame_elapsed_time >= g_refresh_time) {
+            update_GUI();
 
-            if (gSceneChange) {
+            if (g_scene_change) {
                 predraw();
                 draw();
                 postdraw();
-                gSceneChange = false;
-                gScreenChange = false;
-            } else if (gScreenChange) {
+                g_scene_change = false;
+                g_screen_change = false;
+            } else if (g_screen_change) {
                 draw();
                 postdraw();
-                gScreenChange = false;
+                g_screen_change = false;
             }
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-            SDL_GL_SwapWindow(gWindow);
+            SDL_GL_SwapWindow(g_window);
 
-            frameCount++;
-            frameElapsedTime = 0.0;
+            frame_count++;
+            frame_elapsed_time = 0.0;
         }
 
-        currCounter = SDL_GetPerformanceCounter();
-        double frameTime = (double)(currCounter - prevCounter) / SDL_GetPerformanceFrequency();
-        elapsedTime += frameTime;
-        frameElapsedTime += frameTime;
+        curr_counter = SDL_GetPerformanceCounter();
+        double frame_time = (double)(curr_counter - prev_counter) / SDL_GetPerformanceFrequency();
+        elapsed_time += frame_time;
+        frame_elapsed_time += frame_time;
 
-        if (elapsedTime >= 1.0) {
-            fps = frameCount;
-            std::string title = std::to_string(fps) + " FPS";
-            SDL_SetWindowTitle(gWindow, title.c_str());
+        if (elapsed_time >= 1.0) {
+            FPS = frame_count;
+            std::string title = std::to_string(FPS) + " FPS";
+            SDL_SetWindowTitle(g_window, title.c_str());
 
-            frameCount = 0;
-            elapsedTime = 0.0;
+            frame_count = 0;
+            elapsed_time = 0.0;
         }
 
-        prevCounter = currCounter;
+        prev_counter = curr_counter;
     }
 }
 
@@ -501,17 +499,17 @@ void cleanup() {
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
-    SDL_DestroyWindow(gWindow);
+    SDL_DestroyWindow(g_window);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 
-    glDeleteBuffers(1, &gVertexBufferObject);
-    glDeleteBuffers(1, &gIndexBufferObject);
-    glDeleteVertexArrays(1, &gVertexArrayObject);
+    glDeleteBuffers(1, &g_VBO);
+    glDeleteBuffers(1, &g_IBO);
+    glDeleteVertexArrays(1, &g_VAO);
 
-    glDeleteProgram(gGraphicsPipeline.get_program());
-    glDeleteProgram(gComputePipeline.get_program());
+    glDeleteProgram(g_graphics_pipeline.get_program());
+    glDeleteProgram(g_compute_pipeline.get_program());
 
     SDL_Quit();
 }
@@ -519,9 +517,7 @@ void cleanup() {
 int main() {
     setup();
 
-    vertexSpecification();
-
-    createGraphicsPipeline();
+    vertex_specification();
 
     loop();
 

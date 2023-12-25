@@ -10,7 +10,7 @@
 namespace mine {
 camera::camera() : 
     radius{}, theta{}, phi{}, screen_width{}, screen_height{}, aspect_ratio{}, 
-    fov{glm::radians(60.0f)}, position{}, center{}, view{} 
+    FOV{glm::radians(60.0f)}, position{}, center{}, view{} 
 {}
 
 void camera::set_screen(float screen_width, float screen_height) {
@@ -19,9 +19,9 @@ void camera::set_screen(float screen_width, float screen_height) {
     aspect_ratio = this->screen_width / this->screen_height;
 
     if (aspect_ratio < 1) {
-        fov = glm::atan(glm::tan(fov / 2.0f) / aspect_ratio) * 2.0f;
+        FOV = glm::atan(glm::tan(FOV / 2.0f) / aspect_ratio) * 2.0f;
     } else {
-        fov = glm::radians(60.0f);
+        FOV = glm::radians(60.0f);
     }
 
     update_position();
@@ -119,7 +119,7 @@ void camera::update_position() {
     view = glm::lookAt(position, center, camera_up);
     
     view = glm::perspective(
-        fov,
+        FOV,
         aspect_ratio,
         0.01f,
         50.0f

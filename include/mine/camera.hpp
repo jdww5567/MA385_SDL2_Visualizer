@@ -14,7 +14,7 @@ public:
     float screen_width;
     float screen_height;
     float aspect_ratio;
-    float fov;
+    float FOV;
 
     glm::vec3 position;
     glm::vec3 center;
