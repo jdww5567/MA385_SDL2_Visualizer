@@ -16,7 +16,7 @@ constexpr float DASH_LENGTH = 12.0f * AXIS_WIDTH;
 constexpr float DASH_WIDTH = 2.0f * AXIS_WIDTH;
 constexpr float GRID_WIDTH = AXIS_WIDTH / 2.0f;
 
-constexpr std::array<std::array<int, 4>, 8> DEF_BOUNDS{{
+constexpr std::array<std::array<int, 4>, 8> INITIAL_BOUNDS{{
     { -2,  2, -2, 2 },
     { -2,  2, -2, 2 },
     {  2,  6, -2, 2 },
@@ -27,14 +27,7 @@ constexpr std::array<std::array<int, 4>, 8> DEF_BOUNDS{{
     { -6,  6, -6, 6 }
 }};
 
-constexpr int INIT_Y_AXIS_LENGTH = 5;
-constexpr int INIT_POS_X_AXIS_LENGTH = 6;
-constexpr int INIT_POS_Z_AXIS_LENGTH = 6;
-constexpr int INIT_NEG_X_AXIS_LENGTH = 6;
-constexpr int INIT_NEG_Z_AXIS_LENGTH = 6;
-constexpr int INIT_BASE_VERTICE_COUNT = 12 + 8 * (INIT_Y_AXIS_LENGTH + INIT_POS_X_AXIS_LENGTH + INIT_POS_Z_AXIS_LENGTH + INIT_NEG_X_AXIS_LENGTH + INIT_NEG_Z_AXIS_LENGTH);
-
-constexpr std::array<char[256], 8> DEF_FUNCTIONS{{
+constexpr std::array<char[256], 8> INITIAL_FUNCTIONS{{
     "x*x - y*y",
     "x*x + y*y + 1",
     "x+y - 2",
@@ -45,15 +38,22 @@ constexpr std::array<char[256], 8> DEF_FUNCTIONS{{
     "3"
 }};
 
+constexpr std::array<const char[12], 16> ids = {
+    "##Function1", "Submit####1", "##Function2", "Submit####2",
+    "##Function3", "Submit####3", "##Function4", "Submit####4",
+    "##Function5", "Submit####5", "##Function6", "Submit####6",
+    "##Function7", "Submit####7", "##Function8", "Submit####8"
+};
+
 enum index {
     NEG_X_BOUND,
     POS_X_BOUND,
     NEG_Z_BOUND,
     POS_Z_BOUND,
-    NEG_X_AXIS,
-    POS_X_AXIS,
-    NEG_Z_AXIS,
-    POS_Z_AXIS
+    NEG_X_AXIS = 0,
+    POS_X_AXIS = 1,
+    NEG_Z_AXIS = 2,
+    POS_Z_AXIS = 3
 };
 
 struct vertex {
@@ -64,6 +64,16 @@ struct vertex {
     GLfloat g;
     GLfloat b;
 };
+
+constexpr int INIT_Y_AXIS_LENGTH = 5;
+constexpr std::array<int, 4> INITIAL_AXES{{ -6, 6, -6, 6 }};
+constexpr int INIT_BASE_VERTICE_COUNT = 12 + 8 * (
+    INIT_Y_AXIS_LENGTH -
+    INITIAL_AXES[NEG_X_AXIS] + 
+    INITIAL_AXES[POS_X_AXIS] - 
+    INITIAL_AXES[NEG_Z_AXIS] + 
+    INITIAL_AXES[POS_Z_AXIS]
+);
 }
 
 #endif

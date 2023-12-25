@@ -29,8 +29,8 @@ GLuint gVertexArrayObject = 0;
 GLuint gVertexBufferObject = 0;
 GLuint gIndexBufferObject = 0;
 
-mine::pipeline gGraphicsPipeline{};
-mine::pipeline gComputePipeline{};
+mine::graphics_pipeline gGraphicsPipeline{};
+mine::compute_pipeline gComputePipeline{};
 mine::plot gPlot{};
 mine::camera gCamera{};
 
@@ -100,7 +100,7 @@ void setup() {
 
     gCamera.set_screen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     gCamera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-    gCamera.set_center(mine::DEF_BOUNDS[0]);
+    gCamera.set_center(mine::INITIAL_BOUNDS[0]);
 
     if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gWindow), &gDisplayMode)) {
         gRefreshTime = 1.0 / gDisplayMode.refresh_rate;
@@ -108,7 +108,7 @@ void setup() {
 }
 
 bool functionUpdate(const std::string& function, int i) {
-    mine::pipeline tempPipeline;
+    mine::compute_pipeline tempPipeline;
     tempPipeline.set_program("./shaders/compute.glsl", function);
 
     if (tempPipeline.get_program() != 0) {
@@ -160,7 +160,7 @@ bool functionUpdate(const std::string& function, int i) {
 void vertexSpecification() {
     gPlot.set_vertices();
 
-    functionUpdate(mine::DEF_FUNCTIONS[0], 0);
+    functionUpdate(mine::INITIAL_FUNCTIONS[0], 0);
 
     glGenVertexArrays(1, &gVertexArrayObject);
     glBindVertexArray(gVertexArrayObject);
@@ -324,26 +324,12 @@ void updateGui() {
     ImGui::Text("Functions");
 
     static int count = 1;
-    static std::array<char[256], 8> inputStrings {mine::DEF_FUNCTIONS};
-    static const char ids[16][12] = {
-        "##Function1", "Submit####1", "##Function2", "Submit####2",
-        "##Function3", "Submit####3", "##Function4", "Submit####4",
-        "##Function5", "Submit####5", "##Function6", "Submit####6",
-        "##Function7", "Submit####7", "##Function8", "Submit####8"
-    };
-    static int axes[4] = {
-        -mine::INIT_NEG_X_AXIS_LENGTH, mine::INIT_POS_X_AXIS_LENGTH, -mine::INIT_NEG_Z_AXIS_LENGTH, mine::INIT_POS_Z_AXIS_LENGTH
-    };
-    static std::array<std::array<int, 4>, 8> bounds{{
-        mine::DEF_BOUNDS[0],
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-        {0, 0, 0, 0}
+    static std::array<char[256], 8> inputStrings {mine::INITIAL_FUNCTIONS};
+
+    static std::array<int, 4> axes{{
+        mine::INITIAL_AXES[mine::NEG_X_AXIS], mine::INITIAL_AXES[mine::POS_X_AXIS], mine::INITIAL_AXES[mine::NEG_Z_AXIS], mine::INITIAL_AXES[mine::POS_Z_AXIS]
     }};
+    static std::array<std::array<int, 4>, 8> bounds{mine::INITIAL_BOUNDS};
     float halfSpace = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     halfSpace = (halfSpace < 0) ? 0 : halfSpace;
 
@@ -369,10 +355,10 @@ void updateGui() {
 
     for (int i = 0; i < count; ++i) {
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::InputText(ids[2 * i], inputStrings[i], sizeof(inputStrings[i]));
+        ImGui::InputText(mine::ids[2 * i], inputStrings[i], sizeof(inputStrings[i]));
         domainFuncs("<= x <=", i, mine::NEG_X_BOUND);
         domainFuncs("<= y <=", i, mine::NEG_Z_BOUND);
-        if (ImGui::Button(ids[2 * i + 1])) {
+        if (ImGui::Button(mine::ids[2 * i + 1])) {
             gPlot.update_bounds(i, bounds[i]);
             gCamera.set_center(gPlot.bounds[i]);
             if (!functionUpdate(inputStrings[i], i)) {
@@ -384,14 +370,9 @@ void updateGui() {
     }
 
     if (count < 8 && ImGui::Button("+")) {
-        strcpy(inputStrings[count], mine::DEF_FUNCTIONS[count]);
-        bounds[count][mine::NEG_X_BOUND] = mine::DEF_BOUNDS[count][mine::NEG_X_BOUND];
-        bounds[count][mine::POS_X_BOUND] = mine::DEF_BOUNDS[count][mine::POS_X_BOUND];
-        bounds[count][mine::NEG_Z_BOUND] = mine::DEF_BOUNDS[count][mine::NEG_Z_BOUND];
-        bounds[count][mine::POS_Z_BOUND] = mine::DEF_BOUNDS[count][mine::POS_Z_BOUND];
         gPlot.add_function();
         gPlot.update_bounds(count, bounds[count]);
-        functionUpdate(mine::DEF_FUNCTIONS[count], count);
+        functionUpdate(inputStrings[count], count);
         count++;
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
@@ -405,11 +386,6 @@ void updateGui() {
         ImGui::SameLine();
     }
     if (count > 0 && ImGui::Button("-")) {
-        strcpy(inputStrings[count - 1], "");
-        bounds[count - 1][mine::NEG_X_BOUND] = 0;
-        bounds[count - 1][mine::POS_X_BOUND] = 0;
-        bounds[count - 1][mine::NEG_Z_BOUND] = 0;
-        bounds[count - 1][mine::POS_Z_BOUND] = 0;
         gPlot.remove_function();
         count--;
         glBufferData(

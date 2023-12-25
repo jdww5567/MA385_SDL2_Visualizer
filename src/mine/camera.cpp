@@ -1,6 +1,7 @@
 #include <mine/camera.hpp>
 
 #include <cmath>
+#include <iostream>
 
 #include <glm/gtx/transform.hpp>
 
@@ -83,7 +84,7 @@ void camera::update_angles(float theta, float phi) {
 
     if (this->phi < 2.0f) {
         this->phi = 2.0f;
-    } else if (phi > 178.0f) {
+    } else if (this->phi > 178.0f) {
         this->phi = 178.0f;
     }
 

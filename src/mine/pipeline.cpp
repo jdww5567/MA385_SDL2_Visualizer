@@ -6,157 +6,163 @@
 namespace mine {
 pipeline::pipeline() {
     program = 0;
-    view_matrix_location = 0;
+}
+
+compute_pipeline::compute_pipeline() : pipeline() {
     function = "";
 }
 
-std::string pipeline::load_shader(const std::string& srcLoc) {
-    std::string src  = "";
-    std::string line = "";
-
-    std::ifstream file(srcLoc.c_str());
-
-    if (file.is_open()) {
-        while (std::getline(file, line)) {
-            src += line + '\n';
-        }
-
-        file.close();
-    }
-
-    return src;
+graphics_pipeline::graphics_pipeline() : pipeline() {
+    view_matrix_location = 0;
 }
 
-std::string pipeline::load_shader(const std::string& srcLoc, const std::string& func) {
-    std::string src  = "";
-    std::string line = "";
-
-    std::ifstream file(srcLoc.c_str());
-
-    if (file.is_open()) {
-        while (std::getline(file, line)) {
-            if (line == "    float z = ") {
-                line += func + ';';
-            }
-            src += line + '\n';
-        }
-
-        file.close();
-    }
-
-    return src;
+GLuint pipeline::get_program() const {
+    return program;
 }
 
-GLuint pipeline::create_program(const std::string& vertexSrc, const std::string& fragmentSrc) {
-    GLuint programObject = glCreateProgram();
-
-    GLuint vertexShader   = compile_shader(GL_VERTEX_SHADER, vertexSrc);
-    GLuint fragmentShader = compile_shader(GL_FRAGMENT_SHADER, fragmentSrc);
-
-    glAttachShader(programObject, vertexShader);
-    glAttachShader(programObject, fragmentShader);
-    glLinkProgram(programObject);
-    glValidateProgram(programObject);
-    glDetachShader(programObject, vertexShader);
-    glDetachShader(programObject, fragmentShader);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    return programObject;
+const char* compute_pipeline::get_function() const {
+    return function.c_str();
 }
 
-GLuint pipeline::create_program(const std::string& computeSrc) {
-    GLuint programObject = glCreateProgram();
+GLint graphics_pipeline::get_view_matrix_location() const {
+    return view_matrix_location;
+}
 
-    GLuint computeShader = compile_shader(GL_COMPUTE_SHADER, computeSrc);
-
-    if (computeShader == 0) {
-        return 0;
+void compute_pipeline::set_program(const std::string& compute_source_location, const std::string& function) {
+    if (program != 0) {
+        glDeleteProgram(program);
     }
+    
+    program = create_program(load_shader(compute_source_location, function));
+    this->function = function;
+}
 
-    glAttachShader(programObject, computeShader);
-    glLinkProgram(programObject);
-    glValidateProgram(programObject);
-
-    glDetachShader(programObject, computeShader);
-    glDeleteShader(computeShader);
-
-    return programObject;
+void graphics_pipeline::set_program(const std::string& vertex_source_location, const std::string& fragment_source_location, const std::string& view_matrix_name) {
+    program = create_program(load_shader(vertex_source_location), load_shader(fragment_source_location));
+    view_matrix_location = glGetUniformLocation(program, view_matrix_name.c_str());
+    if (view_matrix_location < 0) {
+        std::cout << "Error: " << view_matrix_name << " not found in GPU memory" << std::endl;
+        exit(2);
+    }
 }
 
 GLuint pipeline::compile_shader(GLuint type, const std::string& source) {
-    GLuint shaderObject = glCreateShader(type); 
+    GLuint shader_object = glCreateShader(type); 
 
-    const char* src = source.c_str();
-    glShaderSource(shaderObject, 1, &src, nullptr);
-    glCompileShader(shaderObject);
+    const char* source_ = source.c_str();
+    glShaderSource(shader_object, 1, &source_, nullptr);
+    glCompileShader(shader_object);
 
     GLint status = 0;
-    glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &status);
+    glGetShaderiv(shader_object, GL_COMPILE_STATUS, &status);
 
     if (!status) {
-        GLint logSize = 0;
-        glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &logSize);
+        GLint log_size = 0;
+        glGetShaderiv(shader_object, GL_INFO_LOG_LENGTH, &log_size);
 
-        std::vector<GLchar> errorLog(logSize);
-        glGetShaderInfoLog(shaderObject, logSize, &logSize, &errorLog[0]);
+        std::vector<GLchar> error_log(log_size);
+        glGetShaderInfoLog(shader_object, log_size, &log_size, &error_log[0]);
 
         if (type == GL_VERTEX_SHADER) {
             std::cout 
                 << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
-                << errorLog.data() 
+                << error_log.data() 
                 << std::endl
             ;
         } else if (type == GL_FRAGMENT_SHADER) {
             std::cout 
                 << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
-                << errorLog.data() 
+                << error_log.data() 
                 << std::endl
             ;
         } else if (type == GL_COMPUTE_SHADER) {
             std::cout 
                 << "Error: Failed to compile GL_COMPUTE_SHADER\nglError:\n" 
-                << errorLog.data() 
+                << error_log.data() 
                 << std::endl
             ;
         }
 
-        glDeleteShader(shaderObject);
+        glDeleteShader(shader_object);
 
         return 0;
     }
 
-    return shaderObject;
+    return shader_object;
 }
 
-GLint pipeline::get_program() {
-    return program;
-}
+std::string compute_pipeline::load_shader(const std::string& source_location, const std::string& function) {
+    std::string source  = "";
+    std::string line = "";
 
-GLint pipeline::get_view_matrix_location() {
-    return view_matrix_location;
-}
+    std::ifstream file(source_location.c_str());
 
-const char* pipeline::get_function() {
-    return function.c_str();
-}
+    if (file.is_open()) {
+        while (std::getline(file, line)) {
+            if (line == "    float z = ") {
+                line += function + ';';
+            }
+            source += line + '\n';
+        }
 
-void pipeline::set_program(const std::string& vertexSrcLoc, const std::string& fragmentSrcLoc, const std::string& viewMatrixName) {
-    program = create_program(load_shader(vertexSrcLoc), load_shader(fragmentSrcLoc));
-    view_matrix_location = glGetUniformLocation(program, viewMatrixName.c_str());
-    if (view_matrix_location < 0) {
-        std::cout << "Error: " << viewMatrixName << " not found in GPU memory" << std::endl;
-        exit(2);
+        file.close();
     }
+
+    return source;
 }
 
-void pipeline::set_program(const std::string& computeSrcLoc, const std::string& function_) {
-    if (program != 0) {
-        glDeleteProgram(program);
+std::string graphics_pipeline::load_shader(const std::string& source_location) {
+    std::string source  = "";
+    std::string line = "";
+
+    std::ifstream file(source_location.c_str());
+
+    if (file.is_open()) {
+        while (std::getline(file, line)) {
+            source += line + '\n';
+        }
+
+        file.close();
     }
-    program = create_program(load_shader(computeSrcLoc, function_));
-    function = function_;
-    view_matrix_location = -1;
+
+    return source;
+}
+
+GLuint compute_pipeline::create_program(const std::string& compute_source) {
+    GLuint program_object = glCreateProgram();
+
+    GLuint compute_shader = compile_shader(GL_COMPUTE_SHADER, compute_source);
+
+    if (compute_shader == 0) {
+        return 0;
+    }
+
+    glAttachShader(program_object, compute_shader);
+    glLinkProgram(program_object);
+    glValidateProgram(program_object);
+
+    glDetachShader(program_object, compute_shader);
+    glDeleteShader(compute_shader);
+
+    return program_object;
+}
+
+GLuint graphics_pipeline::create_program(const std::string& vertex_source, const std::string& fragment_source) {
+    GLuint program_object = glCreateProgram();
+
+    GLuint vertex_shader   = compile_shader(GL_VERTEX_SHADER, vertex_source);
+    GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, fragment_source);
+
+    glAttachShader(program_object, vertex_shader);
+    glAttachShader(program_object, fragment_shader);
+    glLinkProgram(program_object);
+    glValidateProgram(program_object);
+    glDetachShader(program_object, vertex_shader);
+    glDetachShader(program_object, fragment_shader);
+
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    return program_object;
 }
 }
