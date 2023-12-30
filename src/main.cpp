@@ -35,6 +35,7 @@ mine::plot g_plot{};
 mine::camera g_camera{};
 
 bool g_running = true;
+bool g_size_change = true;
 bool g_scene_change = true;
 bool g_screen_change = false;
 
@@ -198,7 +199,7 @@ void vertex_specification() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(
         1,
-        4,
+        3,
         GL_FLOAT,
         GL_FALSE,
         sizeof(mine::vertex),
@@ -372,13 +373,7 @@ void update_GUI() {
         g_plot.update_bounds(count, bounds[count]);
         update_function(input_strings[count], count);
         count++;
-        glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER,
-            g_plot.indices.size() * sizeof(GLuint),
-            g_plot.indices.data(),
-            GL_DYNAMIC_DRAW
-        );
-        g_scene_change = true;
+        g_size_change = true;
     }
     if (count < 8 && count > 0) {
         ImGui::SameLine();
@@ -386,13 +381,7 @@ void update_GUI() {
     if (count > 0 && ImGui::Button("-")) {
         g_plot.remove_function();
         count--;
-        glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER,
-            g_plot.indices.size() * sizeof(GLuint),
-            g_plot.indices.data(),
-            GL_DYNAMIC_DRAW
-        );
-        g_scene_change = true;
+        g_size_change = true;
     }
 
     domain_axes("<= X <=", 0);
@@ -406,26 +395,35 @@ void update_GUI() {
         for (int i = 0; i < count; ++i) {
             bounds[i] = g_plot.bounds[i];
         }
-        glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER,
-            g_plot.indices.size() * sizeof(GLuint),
-            g_plot.indices.data(),
-            GL_DYNAMIC_DRAW
-        );
-        g_scene_change = true;
+        g_size_change = true;
     }
 
     ImGui::End();
 }
 
-void predraw() {
+void reallocate_buffers() {
     g_plot.rotate_base_vertices(g_camera.position.x, g_camera.position.y, g_camera.position.z);
-
     glBufferData(
         GL_ARRAY_BUFFER, 
         g_plot.vertices.size() * sizeof(mine::vertex),
         g_plot.vertices.data(), 
         GL_DYNAMIC_DRAW
+    );
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        g_plot.indices.size() * sizeof(GLuint),
+        g_plot.indices.data(),
+        GL_DYNAMIC_DRAW
+    );
+}
+
+void update_buffer() {
+    g_plot.rotate_base_vertices(g_camera.position.x, g_camera.position.y, g_camera.position.z);
+    glBufferSubData(
+        GL_ARRAY_BUFFER, 
+        0,
+        g_plot.vertices.size() * sizeof(mine::vertex), 
+        g_plot.vertices.data()
     );
 }
 
@@ -454,9 +452,15 @@ void loop() {
         input();
         if (frame_elapsed_time >= g_refresh_time) {
             update_GUI();
-
-            if (g_scene_change) {
-                predraw();
+            if (g_size_change) {
+                reallocate_buffers();
+                draw();
+                postdraw();
+                g_size_change = false;
+                g_scene_change = false;
+                g_screen_change = false;
+            } else if (g_scene_change) {
+                update_buffer();
                 draw();
                 postdraw();
                 g_scene_change = false;
