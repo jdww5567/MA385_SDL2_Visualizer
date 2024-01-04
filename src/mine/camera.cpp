@@ -53,6 +53,11 @@ void camera::set_center(const std::array<int, 4>& bounds) {
     center.x = (bounds[NEG_X_BOUND] + bounds[POS_X_BOUND]) / 2.0f;
     center.z = (bounds[NEG_Z_BOUND] + bounds[POS_Z_BOUND]) / 2.0f;
 
+    if (bounds[NEG_X_BOUND] == center.x || bounds[NEG_Z_BOUND] == center.z) {
+        center.x = 0;
+        center.z = 0;
+    }
+
     update_position();
 }
 

@@ -4,37 +4,37 @@
 #include <vector>
 
 namespace mine {
-pipeline::pipeline() {
-    program = 0;
-}
+pipeline::pipeline() : program{} {}
 
-compute_pipeline::compute_pipeline() : pipeline() {
-    function = "";
-}
+compute_pipeline::compute_pipeline() : pipeline(), functions{} {}
 
-graphics_pipeline::graphics_pipeline() : pipeline() {
-    view_matrix_location = 0;
-}
+graphics_pipeline::graphics_pipeline() : pipeline(), view_matrix_location{} {}
 
 GLuint pipeline::get_program() const {
     return program;
 }
 
-const char* compute_pipeline::get_function() const {
-    return function.c_str();
+const char* compute_pipeline::get_function(int index) const {
+    return functions[index].c_str();
 }
 
 GLint graphics_pipeline::get_view_matrix_location() const {
     return view_matrix_location;
 }
 
-void compute_pipeline::set_program(const std::string& compute_source_location, const std::string& function) {
-    if (program != 0) {
-        glDeleteProgram(program);
+bool compute_pipeline::set_program(const std::string& compute_source_location, const std::string& function, int index) {
+    GLuint temp_program = create_program(load_shader(compute_source_location, function));
+
+    if (temp_program == program) {
+        return false;
     }
-    
-    program = create_program(load_shader(compute_source_location, function));
-    this->function = function;
+
+    glDeleteProgram(program);
+
+    program = temp_program;
+    functions[index] = function;
+
+    return true;
 }
 
 void graphics_pipeline::set_program(const std::string& vertex_source_location, const std::string& fragment_source_location, const std::string& view_matrix_name) {
@@ -65,21 +65,18 @@ GLuint pipeline::compile_shader(GLuint type, const std::string& source) {
 
         if (type == GL_VERTEX_SHADER) {
             std::cout 
-                << "Error: Failed to compile GL_VERTEX_SHADER\nglError:\n" 
+                << "\n" 
                 << error_log.data() 
-                << std::endl
             ;
         } else if (type == GL_FRAGMENT_SHADER) {
             std::cout 
-                << "Error: Failed to compile GL_FRAGMENT_SHADER\nglError:\n" 
+                << "\n" 
                 << error_log.data() 
-                << std::endl
             ;
         } else if (type == GL_COMPUTE_SHADER) {
             std::cout 
-                << "Error: Failed to compile GL_COMPUTE_SHADER\nglError:\n" 
+                << "\n"
                 << error_log.data() 
-                << std::endl
             ;
         }
 
@@ -92,7 +89,7 @@ GLuint pipeline::compile_shader(GLuint type, const std::string& source) {
 }
 
 std::string compute_pipeline::load_shader(const std::string& source_location, const std::string& function) {
-    std::string source  = "";
+    std::string source = "";
     std::string line = "";
 
     std::ifstream file(source_location.c_str());
@@ -134,7 +131,8 @@ GLuint compute_pipeline::create_program(const std::string& compute_source) {
     GLuint compute_shader = compile_shader(GL_COMPUTE_SHADER, compute_source);
 
     if (compute_shader == 0) {
-        return 0;
+        glDeleteProgram(program_object);
+        return program;
     }
 
     glAttachShader(program_object, compute_shader);

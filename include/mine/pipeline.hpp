@@ -1,6 +1,7 @@
 #ifndef MINE_PIPELINE_HPP
 #define MINE_PIPELINE_HPP
 
+#include <array>
 #include <iostream>
 #include <string>
 
@@ -18,11 +19,11 @@ protected:
 };
 
 class compute_pipeline : public pipeline {
-	std::string function;
+	std::array<std::string, 8> functions;
 public:
 	compute_pipeline();
-	const char* get_function() const;
-	void set_program(const std::string& compute_source_location, const std::string& function);
+	const char* get_function(int index) const;
+	bool set_program(const std::string& compute_source_location, const std::string& function, int index);
 private:
 	std::string load_shader(const std::string& source_location, const std::string& function);
 	GLuint create_program(const std::string& compute_source);

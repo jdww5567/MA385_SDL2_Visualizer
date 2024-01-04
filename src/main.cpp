@@ -21,13 +21,12 @@ constexpr float INITIAL_RADIUS = 13.0f;
 constexpr float INITIAL_THETA = 45.0f;
 constexpr float INITIAL_PHI = 65.0f;
 
-SDL_Window *g_window = nullptr;
-
+SDL_Window *g_window{};
 SDL_DisplayMode g_display_mode{};
 
-GLuint g_VAO = 0;
-GLuint g_VBO = 0;
-GLuint g_IBO = 0;
+GLuint g_VAO{};
+GLuint g_VBO{};
+GLuint g_IBO{};
 
 mine::graphics_pipeline g_graphics_pipeline{};
 mine::compute_pipeline g_compute_pipeline{};
@@ -35,11 +34,11 @@ mine::plot g_plot{};
 mine::camera g_camera{};
 
 bool g_running = true;
-bool g_size_change = true;
+bool g_size_change = false;
 bool g_scene_change = true;
 bool g_screen_change = false;
 
-double g_refresh_time = 0;
+double g_refresh_time{};
 
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -110,45 +109,48 @@ void setup() {
     }
 }
 
-bool update_function(const std::string& function, int i) {
-    mine::compute_pipeline temp_pipeline;
-    temp_pipeline.set_program("./shaders/compute.glsl", function);
-
-    if (temp_pipeline.get_program() != 0) {
-        glDeleteProgram(temp_pipeline.get_program());
-        g_compute_pipeline.set_program("./shaders/compute.glsl", function);
-    } else {
-        glDeleteProgram(temp_pipeline.get_program());
+bool update_function(const std::string& function, int index) {
+    if (!g_compute_pipeline.set_program("./shaders/compute.glsl", function, index)) {
         return false;
     }
 
     GLuint input_buffer;
     glGenBuffers(1, &input_buffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, input_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, g_plot.functions[i].size() * sizeof(mine::vertex), g_plot.functions[i].data(), GL_STATIC_READ);
+    glBufferData(
+        GL_SHADER_STORAGE_BUFFER,
+        g_plot.functions[index].size() * sizeof(mine::vertex),
+        g_plot.functions[index].data(),
+        GL_STATIC_READ
+    );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, input_buffer);
 
     GLuint output_buffer;
     glGenBuffers(1, &output_buffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, output_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, g_plot.functions[i].size() * sizeof(mine::vertex), NULL, GL_DYNAMIC_COPY);
+    glBufferData(
+        GL_SHADER_STORAGE_BUFFER,
+        g_plot.functions[index].size() * sizeof(mine::vertex),
+        nullptr,
+        GL_DYNAMIC_COPY
+    );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, output_buffer);
 
     glUseProgram(g_compute_pipeline.get_program());
-    glUniform1f(glGetUniformLocation(g_compute_pipeline.get_program(), "i"), i);
-    glDispatchCompute(g_plot.functions[i].size(), 1, 1);
+    glUniform1f(glGetUniformLocation(g_compute_pipeline.get_program(), "i"), index);
+    glDispatchCompute(g_plot.functions[index].size(), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glUseProgram(0);
 
     float* results = (float*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
 
     for (std::vector<mine::vertex>::size_type j = 0; j < (mine::X_RECTS + 1) * (mine::Z_RECTS + 1); ++j) {
-        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].x = results[j * 6];
-        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].y = results[j * 6 + 1];
-        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].z = results[j * 6 + 2];
-        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].r = results[j * 6 + 3];
-        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].g = results[j * 6 + 4];
-        g_plot.vertices[g_plot.base_vertice_count + i * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].b = results[j * 6 + 5];
+        g_plot.vertices[g_plot.base_vertice_count + index * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].x = results[j * 6];
+        g_plot.vertices[g_plot.base_vertice_count + index * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].y = results[j * 6 + 1];
+        g_plot.vertices[g_plot.base_vertice_count + index * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].z = results[j * 6 + 2];
+        g_plot.vertices[g_plot.base_vertice_count + index * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].r = results[j * 6 + 3];
+        g_plot.vertices[g_plot.base_vertice_count + index * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].g = results[j * 6 + 4];
+        g_plot.vertices[g_plot.base_vertice_count + index * ((mine::X_RECTS + 1) * (mine::Z_RECTS + 1)) + j].b = results[j * 6 + 5];
     }
 
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -324,25 +326,22 @@ void update_GUI() {
 
     static int count = 1;
     static std::array<char[256], 8> input_strings {mine::INITIAL_FUNCTIONS};
-
-    static std::array<int, 4> axes{{
-        mine::INITIAL_AXES[mine::NEG_X_AXIS], mine::INITIAL_AXES[mine::POS_X_AXIS], mine::INITIAL_AXES[mine::NEG_Z_AXIS], mine::INITIAL_AXES[mine::POS_Z_AXIS]
-    }};
+    static std::array<int, 4> axes{mine::INITIAL_AXES};
     static std::array<std::array<int, 4>, 8> bounds{mine::INITIAL_BOUNDS};
     float half_space = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     half_space = (half_space < 0) ? 0 : half_space;
 
-    static auto domain_axes = [&](const char * str, int neg) {
+    static auto domain_axes = [&](const char* str, int neg) {
         ImGui::SetNextItemWidth(half_space);
         ImGui::InputInt(("##intInput" + std::to_string(neg)).c_str(), &axes[neg], 0, 0, ImGuiInputTextFlags_None);
         ImGui::SameLine();
         ImGui::Text(str);
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         ImGui::InputInt(("##intInput" + std::to_string(neg + 1)).c_str(), &axes[neg + 1], 0, 0, ImGuiInputTextFlags_None);
     };
 
-    static auto domain_functions = [&](const char * str, int func, int neg) {
+    static auto domain_functions = [&](const char* str, int func, int neg) {
         ImGui::SetNextItemWidth(half_space);
         ImGui::InputInt(("##intInput" + std::to_string(func) + std::to_string(neg)).c_str(), &bounds[func][neg], 0, 0, ImGuiInputTextFlags_None);
         ImGui::SameLine();
@@ -361,7 +360,7 @@ void update_GUI() {
             g_plot.update_bounds(i, bounds[i]);
             g_camera.set_center(g_plot.bounds[i]);
             if (!update_function(input_strings[i], i)) {
-                strcpy(input_strings[i], g_compute_pipeline.get_function());
+                strcpy(input_strings[i], g_compute_pipeline.get_function(i));
                 update_function(input_strings[i], i);
             }
             g_scene_change = true;
@@ -442,16 +441,17 @@ void postdraw() {
 
 void loop() {
     Uint64 prev_counter = SDL_GetPerformanceCounter();
-    Uint64 curr_counter = 0;
-    double elapsed_time = 0.0;
-    double frame_elapsed_time = 0.0;
-    int frame_count = 0;
-    int FPS = 0;
+    Uint64 curr_counter{};
+    double elapsed_time{};
+    double frame_elapsed_time{};
+    int frame_count{};
+    int FPS;
 
     while (g_running) {
         input();
         if (frame_elapsed_time >= g_refresh_time) {
             update_GUI();
+
             if (g_size_change) {
                 reallocate_buffers();
                 draw();
@@ -504,9 +504,6 @@ void cleanup() {
     ImGui::DestroyContext();
 
     SDL_DestroyWindow(g_window);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
 
     glDeleteBuffers(1, &g_VBO);
     glDeleteBuffers(1, &g_IBO);

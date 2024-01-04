@@ -31,8 +31,6 @@ void plot::add_function() {
         }
     }
 
-    
-
     for (size_t i = base_vertice_count + k * ((X_RECTS + 1) * (Z_RECTS + 1)); i < base_vertice_count + (k + 1) * ((X_RECTS + 1) * (Z_RECTS + 1)); ++i) {
         if (vertices[i].z == (float)bounds[k][POS_Z_BOUND]) {
             continue;
@@ -323,6 +321,8 @@ void plot::update_axes(std::array<int, 4>& axes) {
     this->axes[NEG_Z_AXIS] = axes[NEG_Z_AXIS];
     this->axes[POS_Z_AXIS] = axes[POS_Z_AXIS];
     base_vertice_count = 12 + 8 * (y_axis_length - this->axes[NEG_X_AXIS] + this->axes[POS_X_AXIS] - this->axes[NEG_Z_AXIS] + this->axes[POS_Z_AXIS]);
+
+    update_vertices();
 
     for (size_t i = 0; i < functions.size(); ++i) {
         update_bounds(i, bounds[i]);
