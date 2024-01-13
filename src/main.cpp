@@ -13,6 +13,7 @@
 #include <mine/enums.hpp>
 #include <mine/pipeline.hpp>
 #include <mine/plot.hpp>
+#include <mine/gui.hpp>
 
 constexpr int INITIAL_SCREEN_WIDTH = 960;
 constexpr int INITIAL_SCREEN_HEIGHT = 720;
@@ -32,6 +33,7 @@ mine::graphics_pipeline g_graphics_pipeline{};
 mine::compute_pipeline g_compute_pipeline{};
 mine::plot g_plot{};
 mine::camera g_camera{};
+mine::gui g_gui{};
 
 bool g_running = true;
 bool g_size_change = false;
@@ -67,8 +69,8 @@ void setup() {
         exit(1);
     }
 
-    SDL_GLContext glContext = SDL_GL_CreateContext(g_window);
-    if (!glContext) {
+    SDL_GLContext gl_context = SDL_GL_CreateContext(g_window);
+    if (!gl_context) {
         std::cerr << "Error: Failed to create OpenGL context\nSDL Error: " << SDL_GetError() << std::endl;
         exit(1);
     }
@@ -89,20 +91,13 @@ void setup() {
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glViewport(0, 0, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT);
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    ImGui_ImplSDL2_InitForOpenGL(g_window, glContext);
-    ImGui_ImplOpenGL3_Init("#version 460 core\n");
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    g_gui.set_version(g_window, gl_context);
 
     g_camera.set_screen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     g_camera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
     g_camera.set_center(mine::INITIAL_BOUNDS[0]);
 
-    g_graphics_pipeline.set_program("./shaders/vertex.glsl", "./shaders/fragment.glsl", "uViewMatrix");
+    g_graphics_pipeline.set_program("./shaders/vertex.glsl", "./shaders/fragment.glsl", "u_view_matrix");
 
     if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(g_window), &g_display_mode)) {
         g_refresh_time = 1.0 / g_display_mode.refresh_rate;
