@@ -7,6 +7,7 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/src/mine/pipeline.cpp
     ${CMAKE_SOURCE_DIR}/src/mine/plot.cpp
     ${CMAKE_SOURCE_DIR}/src/mine/camera.cpp
+    ${CMAKE_SOURCE_DIR}/src/mine/gui.cpp
     ${CMAKE_SOURCE_DIR}/src/glad/glad.c
     ${CMAKE_SOURCE_DIR}/src/imgui/imgui.cpp
     ${CMAKE_SOURCE_DIR}/src/imgui/imgui_draw.cpp

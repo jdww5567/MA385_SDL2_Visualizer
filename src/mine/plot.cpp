@@ -18,7 +18,6 @@ void plot::add_function() {
 
     float x_ref = (float)(bounds[k][POS_X_BOUND] - bounds[k][NEG_X_BOUND]) / X_RECTS;
     float z_ref = (float)(bounds[k][POS_Z_BOUND] - bounds[k][NEG_Z_BOUND]) / Z_RECTS;
-    
     for (unsigned int i = 0, g = 0; i <= X_RECTS; ++i) {
         for (unsigned int j = 0; j <= Z_RECTS; ++j, ++g) {
             float x_offset = i * x_ref;
@@ -62,49 +61,46 @@ void plot::remove_function() {
 
 void plot::set_vertices() {
     // x axis
-    vertices.push_back({(float)axes[NEG_X_AXIS], -AXIS_WIDTH, 0.0f, 0.2f, 0.1f, 0.1f});
-    vertices.push_back({(float)axes[NEG_X_AXIS], AXIS_WIDTH, 0.0f, 0.2f, 0.1f, 0.1f});
-    vertices.push_back({(float)axes[POS_X_AXIS], -AXIS_WIDTH, 0.0f, 0.8f, 0.1f, 0.1f});
-    vertices.push_back({(float)axes[POS_X_AXIS], AXIS_WIDTH, 0.0f, 0.8f, 0.1f, 0.1f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], 0.0f, 0.0f, 0.2f, 0.1f, 0.1f});
+    vertices.push_back({(float)axes[POS_X_AXIS], 0.0f, 0.0f, 0.8f, 0.1f, 0.1f});
+
+    // x axis-parallel bounds
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
 
     // z axis
-    vertices.push_back({0.0f, -AXIS_WIDTH, (float)axes[NEG_Z_AXIS], 0.1f, 0.2f, 0.1f});
-    vertices.push_back({0.0f, AXIS_WIDTH, (float)axes[NEG_Z_AXIS], 0.1f, 0.2f, 0.1f});
-    vertices.push_back({0.0f, -AXIS_WIDTH, (float)axes[POS_Z_AXIS], 0.1f, 0.8f, 0.1f});
-    vertices.push_back({0.0f, AXIS_WIDTH, (float)axes[POS_Z_AXIS], 0.1f, 0.8f, 0.1f});
+    vertices.push_back({0.0f, 0.0f, (float)axes[NEG_Z_AXIS], 0.1f, 0.2f, 0.1f});
+    vertices.push_back({0.0f, 0.0f, (float)axes[POS_Z_AXIS], 0.1f, 0.8f, 0.1f});
+
+    // z axis-parallel bounds
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
 
     // y axis
-    vertices.push_back({-AXIS_WIDTH, -(float)y_axis_length, 0.0f, 0.1f, 0.1f, 0.2f});
-    vertices.push_back({AXIS_WIDTH, -(float)y_axis_length, 0.0f, 0.1f, 0.1f, 0.2f});
-    vertices.push_back({-AXIS_WIDTH, (float)y_axis_length, 0.0f, 0.1f, 0.1f, 0.8f});
-    vertices.push_back({AXIS_WIDTH, (float)y_axis_length, 0.0f, 0.1f, 0.1f, 0.8f});
+    vertices.push_back({0.0f, (float)axes[NEG_Y_AXIS], 0.0f, 0.1f, 0.1f, 0.2f});
+    vertices.push_back({0.0f, (float)axes[POS_Y_AXIS], 0.0f, 0.1f, 0.1f, 0.8f});
 
-    // x dashes
-    for (int i = axes[NEG_X_AXIS]; i <= axes[POS_X_AXIS]; ++i) {
-        if (i == 0) { continue; }
-        vertices.push_back({(float)i, -DASH_WIDTH, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({(float)i, DASH_WIDTH, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({(float)i, -DASH_WIDTH, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({(float)i, DASH_WIDTH, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-    }
-
-    // z dashes
-    for (int i = axes[NEG_Z_AXIS]; i <= axes[POS_Z_AXIS]; ++i) {
-        if (i == 0) { continue; }
-        vertices.push_back({-DASH_LENGTH, -DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({-DASH_LENGTH, DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({DASH_LENGTH, -DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({DASH_LENGTH, DASH_WIDTH, (float)i, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-    }
-
-    // y dashes
-    for (int i = -y_axis_length; i <= y_axis_length; ++i) {
-        if (i == 0) { continue; }
-        vertices.push_back({-DASH_WIDTH, (float)i, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({DASH_WIDTH, (float)i, -DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({-DASH_WIDTH, (float)i, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-        vertices.push_back({DASH_WIDTH, (float)i, DASH_LENGTH, AXIS_RED, AXIS_GREEN, AXIS_BLUE});
-    }
+    // y axis-parallel bounds
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[NEG_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[POS_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[POS_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
+    vertices.push_back({(float)axes[POS_X_AXIS], (float)axes[NEG_Y_AXIS], (float)axes[NEG_Z_AXIS], 0.0f, 0.0f, 0.0f});
 
     auto xColor = [=](int i) {
         return 0.2f + (0.6f) * (i - axes[NEG_X_AXIS]) / (axes[POS_X_AXIS] - axes[NEG_X_AXIS]);
@@ -113,10 +109,8 @@ void plot::set_vertices() {
     // x grid
     for (int i = axes[NEG_X_AXIS]; i <= axes[POS_X_AXIS]; ++i) {
         if (i == 0) { continue; }
-        vertices.push_back({(float)i, -GRID_WIDTH, (float)axes[NEG_Z_AXIS], xColor(i), 0.1f, 0.1f});
-        vertices.push_back({(float)i, GRID_WIDTH, (float)axes[NEG_Z_AXIS], xColor(i), 0.1f, 0.1f});
-        vertices.push_back({(float)i, -GRID_WIDTH, (float)axes[POS_Z_AXIS], xColor(i), 0.1f, 0.1f});
-        vertices.push_back({(float)i, GRID_WIDTH, (float)axes[POS_Z_AXIS], xColor(i), 0.1f, 0.1f});
+        vertices.push_back({(float)i, 0.0f, (float)axes[NEG_Z_AXIS], xColor(i), 0.1f, 0.1f});
+        vertices.push_back({(float)i, 0.0f, (float)axes[POS_Z_AXIS], xColor(i), 0.1f, 0.1f});
     }
 
     auto zColor = [=](int i) {
@@ -126,10 +120,8 @@ void plot::set_vertices() {
     // z grid
     for (int i = axes[NEG_Z_AXIS]; i <= axes[POS_Z_AXIS]; ++i) {
         if (i == 0) { continue; }
-        vertices.push_back({(float)axes[NEG_X_AXIS], -GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({(float)axes[NEG_X_AXIS], GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({(float)axes[POS_X_AXIS], -GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f});
-        vertices.push_back({(float)axes[POS_X_AXIS], GRID_WIDTH, (float)i, 0.1f, zColor(i), 0.1f});
+        vertices.push_back({(float)axes[NEG_X_AXIS], 0.0f, (float)i, 0.1f, zColor(i), 0.1f});
+        vertices.push_back({(float)axes[POS_X_AXIS], 0.0f, (float)i, 0.1f, zColor(i), 0.1f});
     }
     
     // function
@@ -150,12 +142,8 @@ void plot::set_vertices() {
     }
     
     // grid and axes rectangles
-    for (int i = 0; i < base_vertice_count; i += 4) {
+    for (int i = 0; i < base_vertice_count; i += 2) {
         indices.push_back(i);
-        indices.push_back(i + 1);
-        indices.push_back(i + 2);
-        indices.push_back(i + 2);
-        indices.push_back(i + 3);
         indices.push_back(i + 1);
     }
 
@@ -184,129 +172,7 @@ void plot::update_vertices() {
     set_vertices();
 }
 
-void plot::calc_orientation(int start, float angle, int offset, float scale, bool x, bool axes) {
-    float angle_ = M_PI / 2.0 - atan(angle);
-    float first_dimension  = -scale * sin(angle_);
-    float second_dimension = scale * cos(angle_);
-    if (x && !axes) {
-        vertices[start].x  = first_dimension + offset;
-        vertices[start].y  = second_dimension;
-        vertices[start + 1].x = -first_dimension + offset;
-        vertices[start + 1].y = -second_dimension;
-        vertices[start + 2].x = first_dimension + offset;
-        vertices[start + 2].y = second_dimension;
-        vertices[start + 3].x = -first_dimension + offset;
-        vertices[start + 3].y = -second_dimension;
-    } else if (!x && !axes) {
-        vertices[start].y  = first_dimension;
-        vertices[start].z  = second_dimension + offset;
-        vertices[start + 1].y = -first_dimension;
-        vertices[start + 1].z = -second_dimension + offset;
-        vertices[start + 2].y = first_dimension;
-        vertices[start + 2].z = second_dimension + offset;
-        vertices[start + 3].y = -first_dimension;
-        vertices[start + 3].z = -second_dimension + offset;
-    } else if (x && axes) {
-        vertices[start].y  = first_dimension + offset;
-        vertices[start].z  = second_dimension;
-        vertices[start + 1].y = -first_dimension + offset;
-        vertices[start + 1].z = -second_dimension;
-        vertices[start + 2].y = first_dimension + offset;
-        vertices[start + 2].z = second_dimension;
-        vertices[start + 3].y = -first_dimension + offset;
-        vertices[start + 3].z = -second_dimension;
-    } else {
-        vertices[start].x  = first_dimension;
-        vertices[start].y  = second_dimension + offset;
-        vertices[start + 1].x = -first_dimension;
-        vertices[start + 1].y = -second_dimension + offset;
-        vertices[start + 2].x = first_dimension;
-        vertices[start + 2].y = second_dimension + offset;
-        vertices[start + 3].x = -first_dimension;
-        vertices[start + 3].y = -second_dimension + offset;
-    }
-}
-
-void plot::rotate_base_vertices(float camera_x, float camera_y, float camera_z) {
-    // x axis
-    calc_orientation(0, camera_y / camera_z, 0, AXIS_WIDTH, true , true);
-    // z axis
-    calc_orientation(4, camera_x / camera_y, 0, AXIS_WIDTH, false, true);
-    // y axis
-    float y_angle = M_PI / 2.0 - atan(camera_z / camera_x);
-    float y_z_offset = -AXIS_WIDTH * sin(y_angle);
-    float y_x_offset = AXIS_WIDTH * cos(y_angle);
-    vertices[8].x = y_x_offset;
-    vertices[8].z = y_z_offset;
-    vertices[9].x = -y_x_offset;
-    vertices[9].z = -y_z_offset;
-    vertices[10].x = y_x_offset;
-    vertices[10].z = y_z_offset;
-    vertices[11].x = -y_x_offset;
-    vertices[11].z = -y_z_offset;
-    // -x dashes
-    int position = 12;
-    for (int i = position; i < position - 4 * axes[NEG_X_AXIS]; i += 4) {
-        int offset = (i - position) / 4 + axes[NEG_X_AXIS];
-        calc_orientation(i, (camera_x - offset) / camera_y, offset, DASH_WIDTH, true, false);
-    }
-    // +x dashes
-    position = position - 4 * axes[NEG_X_AXIS];
-    for (int i = position; i < position + 4 * axes[POS_X_AXIS]; i += 4) {
-        int offset = (i - position) / 4 + 1;
-        calc_orientation(i, (camera_x - offset) / camera_y, offset, DASH_WIDTH, true, false);
-    }
-    // -z dashes
-    position = position + 4 * axes[POS_X_AXIS];
-    for (int i = position; i < position - 4 * axes[NEG_Z_AXIS]; i += 4) {
-        int offset = (i - position) / 4 + axes[NEG_Z_AXIS];
-        calc_orientation(i, camera_y / (camera_z - offset), offset, DASH_WIDTH, false, false);
-    }
-    // +z dashes
-    position = position - 4 * axes[NEG_Z_AXIS];
-    for (int i = position; i < position + 4 * axes[POS_Z_AXIS]; i += 4) {
-        int offset = (i - position) / 4 + 1;
-        calc_orientation(i, camera_y / (camera_z - offset), offset, DASH_WIDTH, false, false);
-    }
-    // -y dashes
-    position = position + 4 * axes[POS_Z_AXIS];
-    for (int i = position; i < position + 4 * y_axis_length; i += 4) {
-        int offset = (i - position) / 4 - y_axis_length;
-        calc_orientation(i, camera_x / (camera_y - offset), offset, DASH_WIDTH, false, true);
-    }
-    // +y dashes
-    position = position + 4 * y_axis_length;
-    for (int i = position; i < position + 4 * y_axis_length; i += 4) {
-        int offset = (i - position) / 4 + 1;
-        calc_orientation(i, camera_x / (camera_y - offset), offset, DASH_WIDTH, false, true);
-    }
-    // -x grid
-    position = position + 4 * y_axis_length;
-    for (int i = position; i < position - 4 * axes[NEG_X_AXIS]; i += 4) {
-        int offset = (i - position) / 4 + axes[NEG_X_AXIS];
-        calc_orientation(i, (camera_x - offset) / camera_y, offset, GRID_WIDTH, true, false);
-    }
-    // +x grid
-    position = position - 4 * axes[NEG_X_AXIS];
-    for (int i = position; i < position + 4 * axes[POS_X_AXIS]; i += 4) {
-        int offset = (i - position) / 4 + 1;
-        calc_orientation(i, (camera_x - offset) / camera_y, offset, GRID_WIDTH, true, false);
-    }
-    // -z grid
-    position = position + 4 * axes[POS_X_AXIS];
-    for (int i = position; i < position - 4 * axes[NEG_Z_AXIS]; i += 4) {
-        int offset = (i - position) / 4 + axes[NEG_Z_AXIS];
-        calc_orientation(i, camera_y / (camera_z - offset), offset, GRID_WIDTH, false, false);
-    }
-    // +z grid
-    position = position - 4 * axes[NEG_Z_AXIS];
-    for (int i = position; i < base_vertice_count; i += 4) {
-        int offset = (i - position) / 4 + 1;
-        calc_orientation(i, camera_y / (camera_z - offset), offset, GRID_WIDTH, false, false);
-    }
-}
-
-void plot::update_axes(std::array<int, 4>& axes) {
+void plot::update_axes(std::array<int, 6>& axes) {
     if      (axes[NEG_X_AXIS] < -1000) { axes[NEG_X_AXIS] = -1000; }
     else if (axes[NEG_X_AXIS] >     0) { axes[NEG_X_AXIS] =     0; }
     if      (axes[POS_X_AXIS] >  1000) { axes[POS_X_AXIS] =  1000; }
@@ -315,12 +181,18 @@ void plot::update_axes(std::array<int, 4>& axes) {
     else if (axes[NEG_Z_AXIS] >     0) { axes[NEG_Z_AXIS] =     0; }
     if      (axes[POS_Z_AXIS] >  1000) { axes[POS_Z_AXIS] =  1000; }
     else if (axes[POS_Z_AXIS] <     0) { axes[POS_Z_AXIS] =     0; }
+    if      (axes[NEG_Y_AXIS] < -1000) { axes[NEG_Y_AXIS] = -1000; }
+    else if (axes[NEG_Y_AXIS] >     0) { axes[NEG_Y_AXIS] =     0; }
+    if      (axes[POS_Y_AXIS] >  1000) { axes[POS_Y_AXIS] =  1000; }
+    else if (axes[POS_Y_AXIS] <     0) { axes[POS_Y_AXIS] =     0; }
 
     this->axes[NEG_X_AXIS] = axes[NEG_X_AXIS];
     this->axes[POS_X_AXIS] = axes[POS_X_AXIS];
     this->axes[NEG_Z_AXIS] = axes[NEG_Z_AXIS];
     this->axes[POS_Z_AXIS] = axes[POS_Z_AXIS];
-    base_vertice_count = 12 + 8 * (y_axis_length - this->axes[NEG_X_AXIS] + this->axes[POS_X_AXIS] - this->axes[NEG_Z_AXIS] + this->axes[POS_Z_AXIS]);
+    this->axes[NEG_Y_AXIS] = axes[NEG_Y_AXIS];
+    this->axes[POS_Y_AXIS] = axes[POS_Y_AXIS];
+    base_vertice_count = 30 + 2 * (this->axes[POS_X_AXIS] - this->axes[NEG_X_AXIS] + this->axes[POS_Z_AXIS] - this->axes[NEG_Z_AXIS]);
 
     update_vertices();
 

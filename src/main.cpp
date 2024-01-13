@@ -176,7 +176,7 @@ void vertex_specification() {
         GL_ARRAY_BUFFER,
         g_plot.vertices.size() * sizeof(mine::vertex),
         g_plot.vertices.data(),
-        GL_DYNAMIC_DRAW
+        GL_STATIC_DRAW
     );
 
     glGenBuffers(1, &g_IBO);
@@ -185,7 +185,7 @@ void vertex_specification() {
         GL_ELEMENT_ARRAY_BUFFER,
         g_plot.indices.size() * sizeof(GLuint),
         g_plot.indices.data(),
-        GL_DYNAMIC_DRAW
+        GL_STATIC_DRAW
     );
 
     glEnableVertexAttribArray(0);
@@ -326,7 +326,7 @@ void update_GUI() {
 
     static int count = 1;
     static std::array<char[256], 8> input_strings {mine::INITIAL_FUNCTIONS};
-    static std::array<int, 4> axes{mine::INITIAL_AXES};
+    static std::array<int, 6> axes{mine::INITIAL_AXES};
     static std::array<std::array<int, 4>, 8> bounds{mine::INITIAL_BOUNDS};
     float half_space = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
     half_space = (half_space < 0) ? 0 : half_space;
@@ -361,7 +361,6 @@ void update_GUI() {
             g_camera.set_center(g_plot.bounds[i]);
             if (!update_function(input_strings[i], i)) {
                 strcpy(input_strings[i], g_compute_pipeline.get_function(i));
-                update_function(input_strings[i], i);
             }
             g_scene_change = true;
         }
@@ -385,6 +384,7 @@ void update_GUI() {
 
     domain_axes("<= X <=", 0);
     domain_axes("<= Y <=", 2);
+    domain_axes("<= Z <=", 4);
 
     if (ImGui::Button("Set Bounds")) {
         g_plot.update_axes(axes);
@@ -401,38 +401,32 @@ void update_GUI() {
 }
 
 void reallocate_buffers() {
-    g_plot.rotate_base_vertices(g_camera.position.x, g_camera.position.y, g_camera.position.z);
     glBufferData(
         GL_ARRAY_BUFFER, 
         g_plot.vertices.size() * sizeof(mine::vertex),
         g_plot.vertices.data(), 
-        GL_DYNAMIC_DRAW
+        GL_STATIC_DRAW
     );
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER,
         g_plot.indices.size() * sizeof(GLuint),
         g_plot.indices.data(),
-        GL_DYNAMIC_DRAW
+        GL_STATIC_DRAW
     );
 }
 
-void update_buffer() {
-    g_plot.rotate_base_vertices(g_camera.position.x, g_camera.position.y, g_camera.position.z);
-    glBufferSubData(
-        GL_ARRAY_BUFFER, 
-        0,
-        g_plot.vertices.size() * sizeof(mine::vertex), 
-        g_plot.vertices.data()
-    );
+void predraw() {
+    glUseProgram(g_graphics_pipeline.get_program());
+}
+
+void update_view() {
+    glUniformMatrix4fv(g_graphics_pipeline.get_view_matrix_location(), 1, GL_FALSE, &g_camera.view[0][0]);
 }
 
 void draw() {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-    glUseProgram(g_graphics_pipeline.get_program());
-    glUniformMatrix4fv(g_graphics_pipeline.get_view_matrix_location(), 1, GL_FALSE, &g_camera.view[0][0]);
-
-    glDrawElements(GL_TRIANGLES, g_plot.indices.size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_LINES, g_plot.base_vertice_count, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, g_plot.indices.size() - g_plot.base_vertice_count, GL_UNSIGNED_INT, (void*)(g_plot.base_vertice_count * sizeof(GLuint)));
 }
 
 void postdraw() {
@@ -451,21 +445,25 @@ void loop() {
         input();
         if (frame_elapsed_time >= g_refresh_time) {
             update_GUI();
-
+            
             if (g_size_change) {
                 reallocate_buffers();
+                predraw();
+                update_view();
                 draw();
                 postdraw();
                 g_size_change = false;
                 g_scene_change = false;
                 g_screen_change = false;
             } else if (g_scene_change) {
-                update_buffer();
+                predraw();
+                update_view();
                 draw();
                 postdraw();
                 g_scene_change = false;
                 g_screen_change = false;
             } else if (g_screen_change) {
+                predraw();
                 draw();
                 postdraw();
                 g_screen_change = false;

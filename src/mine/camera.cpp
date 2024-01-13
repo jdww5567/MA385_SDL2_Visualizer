@@ -38,10 +38,10 @@ void camera::set_data(float radius, float theta, float phi) {
         this->radius = radius;
     }
 
-    if (phi < 2.0f) {
-        this->phi = 2.0f;
-    } else if (phi > 178.0f) {
-        this->phi = 178.0f;
+    if (phi < 0.1f) {
+        this->phi = 0.1f;
+    } else if (phi > 179.9f) {
+        this->phi = 179.9f;
     } else {
         this->phi = phi;
     }
@@ -87,10 +87,10 @@ void camera::update_angles(float theta, float phi) {
         this->theta = this->theta + 360.0f;
     }
 
-    if (this->phi < 2.0f) {
-        this->phi = 2.0f;
-    } else if (this->phi > 178.0f) {
-        this->phi = 178.0f;
+    if (this->phi < 0.1f) {
+        this->phi = 0.1f;
+    } else if (this->phi > 179.9f) {
+        this->phi = 179.9f;
     }
 
     update_position();

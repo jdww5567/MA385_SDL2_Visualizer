@@ -8,13 +8,6 @@
 namespace mine {
 constexpr int X_RECTS = 144;
 constexpr int Z_RECTS = 144;
-constexpr float AXIS_RED = 1.0f;
-constexpr float AXIS_GREEN = 1.0f;
-constexpr float AXIS_BLUE = 1.0f;
-constexpr float AXIS_WIDTH = 0.01f;
-constexpr float DASH_LENGTH = 12.0f * AXIS_WIDTH;
-constexpr float DASH_WIDTH = 2.0f * AXIS_WIDTH;
-constexpr float GRID_WIDTH = AXIS_WIDTH / 2.0f;
 
 constexpr std::array<std::array<int, 4>, 8> INITIAL_BOUNDS{{
     { -2,  2, -2, 2 },
@@ -53,7 +46,9 @@ enum index {
     NEG_X_AXIS = 0,
     POS_X_AXIS = 1,
     NEG_Z_AXIS = 2,
-    POS_Z_AXIS = 3
+    POS_Z_AXIS = 3,
+    NEG_Y_AXIS = 4,
+    POS_Y_AXIS = 5
 };
 
 struct vertex {
@@ -65,14 +60,12 @@ struct vertex {
     GLfloat b;
 };
 
-constexpr int INIT_Y_AXIS_LENGTH = 5;
-constexpr std::array<int, 4> INITIAL_AXES{{ -6, 6, -6, 6 }};
-constexpr int INIT_BASE_VERTICE_COUNT = 12 + 8 * (
-    INIT_Y_AXIS_LENGTH -
+constexpr std::array<int, 6> INITIAL_AXES{{ -5, 5, -5, 5, -5, 5 }};
+constexpr int INIT_BASE_VERTICE_COUNT = 30 + 2 * (
+    INITIAL_AXES[POS_X_AXIS] -
     INITIAL_AXES[NEG_X_AXIS] + 
-    INITIAL_AXES[POS_X_AXIS] - 
-    INITIAL_AXES[NEG_Z_AXIS] + 
-    INITIAL_AXES[POS_Z_AXIS]
+    INITIAL_AXES[POS_Z_AXIS] -
+    INITIAL_AXES[NEG_Z_AXIS]
 );
 }
 
