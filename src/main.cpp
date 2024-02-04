@@ -1,3 +1,4 @@
+#include <bitset>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -13,7 +14,6 @@
 #include <mine/enums.hpp>
 #include <mine/pipeline.hpp>
 #include <mine/plot.hpp>
-#include <mine/gui.hpp>
 
 constexpr int INITIAL_SCREEN_WIDTH = 960;
 constexpr int INITIAL_SCREEN_HEIGHT = 720;
@@ -33,12 +33,10 @@ mine::graphics_pipeline g_graphics_pipeline{};
 mine::compute_pipeline g_compute_pipeline{};
 mine::plot g_plot{};
 mine::camera g_camera{};
-mine::gui g_gui{};
 
 bool g_running = true;
-bool g_size_change = false;
-bool g_scene_change = true;
-bool g_screen_change = false;
+
+std::bitset<4> g_change{"1000"};
 
 double g_refresh_time{};
 
@@ -91,7 +89,15 @@ void setup() {
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glViewport(0, 0, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT);
 
-    g_gui.set_version(g_window, gl_context);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;   
+
+    ImGui_ImplSDL2_InitForOpenGL(g_window, gl_context);
+    ImGui_ImplOpenGL3_Init("#version 460 core\n");
 
     g_camera.set_screen((float)INITIAL_SCREEN_WIDTH, (float)INITIAL_SCREEN_HEIGHT);
     g_camera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
@@ -219,16 +225,12 @@ void input() {
                 g_running = false;
                 break;
             case SDL_MOUSEWHEEL:
-                if (ImGui::GetIO().WantCaptureMouse) {
-                    break;
-                }
+                if (ImGui::GetIO().WantCaptureMouse) { break; }
                 g_camera.zoom(event.wheel.y > 0, event.wheel.y < 0);
-                g_scene_change = true;
+                g_change[mine::CAMERA] = true;
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                if (ImGui::GetIO().WantCaptureMouse) {
-                    break;
-                }
+                if (ImGui::GetIO().WantCaptureMouse) { break; }
                 switch (event.button.button) {
                     case SDL_BUTTON_LEFT:
                         mouse_x = event.button.x;
@@ -256,17 +258,15 @@ void input() {
                     );
                     mouse_x = event.button.x;
                     mouse_y = event.button.y;
-                    g_scene_change = true;
+                    g_change[mine::CAMERA] = true;
                 }
                 break;
             case SDL_KEYDOWN:
-                if (ImGui::GetIO().WantCaptureKeyboard) {
-                    break;
-                }
+                if (ImGui::GetIO().WantCaptureKeyboard) { break; }
                 switch (event.key.keysym.sym) {
                     case SDLK_x:
                         g_camera.set_data(INITIAL_RADIUS, INITIAL_THETA, INITIAL_PHI);
-                        g_scene_change = true;
+                        g_change[mine::CAMERA] = true;
                         break;
                     default:
                         break;
@@ -282,7 +282,7 @@ void input() {
                         if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(g_window), &g_display_mode)) {
                             g_refresh_time = 1.0 / g_display_mode.refresh_rate;
                         }
-                        g_screen_change = true;
+                        g_change[mine::SCREEN] = true;
                         break;
                     case SDL_WINDOWEVENT_MOVED:
                         if (!SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(g_window), &g_display_mode)) {
@@ -302,7 +302,6 @@ void update_GUI() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-
     ImGui::Begin("Edit Scene");
 
     static ImVec2 frame_size = {-1, -1};
@@ -314,13 +313,13 @@ void update_GUI() {
     ) {
         frame_position = ImGui::GetWindowPos();
         frame_size = ImGui::GetWindowSize();
-        g_screen_change = true;
+        g_change[mine::SCREEN] = true;
     }
 
     ImGui::Text("Functions");
 
     static int count = 1;
-    static std::array<char[256], 8> input_strings {mine::INITIAL_FUNCTIONS};
+    static std::array<char[256], 8> input_strings{mine::INITIAL_FUNCTIONS};
     static std::array<int, 6> axes{mine::INITIAL_AXES};
     static std::array<std::array<int, 4>, 8> bounds{mine::INITIAL_BOUNDS};
     float half_space = (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(" <= x <= ").x) * 0.5f;
@@ -357,7 +356,7 @@ void update_GUI() {
             if (!update_function(input_strings[i], i)) {
                 strcpy(input_strings[i], g_compute_pipeline.get_function(i));
             }
-            g_scene_change = true;
+            g_change[mine::SCENE] = true;
         }
     }
 
@@ -366,7 +365,7 @@ void update_GUI() {
         g_plot.update_bounds(count, bounds[count]);
         update_function(input_strings[count], count);
         count++;
-        g_size_change = true;
+        g_change[mine::SIZE] = true;
     }
     if (count < 8 && count > 0) {
         ImGui::SameLine();
@@ -374,7 +373,7 @@ void update_GUI() {
     if (count > 0 && ImGui::Button("-")) {
         g_plot.remove_function();
         count--;
-        g_size_change = true;
+        g_change[mine::SIZE] = true;
     }
 
     domain_axes("<= X <=", 0);
@@ -389,7 +388,7 @@ void update_GUI() {
         for (int i = 0; i < count; ++i) {
             bounds[i] = g_plot.bounds[i];
         }
-        g_size_change = true;
+        g_change[mine::SIZE] = true;
     }
 
     ImGui::End();
@@ -407,6 +406,15 @@ void reallocate_buffers() {
         g_plot.indices.size() * sizeof(GLuint),
         g_plot.indices.data(),
         GL_STATIC_DRAW
+    );
+}
+
+void update_buffers() {
+    glBufferSubData(
+        GL_ARRAY_BUFFER, 
+        0, 
+        g_plot.vertices.size() * sizeof(mine::vertex), 
+        g_plot.vertices.data()
     );
 }
 
@@ -434,35 +442,46 @@ void loop() {
     double elapsed_time{};
     double frame_elapsed_time{};
     int frame_count{};
-    int FPS;
+    bool draw_ = false;
 
     while (g_running) {
         input();
         if (frame_elapsed_time >= g_refresh_time) {
             update_GUI();
             
-            if (g_size_change) {
-                reallocate_buffers();
-                predraw();
+            predraw();
+
+            if (g_change[mine::CAMERA]) {
                 update_view();
-                draw();
-                postdraw();
-                g_size_change = false;
-                g_scene_change = false;
-                g_screen_change = false;
-            } else if (g_scene_change) {
-                predraw();
-                update_view();
-                draw();
-                postdraw();
-                g_scene_change = false;
-                g_screen_change = false;
-            } else if (g_screen_change) {
-                predraw();
-                draw();
-                postdraw();
-                g_screen_change = false;
+                draw_ = true;
+                g_change[mine::CAMERA] = false;
+                std::cout << "camera\n";
             }
+            
+            if (g_change[mine::SIZE]) {
+                reallocate_buffers();
+                draw_ = true;
+                g_change[mine::SIZE] = false;
+                g_change[mine::SCENE] = false;
+                g_change[mine::SCREEN] = false;
+                std::cout << "size\n";
+            } else if (g_change[mine::SCENE]) {
+                update_buffers();
+                draw_ = true;
+                g_change[mine::SCENE] = false;
+                g_change[mine::SCREEN] = false;
+                std::cout << "scene\n";
+            } else if (g_change[mine::SCREEN]) {
+                draw_ = true;
+                g_change[mine::SCREEN] = false;
+                std::cout << "screen\n";
+            }
+
+            if (draw_) {
+                draw();
+            }
+
+            postdraw();
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -479,7 +498,7 @@ void loop() {
         frame_elapsed_time += frame_time;
 
         if (elapsed_time >= 1.0) {
-            FPS = frame_count;
+            int FPS = frame_count;
             std::string title = std::to_string(FPS) + " FPS";
             SDL_SetWindowTitle(g_window, title.c_str());
 
@@ -510,12 +529,8 @@ void cleanup() {
 
 int main() {
     setup();
-
     vertex_specification();
-
     loop();
-
     cleanup();
-
     return 0;
 }

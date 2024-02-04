@@ -67,6 +67,13 @@ constexpr int INIT_BASE_VERTICE_COUNT = 30 + 2 * (
     INITIAL_AXES[POS_Z_AXIS] -
     INITIAL_AXES[NEG_Z_AXIS]
 );
+
+enum bools {
+    SCREEN,
+    SCENE,
+    SIZE,
+    CAMERA
+};
 }
 
 #endif
