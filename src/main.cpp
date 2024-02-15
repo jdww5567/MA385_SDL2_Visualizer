@@ -39,7 +39,7 @@ bool g_running = true;
 std::bitset<4> g_change{"1000"};
 
 double g_refresh_time{};
-
+//test
 void setup() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "Error: Failed to initialize SDL video subsytem\nSDL Error: " << SDL_GetError() << std::endl;
