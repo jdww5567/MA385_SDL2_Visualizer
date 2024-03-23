@@ -18,7 +18,7 @@
 constexpr int INITIAL_SCREEN_WIDTH = 960;
 constexpr int INITIAL_SCREEN_HEIGHT = 720;
 
-constexpr float INITIAL_RADIUS = 13.0f;
+constexpr float INITIAL_RADIUS = 13.1f;
 constexpr float INITIAL_THETA = 45.0f;
 constexpr float INITIAL_PHI = 65.0f;
 
